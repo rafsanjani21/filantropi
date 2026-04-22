@@ -3,20 +3,34 @@ const BASE_URL = "http://192.168.52.29:8080/api";
 export async function apiFetch(endpoint: string, options: RequestInit) {
   let access_token = localStorage.getItem("access_token");
 
+  const noAuthEndpoints = [
+    "/auth/login",
+    "/auth/register",
+    "/auth/refresh-token",
+    "/auth/logout",
+  ];
+
+  const isNoAuth = noAuthEndpoints.some((url) => endpoint.includes(url));
+  const isFormData = options.body instanceof FormData;
+
   const doFetch = async (token: string | null) => {
     return fetch(`${BASE_URL}${endpoint}`, {
       ...options,
       headers: {
         ...(options.headers || {}),
-        Authorization: token ? `Bearer ${token}` : "",
+        ...( !isFormData && { "Content-Type": "application/json" }),
+        ...( !isNoAuth && token
+          ? { Authorization: `Bearer ${token}` }
+          : {}
+        ),
       },
     });
   };
 
   let res = await doFetch(access_token);
 
-  // 🔥 kalau token expired → refresh
-  if (res.status === 401) {
+  // 🔥 HANDLE TOKEN EXPIRED
+  if (res.status === 401 && !isNoAuth) {
     const refresh_token = localStorage.getItem("refresh_token");
 
     if (!refresh_token) {
@@ -37,11 +51,12 @@ export async function apiFetch(endpoint: string, options: RequestInit) {
 
       if (!refreshRes.ok) throw new Error();
 
-      // 🔥 simpan token baru
-      localStorage.setItem("access_token", refreshData.data.access_token);
+      const newToken = refreshData.data.access_token;
+
+      localStorage.setItem("access_token", newToken);
 
       // 🔥 retry request
-      res = await doFetch(refreshData.data.access_token);
+      res = await doFetch(newToken);
     } catch {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");

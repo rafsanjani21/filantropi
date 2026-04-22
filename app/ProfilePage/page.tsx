@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import {
   User,
-  ShieldCheck,
+  History,
   FileText,
   LogOut,
   ChevronRight,
@@ -132,22 +132,23 @@ export default function ProfilePage() {
             </div>
           </Link>
 
-          <button className="group w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-purple-50 text-left cursor-pointer">
+          {/* Menu Item: History (Pengganti Privacy Policy) */}
+          <Link href="/History" className="group w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-blue-50 text-left cursor-pointer">
             <div className="flex items-center gap-4">
               <div className="bg-blue-100 p-2.5 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                <ShieldCheck size={22} />
+                <History size={22} />
               </div>
               <span className="font-semibold text-gray-700 group-hover:text-blue-700">
-                Privacy Policy
+                History
               </span>
             </div>
             <ChevronRight
               size={18}
               className="text-gray-400 group-hover:translate-x-1 transition-all"
             />
-          </button>
+          </Link>
 
-          <button className="group w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-purple-50 text-left cursor-pointer">
+          <button className="group w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-orange-50 text-left cursor-pointer">
             <div className="flex items-center gap-4 ">
               <div className="bg-orange-100 p-2.5 rounded-xl text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors">
                 <FileText size={22} />
