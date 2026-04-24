@@ -21,7 +21,6 @@ export default function TentangList() {
 
   return (
     <main className="max-w-4xl mx-auto bg-white">
-      {/* Garis ungu di bagian paling atas sesuai gambar */}
       <div className="h-2 w-full bg-purple-200 mb-4"></div>
       
       <div className="flex flex-col mx-4">

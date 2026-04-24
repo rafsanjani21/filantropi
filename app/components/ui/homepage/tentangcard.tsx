@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight } from 'lucide-react'; // Opsional: Gunakan lucide-react untuk icon
+import { ChevronRight } from 'lucide-react'; 
 
 interface CardProps {
   title: string;
@@ -29,7 +29,6 @@ const TentangCard = ({ title, description, link }: CardProps) => {
 
       {/* Placeholder Gambar */}
       <div className="w-55 h-40 bg-gray-300 rounded-2xl shrink-0">
-        {/* Gunakan Next/Image jika sudah ada source aslinya */}
       </div>
     </div>
   );

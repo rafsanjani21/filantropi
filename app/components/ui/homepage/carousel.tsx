@@ -35,7 +35,7 @@ export default function Carousel() {
     return () => clearInterval(interval);
   }, [active, isDown, isHover]);
 
-  // 🔥 UPDATE INDEX SAAT SCROLL MANUAL
+  //  UPDATE INDEX SAAT SCROLL MANUAL
   const handleScroll = () => {
     if (!scrollRef.current) return;
 
@@ -63,7 +63,7 @@ export default function Carousel() {
     setActive(closestIndex);
   };
 
-  // 🔥 DRAG MOUSE
+  // DRAG MOUSE
   const handleMouseDown = (e: any) => {
     setIsDown(true);
     setStartX(e.pageX - scrollRef.current!.offsetLeft);
@@ -89,7 +89,7 @@ export default function Carousel() {
 
   return (
     <div className="mt-4">
-      {/* 🔥 CAROUSEL */}
+      {/* CAROUSEL */}
       <div
         ref={scrollRef}
         onScroll={handleScroll}

@@ -8,7 +8,7 @@ import { Upload, User, Wallet, Save, Camera } from "lucide-react";
 
 export default function UserPage() {
   const router = useRouter();
-  const { handleRegister, getProfile, updateProfile } = useAuth();
+  const { getProfile, updateProfile } = useAuth();
 
   const BASE_URL = "http://192.168.52.29:8080";
 
@@ -57,33 +57,36 @@ export default function UserPage() {
   };
 
   // 🔥 SUBMIT
+  // 🔥 SUBMIT
   const handleSubmit = async () => {
-  setLoading(true);
+    setLoading(true);
 
-  try {
-    const formData = new FormData();
+    try {
+      const formData = new FormData();
+      formData.append("full_name", form.name);
+      formData.append("wallet_address", form.wallet);
 
-    formData.append("full_name", form.name);
-    formData.append("wallet_address", form.wallet);
+      if (file) {
+        formData.append("photo_profile", file);
+      }
 
-    // ✅ HANYA kirim file kalau ada
-    if (file) {
-      formData.append("photo_profile", file);
+      // KODE SEBELUMNYA YANG ERROR:
+      // await updateProfile(formData);
+
+      // KODE YANG BENAR:
+      await updateProfile(formData, "donor"); 
+
+      router.replace("/ProfilePage");
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menyimpan data");
+    } finally {
+      setLoading(false);
     }
-
-    await updateProfile(formData);
-
-    router.replace("/ProfilePage");
-  } catch (err) {
-    console.error(err);
-    alert("Gagal menyimpan data");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
-    <div className="min-h-screen w-lg mx-auto flex flex-col bg-linear-to-b from-[#7C3996] to-[#E5AFE7] shadow-2xl">
+    <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-b from-[#7C3996] to-[#E5AFE7] shadow-2xl">
       <Navbar />
 
       <main className="flex-1 px-8 pt-8 pb-12 flex flex-col items-center">

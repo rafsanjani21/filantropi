@@ -1,33 +1,36 @@
 import Image from "next/image";
-import { Menu, Bell, User } from "lucide-react";
+import { Bell, User } from "lucide-react";
 import Link from "next/link";
 
-export default function Header() {
+export default function Navbar() {
   return (
-    <header className="w-full bg-transparent py-4 px-2">
-      
-      <div className="flex justify-center mb-4">
-        <Image 
-          src="/filantropi.png" 
-          alt="Logo" 
-          width={100}
+    <header className="w-full bg-transparent px-6 py-4 flex items-center justify-between">
+      {/* Logo (Kiri) */}
+      <Link href="/" className="active:scale-95 transition-transform">
+        <Image
+          src="/filantropi.png"
+          alt="Logo Filantropi"
+          width={120}
           height={40}
-          className="w-auto h-auto"
+          priority
+          className="w-auto h-8 object-contain"
         />
-      </div>
+      </Link>
 
-      <div className="flex justify-between items-center mx-4">
-        
-        <Menu className="text-white w-7 h-7 cursor-pointer" />
+      {/* Ikon (Kanan) */}
+      <div className="flex items-center gap-3">
+        <button className="relative p-2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 rounded-full transition-all active:scale-95 cursor-pointer">
+          <Bell className="w-5 h-5 text-white" />
 
-        <div></div>
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-400 rounded-full border-2 border-purple-800"></span>
+        </button>
 
-        <div className="flex gap-4">
-          <Bell className="text-white w-6 h-6 cursor-pointer" />
-          <Link href="/ProfilePage">
-            <User className="text-white w-6 h-6 cursor-pointer" />
-          </Link>
-        </div>
+        <Link
+          href="/ProfilePage"
+          className="p-2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 rounded-full transition-all active:scale-95 cursor-pointer"
+        >
+          <User className="w-5 h-5 text-white" />
+        </Link>
       </div>
     </header>
   );
