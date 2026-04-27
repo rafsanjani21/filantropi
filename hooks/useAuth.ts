@@ -116,11 +116,21 @@ export function useAuth() {
     }
   };
 
+  const createCampaign = async (formData: FormData) => {
+    try {
+      setLoading(true);
+      return await AuthService.createCampaign(formData);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     loading,
     smartAuth,
     handleLogout,
     getProfile,
     updateProfile,
+    createCampaign,
   };
 }

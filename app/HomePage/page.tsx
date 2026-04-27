@@ -1,30 +1,35 @@
 "use client";
 
-import { HandCoins, Heart, Search, Lock, AlertCircle } from "lucide-react"; // Tambahkan AlertCircle
+import { HandCoins, Heart, Search, Lock, AlertCircle, Wallet, RefreshCw } from "lucide-react"; 
 import Navbar from "../components/ui/homepage/navbar";
 import Carousel from "../components/ui/homepage/carousel";
 import UrgentDonation from "../components/ui/homepage/urgentdonation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { ethers } from "ethers";
 
 export default function HomePage() {
   const [search, setSearch] = useState("");
   const { getProfile } = useAuth();
   
-  // State untuk menyimpan role pengguna
+  // State untuk menyimpan role & data pengguna
   const [role, setRole] = useState<"donor" | "beneficiary" | "guest" | null>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  // --- STATE UNTUK SALDO FCC ---
+  const [balance, setBalance] = useState<string>("0");
+  const [loadingBalance, setLoadingBalance] = useState(false);
 
   // --- STATE UNTUK CUSTOM ALERT (TOAST) ---
   const [toast, setToast] = useState<{ message: string; type: "warning" | "error" | "success" } | null>(null);
 
   const showToast = (message: string, type: "warning" | "error" | "success") => {
     setToast({ message, type });
-    // Otomatis hilangkan toast setelah 4 detik (lebih lama sedikit karena teksnya panjang)
     setTimeout(() => setToast(null), 4000);
   };
-  // ----------------------------------------
 
+  // 1. CEK ROLE & AMBIL PROFIL
   useEffect(() => {
     const checkUserRole = async () => {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
@@ -35,12 +40,14 @@ export default function HomePage() {
       }
 
       try {
-        await getProfile();
+        const data = await getProfile();
         setRole("donor");
+        setUserProfile(data);
       } catch (err) {
         try {
-          await getProfile("beneficiary");
+          const data = await getProfile("beneficiary");
           setRole("beneficiary");
+          setUserProfile(data);
         } catch (err) {
           setRole("guest"); 
         }
@@ -48,16 +55,67 @@ export default function HomePage() {
     };
 
     checkUserRole();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 2. AMBIL SALDO DARI BLOCKCHAIN
+  const fetchBalance = async () => {
+    // Jika tidak ada wallet, tidak perlu fetch
+    if (!userProfile?.wallet_address) return;
+    
+    const FCC_CONTRACT_ADDRESS = "0x5feE45dd5435C6D502753b94c412Df59ad209258"; 
+    
+    // Membersihkan spasi yang mungkin ada dari database
+    const cleanWallet = userProfile.wallet_address.trim();
+
+    // --- VALIDASI DENGAN POPUP (TOAST) ---
+    if (!ethers.isAddress(cleanWallet)) {
+      showToast("Alamat dompet Anda tidak valid. Silakan perbarui profil Anda.", "error");
+      return;
+    }
+
+    if (!ethers.isAddress(FCC_CONTRACT_ADDRESS)) {
+      showToast("Kontrak token tidak valid. Hubungi admin.", "error");
+      return;
+    }
+    // -------------------------------------
+
+    setLoadingBalance(true);
+    try {
+      const POLYGON_RPC_URL = "https://polygon.rpc.thirdweb.com"; 
+      const provider = new ethers.JsonRpcProvider(POLYGON_RPC_URL);
+      const minABI = [
+        "function balanceOf(address owner) view returns (uint256)", 
+        "function decimals() view returns (uint8)"
+      ];
+      
+      const contract = new ethers.Contract(FCC_CONTRACT_ADDRESS, minABI, provider);
+      const rawBalance = await contract.balanceOf(cleanWallet);
+      const decimals = await contract.decimals();
+      const formatted = ethers.formatUnits(rawBalance, decimals);
+      
+      setBalance(parseFloat(formatted).toFixed(2));
+    } catch (err) {
+      console.error("Gagal memuat saldo:", err);
+      showToast("Gagal mengambil saldo dari blockchain. Periksa koneksi internet Anda.", "error");
+      setBalance("0");
+    } finally {
+      setLoadingBalance(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBalance();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userProfile?.wallet_address]);
 
   // --- LOGIKA AKSES FITUR ---
   const isDonasiLocked = role === "beneficiary"; 
-  const isGalangLocked = role === "donor";       
+  const isGalangLocked = role === "donor" || role === "guest";
 
   const handleDonasiClick = (e: React.MouseEvent) => {
     if (isDonasiLocked) {
       e.preventDefault();
-      // Mengganti alert() bawaan browser dengan Toast kustom
       showToast("Akun Penerima Manfaat tidak dapat berdonasi. Silakan pakai akun Pengguna Umum.", "warning");
     }
   };
@@ -65,7 +123,6 @@ export default function HomePage() {
   const handleGalangClick = (e: React.MouseEvent) => {
     if (isGalangLocked) {
       e.preventDefault();
-      // Mengganti alert() bawaan browser dengan Toast kustom
       showToast("Fitur khusus Penerima Manfaat. Pengguna Umum tidak dapat menggalang dana.", "warning");
     }
   };
@@ -84,24 +141,56 @@ export default function HomePage() {
           <span className="font-semibold text-sm leading-snug">{toast.message}</span>
         </div>
       )}
-      {/* ----------------------------------------- */}
 
       {/* Latar Belakang Ungu Melengkung di Atas */}
-      <div className="absolute top-0 left-0 w-full h-85 bg-linear-to-b from-[#7C3996] to-[#b359d4] rounded-b-[3rem] z-0 shadow-lg" />
+      <div className="absolute top-0 left-0 w-full h-96 bg-linear-to-b from-[#7C3996] to-[#b359d4] rounded-b-[3rem] z-0 shadow-lg" />
 
       {/* Konten Utama */}
       <div className="relative z-10 flex flex-col w-full pt-4">
         <Navbar />
 
-        {/* Teks Sambutan & Kolom Pencarian */}
+        {/* Teks Sambutan & Saldo */}
         <div className="px-6 mt-6 mb-8">
           <h1 className="text-2xl font-extrabold text-white mb-1 drop-shadow-sm">
-            Halo, Orang Baik! 👋
+            Halo, {userProfile?.name || userProfile?.full_name || "Orang Baik"}!
           </h1>
           <p className="text-purple-100 text-sm mb-6 font-medium">
             Mari wujudkan kebaikan bersama hari ini.
           </p>
 
+          {/* --- KARTU SALDO FCC --- */}
+          {userProfile?.wallet_address && (
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-5 flex items-center justify-between mb-6 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-purple-600 shadow-inner">
+                  <Wallet size={24} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-purple-100 uppercase tracking-widest opacity-80">Saldo FCC Anda</p>
+                  <div className="flex items-baseline gap-1.5 mt-0.5">
+                    {loadingBalance ? (
+                      <div className="h-6 w-20 bg-white/20 animate-pulse rounded-md"></div>
+                    ) : (
+                      <>
+                        <span className="text-2xl font-black text-white tracking-tighter">{balance}</span>
+                        <span className="text-xs font-bold text-purple-200">FCC</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <button 
+                onClick={fetchBalance}
+                disabled={loadingBalance}
+                className="p-2.5 bg-white/10 rounded-xl hover:bg-white/20 active:scale-90 transition-all text-white disabled:opacity-50"
+              >
+                <RefreshCw size={18} className={loadingBalance ? "animate-spin" : ""} />
+              </button>
+            </div>
+          )}
+
+          {/* Kolom Pencarian */}
           <div className="flex bg-white/20 backdrop-blur-md border border-white/30 items-center px-4 py-3.5 rounded-2xl shadow-sm focus-within:bg-white/30 transition-all">
             <Search className="w-5 h-5 text-white mr-3" />
             <input

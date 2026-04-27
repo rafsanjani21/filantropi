@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Clock } from "lucide-react";
 
 type UrgentCardProps = {
+  id: string | number;
   image: string;
   foundation: string;
   title: string;
@@ -9,9 +10,11 @@ type UrgentCardProps = {
   target: string;
   progress: number;
   daysLeft: number;
+  category: string; // <--- Tambahkan ini
 };
 
 export default function UrgentCard({
+  id,
   image,
   foundation,
   title,
@@ -19,23 +22,12 @@ export default function UrgentCard({
   target,
   progress,
   daysLeft,
+  category, // <--- Terima ini
 }: UrgentCardProps) {
   
-  // Membungkus data menjadi query URL (?title=...&image=...)
-  const queryParams = new URLSearchParams({
-    title,
-    image,
-    foundation,
-    collected,
-    target,
-    progress: progress.toString(),
-    daysLeft: daysLeft.toString(),
-  }).toString();
-
   return (
-    // Kirim data lewat URL
     <Link 
-      href={`/DetailPage?${queryParams}`} 
+      href={`/DetailPage?id=${id}`} 
       className="min-w-[85%] sm:min-w-[280px] shrink-0 block snap-center transition-transform active:scale-95"
     >
       <div className="w-full h-full rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-all flex flex-col">
@@ -48,16 +40,24 @@ export default function UrgentCard({
         </div>
 
         <div className="p-5 flex flex-col flex-1">
-          <div className="flex items-center gap-1.5 text-gray-400 text-xs font-medium">
-            <span>{foundation}</span>
-            <div className="w-3.5 h-3.5 rounded-full bg-sky-500 flex items-center justify-center text-white text-[8px]">✓</div>
+          {/* Header Kartu: Yayasan dan Kategori */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5 text-gray-400 text-[10px] font-medium">
+              <span className="truncate max-w-[100px]">{foundation}</span>
+              <div className="w-3 h-3 rounded-full bg-sky-500 flex items-center justify-center text-white text-[7px]">✓</div>
+            </div>
+            {/* BADGE KATEGORI */}
+            <span className="text-[8px] font-extrabold px-1.5 py-0.5 rounded bg-purple-50 text-purple-600 border border-purple-100 uppercase">
+              {category}
+            </span>
           </div>
 
-          <h3 className="mt-2.5 text-lg font-bold text-gray-800 line-clamp-2 leading-snug">
+          <h3 className="text-lg font-bold text-gray-800 line-clamp-2 leading-snug">
             {title}
           </h3>
 
           <div className="mt-auto pt-5 border-t border-gray-50">
+            {/* Progress Info tetap sama... */}
             <div className="flex justify-between items-end mb-2">
               <div className="flex flex-col">
                 <span className="text-[10px] text-gray-400 font-medium mb-0.5 uppercase tracking-wider">Terkumpul</span>
@@ -81,7 +81,6 @@ export default function UrgentCard({
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </Link>

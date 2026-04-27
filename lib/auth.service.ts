@@ -1,50 +1,5 @@
-// import { apiFetch } from "./api";
 
-// export const AuthService = {
-//   async login(id_token: string) {
-//     return apiFetch("/auth/login", {
-//       method: "POST",
-//       body: JSON.stringify({ id_token }),
-//     });
-//   },
-
-//   // Di dalam AuthService.ts
-// async register({
-//   id_token,
-//   name,
-//   wallet_address,
-//   role, // Pastikan menerima tipe ini
-// }: {
-//   id_token: string;
-//   name: string;
-//   wallet_address: string;
-//   role: string;
-// }) {
-//   return apiFetch("/auth/register", {
-//     method: "POST",
-//     body: JSON.stringify({
-//       id_token,
-//       name,
-//       role, // Diteruskan ke backend
-//       wallet_address,
-//     }),
-//   });
-// },
-
-//   async updateProfile(formData: FormData) {
-//     return apiFetch("/user/profile/update-donors", {
-//       method: "PUT",
-//       body: formData, // 🔥 penting: tanpa JSON
-//     });
-//   },
-
-//   getProfile: () =>
-//     apiFetch("/user/profile", {
-//       method: "GET",
-//     }),
-// };
-
-import { apiFetch } from "./api"; // Asumsikan api.ts Anda tidak berubah
+import { apiFetch } from "./api";
 
 export const AuthService = {
   async login(id_token: string) {
@@ -175,4 +130,34 @@ export const AuthService = {
     method: "GET",
   });
 },
+
+// 1. GET ALL (Rute Publik: /api/campaigns/)
+  async getCampaigns() {
+    return apiFetch("/campaigns/", { 
+      method: "GET",
+    });
+  },
+
+  // 2. GET DETAIL (Rute Publik: /api/campaigns/:slug)
+  // Ganti parameter id menjadi slug
+  async getCampaignDetail(slug: string) {
+    return apiFetch(`/campaigns/${slug}`, {
+      method: "GET",
+    });
+  },
+
+  // 3. CREATE (Rute Privat: /api/campaigns)
+  async createCampaign(formData: FormData) {
+    return apiFetch("/campaigns/", {
+      method: "POST",
+      body: formData,
+    });
+  },
+
+  // 4. GET MY CAMPAIGNS (Rute Privat: /api/campaigns/me)
+  async getMyCampaigns() {
+    return apiFetch("/campaigns/me", {
+      method: "GET",
+    });
+  },
 };

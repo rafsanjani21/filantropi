@@ -3,41 +3,34 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth"; 
 import { 
-  ArrowLeft, 
-  Image as ImageIcon, 
-  Type, 
-  Target, 
-  Tag, 
-  Calendar, 
-  FileText, 
-  Send,
-  CheckCircle2, // Icon untuk sukses
-  AlertCircle   // Icon untuk error
+  ArrowLeft, ImageIcon, Type, Tag, Calendar, FileText, Send, CheckCircle2, AlertCircle, BookOpen 
 } from "lucide-react";
 
 export default function GalangPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  
+  // Panggil createCampaign dan status loading dari useAuth Anda
+  const { createCampaign, loading } = useAuth(); 
+
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  // --- STATE UNTUK CUSTOM ALERT (TOAST) ---
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
-    // Otomatis hilangkan toast setelah 3 detik
     setTimeout(() => setToast(null), 3000);
   };
-  // ----------------------------------------
 
+  // State form disesuaikan persis dengan parameter Database
   const [form, setForm] = useState({
     title: "",
-    category: "Bencana Alam",
+    category_id: "1", // Default ke 1 (Pendidikan)
     target_amount: "",
-    end_date: "",
+    end_date: "",     
     description: "",
+    story: "",        
   });
 
   const handleChange = (field: string, value: string) => {
@@ -52,49 +45,54 @@ export default function GalangPage() {
     }
   };
 
+  // --- LOGIKA SUBMIT ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+
+    if (!selectedFile) {
+      showToast("Mohon unggah Gambar Banner Kampanye!", "error");
+      return;
+    }
 
     try {
-      // Nanti di sini Anda masukkan logika fetch API POST ke Golang Anda
-      // Contoh: const formData = new FormData(); formData.append('image', selectedFile); ...
+      // Susun FormData
+      const formData = new FormData();
+      formData.append("category_id", form.category_id);
+      formData.append("title", form.title);
+      formData.append("description", form.description);
+      formData.append("story", form.story);
+      formData.append("target_amount", form.target_amount);
+      formData.append("end_date", form.end_date); 
+      formData.append("image_banner", selectedFile);
+
+      // Lempar ke useAuth (Token & Fetch diurus otomatis)
+      await createCampaign(formData);
       
-      // Simulasi loading 2 detik untuk UI
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      showToast("Program Galang Dana berhasil ditayangkan! 🎉, Tunggu Verifikasi Admin!", "success");
       
-      // GANTI ALERT DENGAN TOAST SUKSES
-      showToast("Program Galang Dana berhasil dibuat! 🎉", "success");
-      
-      // Beri jeda sedikit sebelum pindah halaman agar user sempat baca notifikasinya
+      // Arahkan ke halaman daftar program setelah berhasil
       setTimeout(() => {
-        router.push("/");
+        router.push("/ProgramPage"); 
       }, 2000);
 
-    } catch (error) {
-      console.error(error);
-      // GANTI ALERT DENGAN TOAST ERROR
-      showToast("Terjadi kesalahan saat membuat program.", "error");
-    } finally {
-      setLoading(false);
+    } catch (error: any) {
+      console.error("Error submit campaign:", error);
+      showToast(error.message || "Gagal membuat program. Cek koneksi Anda.", "error");
     }
   };
 
   return (
     <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-b from-[#7C3996] to-[#E5AFE7] shadow-2xl relative overflow-x-hidden">
       
-      {/* --- CUSTOM ALERT (TOAST NOTIFICATION) --- */}
+      {/* Toast Notification Modern */}
       {toast && (
-        <div className={`fixed top-10 left-1/2 transform -translate-x-1/2 px-6 py-3.5 rounded-full shadow-2xl backdrop-blur-md flex items-center gap-3 z-50 animate-in fade-in slide-in-from-top-5 duration-300 border ${
-          toast.type === "success" 
-            ? "bg-green-600/90 border-green-400 text-white" 
-            : "bg-red-600/90 border-red-400 text-white"
+        <div className={`fixed top-10 left-1/2 transform -translate-x-1/2 px-6 py-3.5 rounded-full shadow-2xl backdrop-blur-md flex items-center gap-3 z-50 animate-in fade-in slide-in-from-top-5 duration-300 border w-[90%] max-w-sm ${
+          toast.type === "success" ? "bg-green-600/90 border-green-400 text-white" : "bg-red-600/90 border-red-400 text-white"
         }`}>
-          {toast.type === "success" ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
-          <span className="font-bold text-sm tracking-wide">{toast.message}</span>
+          {toast.type === "success" ? <CheckCircle2 size={24} className="shrink-0" /> : <AlertCircle size={24} className="shrink-0" />}
+          <span className="font-bold text-sm tracking-wide leading-snug">{toast.message}</span>
         </div>
       )}
-      {/* ----------------------------------------- */}
 
       {/* NAVBAR */}
       <nav className="w-full px-6 pt-8 pb-4 flex items-center justify-between z-10">
@@ -107,7 +105,7 @@ export default function GalangPage() {
         <h1 className="text-lg text-white font-bold tracking-wide drop-shadow-md">
           Buat Program
         </h1>
-        <div className="w-10 h-10" /> {/* Spacer untuk keseimbangan flexbox */}
+        <div className="w-10 h-10" /> 
       </nav>
 
       {/* HEADER TEXT */}
@@ -124,9 +122,9 @@ export default function GalangPage() {
       <div className="flex-1 w-full bg-white/95 backdrop-blur-md rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
 
-          {/* 1. UPLOAD BANNER KAMPANYE */}
+          {/* 1. UPLOAD BANNER */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-bold text-gray-700 ml-1">Foto Utama / Banner</label>
+            <label className="text-sm font-bold text-gray-700 ml-1">Gambar Banner Kampanye *</label>
             <label className="relative flex flex-col items-center justify-center w-full h-48 bg-gray-50 border-2 border-dashed border-purple-200 rounded-2xl cursor-pointer hover:bg-purple-50 hover:border-purple-400 transition-all overflow-hidden group">
               {previewUrl ? (
                 <>
@@ -141,76 +139,91 @@ export default function GalangPage() {
                     <ImageIcon size={24} />
                   </div>
                   <p className="text-sm text-gray-500 font-semibold">Klik untuk unggah foto</p>
-                  <p className="text-xs text-gray-400 mt-1">Rekomendasi rasio 16:9 (Landscape)</p>
+                  <p className="text-xs text-gray-400 mt-1">Format: JPG, PNG (Rekomendasi 16:9)</p>
                 </div>
               )}
-              <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} required />
+              <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
             </label>
           </div>
 
           {/* 2. INPUT JUDUL */}
           <InputField 
-            label="Judul Kampanye" 
+            label="Judul Kampanye *" 
             value={form.title} onChange={(e: any) => handleChange("title", e.target.value)} 
             icon={<Type size={18} />} placeholder="Contoh: Bantu Korban Gempa..." 
             required 
           />
 
-          {/* 3. PILIH KATEGORI */}
+          {/* 3. PILIH KATEGORI (UPDATE URUTAN ID) */}
           <div className="flex flex-col gap-1.5 w-full">
-            <label className="text-sm font-bold text-gray-700 ml-1">Kategori</label>
+            <label className="text-sm font-bold text-gray-700 ml-1">Kategori *</label>
             <div className="group flex items-center bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 transition-all duration-300 focus-within:bg-white focus-within:border-purple-400 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)]">
               <div className="text-gray-400 group-focus-within:text-purple-600 transition-colors duration-300">
                 <Tag size={18} />
               </div>
               <select 
-                value={form.category} 
-                onChange={(e) => handleChange("category", e.target.value)} 
+                value={form.category_id} 
+                onChange={(e) => handleChange("category_id", e.target.value)} 
                 className="ml-3 w-full bg-transparent outline-none text-gray-800 font-medium cursor-pointer"
               >
-                <option value="Bencana Alam">Bencana Alam</option>
-                <option value="Medis & Kesehatan">Medis & Kesehatan</option>
-                <option value="Pendidikan">Pendidikan</option>
-                <option value="Pembangunan Fasilitas">Pembangunan Fasilitas</option>
-                <option value="Sosial & Kemanusiaan">Sosial & Kemanusiaan</option>
+                <option value="1">Pendidikan</option>
+                <option value="2">Kesehatan</option>
+                <option value="3">Bencana Alam</option>
+                <option value="4">Pembangunan Masjid</option>
               </select>
             </div>
           </div>
 
-          {/* 4. TARGET & BATAS WAKTU (2 KOLOM) */}
+          {/* 4. TARGET & BATAS WAKTU */}
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5 w-full">
-              <label className="text-sm font-bold text-gray-700 ml-1">Target Dana</label>
+              <label className="text-sm font-bold text-gray-700 ml-1">Target Dana *</label>
               <div className="group flex items-center bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 transition-all duration-300 focus-within:bg-white focus-within:border-purple-400 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)]">
                 <div className="text-purple-600 font-bold text-sm mr-2">FCC</div>
                 <input 
                   type="number" 
                   value={form.target_amount} onChange={(e) => handleChange("target_amount", e.target.value)} 
                   placeholder="1000" className="w-full bg-transparent outline-none text-gray-800 font-medium placeholder:text-gray-300 placeholder:font-normal" 
-                  required min="1"
+                  required min="1" step="0.01" 
                 />
               </div>
             </div>
 
             <InputField 
-              label="Batas Waktu" type="date"
+              label="Batas Waktu *" type="date"
               value={form.end_date} onChange={(e: any) => handleChange("end_date", e.target.value)} 
               icon={<Calendar size={18} />} placeholder="" 
               required 
             />
           </div>
 
-          {/* 5. TEXTAREA CERITA */}
+          {/* 5. TEXTAREA DESKRIPSI SINGKAT */}
           <div className="flex flex-col gap-1.5 w-full">
-            <label className="text-sm font-bold text-gray-700 ml-1">Cerita & Detail Lengkap</label>
+            <label className="text-sm font-bold text-gray-700 ml-1">Deskripsi Singkat *</label>
             <div className="group flex items-start bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 transition-all duration-300 focus-within:bg-white focus-within:border-purple-400 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)]">
               <div className="text-gray-400 group-focus-within:text-purple-600 transition-colors duration-300 mt-1">
                 <FileText size={18} />
               </div>
               <textarea 
                 value={form.description} onChange={(e) => handleChange("description", e.target.value)} 
-                placeholder="Ceritakan latar belakang, alasan, dan rincian penggunaan dana di sini..." 
-                rows={6} className="ml-3 w-full bg-transparent outline-none text-gray-800 font-medium placeholder:text-gray-300 placeholder:font-normal resize-none leading-relaxed" 
+                placeholder="Tuliskan rangkuman singkat kampanye ini..." 
+                rows={3} className="ml-3 w-full bg-transparent outline-none text-gray-800 font-medium placeholder:text-gray-300 placeholder:font-normal resize-none leading-relaxed" 
+                required 
+              />
+            </div>
+          </div>
+
+          {/* 6. TEXTAREA STORY (CERITA LENGKAP) */}
+          <div className="flex flex-col gap-1.5 w-full">
+            <label className="text-sm font-bold text-gray-700 ml-1">Cerita Detail Kampanye *</label>
+            <div className="group flex items-start bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 transition-all duration-300 focus-within:bg-white focus-within:border-purple-400 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)]">
+              <div className="text-gray-400 group-focus-within:text-purple-600 transition-colors duration-300 mt-1">
+                <BookOpen size={18} />
+              </div>
+              <textarea 
+                value={form.story} onChange={(e) => handleChange("story", e.target.value)} 
+                placeholder="Ceritakan latar belakang, kondisi saat ini, dan rincian penggunaan dana secara lengkap..." 
+                rows={8} className="ml-3 w-full bg-transparent outline-none text-gray-800 font-medium placeholder:text-gray-300 placeholder:font-normal resize-none leading-relaxed" 
                 required 
               />
             </div>
@@ -238,7 +251,7 @@ export default function GalangPage() {
   );
 }
 
-// Komponen Input Lokal (Agar file ini mandiri dan bisa di-copy paste utuh)
+// Komponen Input Lokal (Agar file mandiri dan rapi)
 function InputField({ label, value, onChange, icon, placeholder, type = "text", required = false }: any) {
   return (
     <div className="flex flex-col gap-1.5 w-full">

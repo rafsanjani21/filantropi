@@ -1,133 +1,156 @@
 "use client";
 
-import { ArrowLeft, Search } from "lucide-react";
-import Link from "next/link";
-import CampaignCard from "../components/ui/donasi/campaigncard"; // Sesuaikan path jika berbeda
 import { useState, useEffect } from "react";
+import { ArrowLeft, Search, ListFilter } from "lucide-react";
+import Link from "next/link";
+import CampaignCard from "../components/ui/donasi/campaigncard";
+import { AuthService } from "@/lib/auth.service";
 
 export default function DonasiPage() {
   const [search, setSearch] = useState("");
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // --- MENGAMBIL DATA PROGRAM (DINAMIS) ---
+  const IMAGE_BASE_URL = "http://192.168.52.29:8080";
+
+  // RUMUS MENGHITUNG SISA HARI
+  const calculateDaysLeft = (endDateStr: string) => {
+    if (!endDateStr) return 0;
+    const end = new Date(endDateStr);
+    const today = new Date();
+    const diffTime = end.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+
+  // --- FUNGSI PENERJEMAH KATEGORI ---
+  const getCategoryName = (campaign: any) => {
+    // Jika backend suatu saat sudah mengirimkan nama kategorinya langsung
+    if (campaign.category?.name) return campaign.category.name;
+    if (campaign.category_name) return campaign.category_name;
+    
+    // Jika backend hanya mengirim category_id berupa angka (Fallback)
+    // SESUAIKAN TEKS INI DENGAN DATA DATABASE ANDA
+    const categoryMap: Record<number, string> = {
+      1: "Kesehatan",
+      2: "Pendidikan",
+      3: "Bencana Alam",
+      4: "Kemanusiaan",
+      5: "Panti Asuhan",
+    };
+    
+    return categoryMap[campaign.category_id] || "Umum";
+  };
+
   useEffect(() => {
-    const fetchCampaigns = async () => {
+    const fetchAllCampaigns = async () => {
       setLoading(true);
       try {
-        // NANTINYA GANTI DENGAN FETCH API GOLANG ANDA
-        // const res = await fetch("http://192.168.52.29:8080/api/campaigns");
-        // const data = await res.json();
-        // setCampaigns(data);
-
-        // --- DATA DUMMY SEMENTARA AGAR UI TERLIHAT ---
-        setTimeout(() => {
-          setCampaigns([
-            {
-              id: 1,
-              image: "/bencana.png",
-              foundation: "Kemas Foundation",
-              title: "Donasi Untuk Sumatera",
-              collected: "685",
-              target: "1000",
-              progress: 68,
-              daysLeft: 12,
-            },
-            {
-              id: 2,
-              image: "/bencana.png",
-              foundation: "Peduli Negeri",
-              title: "Bantu Pembangunan Masjid Desa",
-              collected: "120",
-              target: "300",
-              progress: 40,
-              daysLeft: 30,
-            },
-            {
-              id: 3,
-              image: "/bencana.png",
-              foundation: "Yayasan Yatim Piatu",
-              title: "Beasiswa Anak Asuh Berprestasi",
-              collected: "5000",
-              target: "10000",
-              progress: 50,
-              daysLeft: 7,
-            },
-          ]);
-          setLoading(false);
-        }, 1000);
-      } catch (err) {
-        console.error("Gagal mengambil data", err);
+        const res = await AuthService.getCampaigns();
+        const data = res.data || res;
+        
+        if (Array.isArray(data)) {
+          setCampaigns(data);
+        } else {
+          setCampaigns([]);
+        }
+      } catch (error) {
+        console.error("Gagal mengambil daftar campaign:", error);
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchCampaigns();
+    fetchAllCampaigns();
   }, []);
 
-  // --- LOGIKA FILTER PENCARIAN ---
-  const filteredCampaigns = campaigns.filter((campaign) =>
-    campaign.title.toLowerCase().includes(search.toLowerCase()) ||
-    campaign.foundation.toLowerCase().includes(search.toLowerCase())
-  );
+  const processedCampaigns = campaigns
+    .filter((c) => (c.title || "").toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      const daysA = calculateDaysLeft(a.end_date);
+      const daysB = calculateDaysLeft(b.end_date);
+
+      if (daysA > 0 && daysB > 0) return daysA - daysB;
+      if (daysA > 0 && daysB <= 0) return -1;
+      if (daysA <= 0 && daysB > 0) return 1;
+
+      return 0;
+    });
 
   return (
-    <div className="min-h-screen w-full max-w-md mx-auto bg-linear-to-b from-[#7C3996] to-[#E5AFE7] flex flex-col relative pb-10">
+    <div className="min-h-screen w-full max-w-md mx-auto bg-linear-to-b from-[#7C3996] to-[#E5AFE7] flex flex-col pb-10">
       
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-[#7C3996]/90 backdrop-blur-md px-6 py-5 flex items-center gap-4 shadow-sm">
-        <Link
-          href="/"
-          className="p-2 -ml-2 text-white active:scale-95 transition rounded-full hover:bg-white/10"
-        >
+      <div className="sticky top-0 z-20 bg-[#7C3996]/90 backdrop-blur-md px-6 py-5 flex items-center gap-4">
+        <Link href="/" className="p-2 -ml-2 text-white active:scale-95 transition">
           <ArrowLeft size={20} />
         </Link>
         <h1 className="text-xl font-bold text-white">Program Donasi</h1>
       </div>
 
-      {/* Kolom Pencarian */}
-      <div className="px-6 py-4">
-        <div className="flex bg-white items-center px-4 py-3 rounded-2xl shadow-sm border border-purple-100 focus-within:ring-2 focus-within:ring-purple-300 transition-all">
-          <Search className="w-5 h-5 text-purple-400 mr-3" />
+      {/* Search & Sort Indicator */}
+      <div className="px-6 py-4 flex flex-col gap-3">
+        <div className="flex bg-white items-center px-4 py-3 rounded-2xl shadow-sm border border-gray-100 focus-within:ring-2 focus-within:ring-purple-300 transition-all">
+          <Search className="w-5 h-5 text-gray-400 mr-3" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari yayasan atau judul program..."
+            placeholder="Cari judul program..."
             className="flex-1 outline-none text-gray-700 text-sm bg-transparent"
           />
         </div>
+        
+        <div className="flex items-center gap-2 px-1">
+          <ListFilter size={14} className="text-white/80" />
+          <span className="text-[10px] font-bold text-white/90 uppercase tracking-widest">
+            Urutan: Paling Mendesak
+          </span>
+        </div>
       </div>
 
-      {/* Daftar Campaign */}
-      <div className="px-6 flex flex-col gap-5 mt-2">
+      {/* List Campaign */}
+      <div className="px-6 flex flex-col gap-5 mt-1">
         {loading ? (
-          // Animasi Loading
           <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-            <p className="text-sm font-bold text-white animate-pulse">Memuat program...</p>
+             <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+             <p className="text-sm font-bold text-white animate-pulse">Sinkronisasi data...</p>
           </div>
-        ) : filteredCampaigns.length > 0 ? (
-          // List Program yang Ditemukan
-          filteredCampaigns.map((campaign, index) => (
-            <CampaignCard
-              key={campaign.id || index}
-              image={campaign.image}
-              foundation={campaign.foundation}
-              title={campaign.title}
-              collected={`${campaign.collected} fcc`} // Tambahkan 'fcc' otomatis
-              target={`${campaign.target} fcc`}       // Tambahkan 'fcc' otomatis
-              progress={campaign.progress}
-            />
-          ))
+        ) : processedCampaigns.length > 0 ? (
+          processedCampaigns.map((campaign) => {
+            const collected = campaign.current_amount || 0;
+            const target = campaign.target_amount || 1; 
+            const progressRaw = (collected / target) * 100;
+            const progress = progressRaw > 100 ? 100 : Math.round(progressRaw);
+            const daysLeft = calculateDaysLeft(campaign.end_date);
+            
+            // Dapatkan nama kategori
+            const categoryName = getCategoryName(campaign);
+
+            const imageUrl = campaign.image_banner 
+              ? (campaign.image_banner.startsWith('http') ? campaign.image_banner : `${IMAGE_BASE_URL}/${campaign.image_banner.replace(/^\/+/, '')}`)
+              : "/bencana.png"; 
+
+            return (
+              <CampaignCard
+                key={campaign.id}
+                id={campaign.slug || campaign.id}
+                image={imageUrl}
+                foundation={campaign.full_name || "Penerima Manfaat"}
+                title={campaign.title}
+                collected={`${collected} FCC`}
+                target={`${campaign.target_amount} FCC`}
+                progress={progress}
+                daysLeft={daysLeft}
+                category={categoryName} // <--- KIRIM KATEGORI KE UI
+              />
+            );
+          })
         ) : (
-          // Jika Pencarian Kosong / Tidak Ada Program
           <div className="flex flex-col items-center justify-center py-20 text-center bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 mt-4">
-            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4">
-              <Search size={28} className="text-white" />
-            </div>
+            <Search size={28} className="text-white mb-4 opacity-70" />
             <h3 className="text-white font-bold text-lg mb-1">Tidak Ditemukan</h3>
-            <p className="text-purple-100 text-sm px-4">Program atau yayasan yang Anda cari belum terdaftar.</p>
+            <p className="text-purple-100 text-sm px-4">Coba cari dengan kata kunci lain.</p>
           </div>
         )}
       </div>

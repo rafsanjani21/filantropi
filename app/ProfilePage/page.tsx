@@ -15,7 +15,8 @@ import {
   Building2,
   ShieldCheck,
   MapPin,
-  Mail, // <-- TAMBAHKAN IKON EMAIL DI SINI
+  Mail,
+  LayoutDashboard // <-- TAMBAHAN: Ikon untuk menu Program Saya
 } from "lucide-react";
 
 export default function ProfilePagePenerima() {
@@ -183,13 +184,33 @@ export default function ProfilePagePenerima() {
             </div>
           </Link>
 
-          <Link href="/History" className="group">
+          {/* --- MENU BARU: PROGRAM SAYA (HANYA MUNCUL UNTUK PENERIMA MANFAAT) --- */}
+          {(user?.role === "beneficiary" || user?.role === "penerima_manfaat") && (
+            <Link href="/ProgramPage" className="group">
+              <div className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-emerald-50">
+                <div className="flex items-center gap-4">
+                  <div className="bg-emerald-100 p-2.5 rounded-xl text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                    <LayoutDashboard size={22} />
+                  </div>
+                  <div>
+                    <span className="font-bold text-gray-700 block text-sm">Program Saya</span>
+                    <span className="text-[10px] text-gray-400 font-medium uppercase">
+                      Pantau & Kelola Penggalangan
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight size={18} className="text-gray-300 group-hover:translate-x-1 transition-all" />
+              </div>
+            </Link>
+          )}
+
+          <Link href="/HistoryPage" className="group">
             <div className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-blue-50">
               <div className="flex items-center gap-4">
                 <div className="bg-blue-100 p-2.5 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                   <History size={22} />
                 </div>
-                <span className="font-bold text-gray-700 text-sm">Riwayat Penggalangan</span>
+                <span className="font-bold text-gray-700 text-sm">Riwayat Donasi</span>
               </div>
               <ChevronRight size={18} className="text-gray-300 group-hover:translate-x-1 transition-all" />
             </div>
@@ -225,7 +246,7 @@ export default function ProfilePagePenerima() {
         </div>
 
         <p className="text-white/40 text-[10px] font-bold tracking-[0.2em] uppercase mb-10">
-          Secure Blockchain ID
+          Kemas Foundation
         </p>
       </main>
     </div>
