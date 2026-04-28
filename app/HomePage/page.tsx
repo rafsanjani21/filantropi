@@ -66,7 +66,18 @@ export default function HomePage() {
     const FCC_CONTRACT_ADDRESS = "0x5feE45dd5435C6D502753b94c412Df59ad209258"; 
     
     // Membersihkan spasi yang mungkin ada dari database
-    const cleanWallet = userProfile.wallet_address.trim();
+    const cleanWallet = userProfile.wallet_address.trim().toLowerCase();
+
+    // ==========================================
+    // --- AREA LOG DEBUGGING UNTUK KONSOL ---
+    // ==========================================
+    console.log("🔍 === CEK WALLET PENGGUNA ===");
+    console.log("1. Data Asli Database :", `"${userProfile.wallet_address}"`);
+    console.log("2. Setelah Dibersihkan:", `"${cleanWallet}"`);
+    console.log("3. Panjang Karakter   :", cleanWallet.length, "(Syarat mutlak: 42 karakter)");
+    console.log("4. Status Validasi    :", ethers.isAddress(cleanWallet) ? "✅ LOLOS" : "❌ GAGAL");
+    console.log("===============================");
+    // ==========================================
 
     // --- VALIDASI DENGAN POPUP (TOAST) ---
     if (!ethers.isAddress(cleanWallet)) {

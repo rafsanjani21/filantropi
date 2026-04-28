@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth"; 
+import { ethers } from "ethers"; // <-- IMPORT ETHERS UNTUK VALIDASI WALLET
 import { 
-  ArrowLeft, ImageIcon, Type, Tag, Calendar, FileText, Send, CheckCircle2, AlertCircle, BookOpen 
+  ArrowLeft, ImageIcon, Type, Tag, Calendar, FileText, Send, CheckCircle2, AlertCircle, BookOpen, Wallet 
 } from "lucide-react";
 
 export default function GalangPage() {
@@ -26,11 +27,12 @@ export default function GalangPage() {
   // State form disesuaikan persis dengan parameter Database
   const [form, setForm] = useState({
     title: "",
-    category_id: "1", // Default ke 1 (Pendidikan)
+    category_id: "1", 
     target_amount: "",
     end_date: "",     
     description: "",
     story: "",        
+    wallet_address: "", // <-- TAMBAHKAN STATE WALLET DI SINI
   });
 
   const handleChange = (field: string, value: string) => {
@@ -54,6 +56,12 @@ export default function GalangPage() {
       return;
     }
 
+    // --- VALIDASI WALLET MENGGUNAKAN ETHERS.JS ---
+    if (!ethers.isAddress(form.wallet_address.trim())) {
+      showToast("Alamat Wallet tidak valid! Pastikan formatnya 0x...", "error");
+      return;
+    }
+
     try {
       // Susun FormData
       const formData = new FormData();
@@ -63,6 +71,7 @@ export default function GalangPage() {
       formData.append("story", form.story);
       formData.append("target_amount", form.target_amount);
       formData.append("end_date", form.end_date); 
+      formData.append("wallet_address", form.wallet_address.trim()); // <-- KIRIM WALLET KE BACKEND
       formData.append("image_banner", selectedFile);
 
       // Lempar ke useAuth (Token & Fetch diurus otomatis)
@@ -154,7 +163,28 @@ export default function GalangPage() {
             required 
           />
 
-          {/* 3. PILIH KATEGORI (UPDATE URUTAN ID) */}
+          {/* 3. INPUT WALLET ADDRESS (BARU) */}
+          <div className="flex flex-col gap-1.5 w-full">
+            <label className="text-sm font-bold text-gray-700 ml-1">Wallet Penerima Donasi (Polygon) *</label>
+            <div className="group flex items-center bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 transition-all duration-300 focus-within:bg-white focus-within:border-purple-400 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)]">
+              <div className="text-gray-400 group-focus-within:text-purple-600 transition-colors duration-300">
+                <Wallet size={18} />
+              </div>
+              <input
+                type="text"
+                value={form.wallet_address}
+                onChange={(e) => handleChange("wallet_address", e.target.value)}
+                placeholder="0x..."
+                required
+                className="ml-3 w-full bg-transparent outline-none text-gray-800 font-mono text-sm placeholder:text-gray-300 placeholder:font-sans"
+              />
+            </div>
+            <p className="text-[10px] text-orange-600 font-medium ml-1">
+              * Pastikan alamat ini benar. Donasi (Token FCC) akan dikirim langsung ke sini.
+            </p>
+          </div>
+
+          {/* 4. PILIH KATEGORI */}
           <div className="flex flex-col gap-1.5 w-full">
             <label className="text-sm font-bold text-gray-700 ml-1">Kategori *</label>
             <div className="group flex items-center bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 transition-all duration-300 focus-within:bg-white focus-within:border-purple-400 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)]">
@@ -174,7 +204,7 @@ export default function GalangPage() {
             </div>
           </div>
 
-          {/* 4. TARGET & BATAS WAKTU */}
+          {/* 5. TARGET & BATAS WAKTU */}
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5 w-full">
               <label className="text-sm font-bold text-gray-700 ml-1">Target Dana *</label>
@@ -197,7 +227,7 @@ export default function GalangPage() {
             />
           </div>
 
-          {/* 5. TEXTAREA DESKRIPSI SINGKAT */}
+          {/* 6. TEXTAREA DESKRIPSI SINGKAT */}
           <div className="flex flex-col gap-1.5 w-full">
             <label className="text-sm font-bold text-gray-700 ml-1">Deskripsi Singkat *</label>
             <div className="group flex items-start bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 transition-all duration-300 focus-within:bg-white focus-within:border-purple-400 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)]">
@@ -213,7 +243,7 @@ export default function GalangPage() {
             </div>
           </div>
 
-          {/* 6. TEXTAREA STORY (CERITA LENGKAP) */}
+          {/* 7. TEXTAREA STORY (CERITA LENGKAP) */}
           <div className="flex flex-col gap-1.5 w-full">
             <label className="text-sm font-bold text-gray-700 ml-1">Cerita Detail Kampanye *</label>
             <div className="group flex items-start bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 transition-all duration-300 focus-within:bg-white focus-within:border-purple-400 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)]">

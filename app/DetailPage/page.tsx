@@ -8,7 +8,9 @@ import {
   Heart,
   Clock,
   AlertCircle,
-  XCircle // Tambahkan ini untuk ikon ditolak
+  XCircle,
+  Wallet, // <-- Tambahan Icon Wallet
+  Copy    // <-- Tambahan Icon Copy
 } from "lucide-react";
 import NavbarDetail from "../components/ui/detail/navbar";
 import Link from "next/link";
@@ -180,7 +182,7 @@ function DetailContent() {
               <div className="h-full bg-purple-600 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }} />
             </div>
 
-            {/* --- INFO SISA HARI (Dikembalikan) --- */}
+            {/* --- INFO SISA HARI --- */}
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-50">
               <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold ${daysLeft > 0 ? 'text-orange-600 bg-orange-50 border border-orange-100' : 'text-gray-500 bg-gray-100 border border-gray-200'}`}>
                 <Clock size={14} className="shrink-0" />
@@ -190,6 +192,7 @@ function DetailContent() {
           </div>
         </div>
 
+        {/* --- INFO PENGGALANG DANA --- */}
         <div className="p-6 border-b border-gray-100">
           <h2 className="text-lg font-bold text-gray-800 mb-4">Informasi Penggalang Dana</h2>
           <div className="flex items-center justify-between mb-2">
@@ -206,6 +209,42 @@ function DetailContent() {
             </div>
           </div>
         </div>
+
+        {/* --- TAMBAHAN: INFO DOMPET PENERIMA --- */}
+        <div className="p-6 border-b border-gray-100 bg-purple-50/40">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center">
+              <Wallet size={20} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-800">Alamat Dompet Penerima</h3>
+              <p className="text-[10px] text-purple-600 font-medium italic">Didukung oleh jaringan Polygon Mainnet</p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between bg-white border border-purple-100 p-3.5 rounded-2xl shadow-sm">
+            <code className="text-xs font-mono text-gray-600 truncate mr-3">
+              {campaign?.wallet_address || campaign?.user?.wallet_address || "Belum diatur"}
+            </code>
+            <button 
+              type="button"
+              onClick={() => {
+                const addr = campaign?.wallet_address || campaign?.user?.wallet_address;
+                if(addr) {
+                  navigator.clipboard.writeText(addr);
+                  alert("Alamat dompet disalin!");
+                } else {
+                  alert("Dompet belum tersedia");
+                }
+              }}
+              className="bg-purple-50 p-2 rounded-lg text-purple-600 hover:bg-purple-600 hover:text-white transition-colors active:scale-95 shrink-0"
+              title="Salin Alamat Dompet"
+            >
+              <Copy size={16} />
+            </button>
+          </div>
+        </div>
+        {/* --- AKHIR INFO DOMPET --- */}
 
         <div className="p-6">
           <h2 className="text-lg font-bold text-gray-800 mb-4">Cerita Penggalangan Dana</h2>
@@ -230,7 +269,7 @@ function DetailContent() {
           {/* Tombol Donasi (Hanya bisa diklik jika status aktif DAN sisa hari > 0) */}
           {!isBeneficiary && (
             <Link
-              href={`/FormDonasi?id=${campaign.id}`}
+              href={`/DetailPage/FormDonasiPage?id=${campaign.slug}`}
               className={`flex items-center justify-center gap-2 rounded-xl px-4 py-3 w-2/3 font-bold transition-all active:scale-95 text-center ${
                 campaign?.status === 'active' && daysLeft > 0 
                   ? "bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-200" 

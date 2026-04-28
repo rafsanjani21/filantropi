@@ -16,7 +16,9 @@ import {
   ShieldCheck,
   MapPin,
   Mail,
-  LayoutDashboard // <-- TAMBAHAN: Ikon untuk menu Program Saya
+  LayoutDashboard,
+  HelpCircle, // <-- Tambahan ikon
+  Scale       // <-- Tambahan ikon
 } from "lucide-react";
 
 export default function ProfilePagePenerima() {
@@ -44,6 +46,7 @@ export default function ProfilePagePenerima() {
     };
     
     fetchProfileData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const BASE_URL = "http://192.168.52.29:8080";
@@ -184,7 +187,7 @@ export default function ProfilePagePenerima() {
             </div>
           </Link>
 
-          {/* --- MENU BARU: PROGRAM SAYA (HANYA MUNCUL UNTUK PENERIMA MANFAAT) --- */}
+          {/* PROGRAM SAYA */}
           {(user?.role === "beneficiary" || user?.role === "penerima_manfaat") && (
             <Link href="/ProgramPage" className="group">
               <div className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-emerald-50">
@@ -204,6 +207,7 @@ export default function ProfilePagePenerima() {
             </Link>
           )}
 
+          {/* RIWAYAT DONASI */}
           <Link href="/HistoryPage" className="group">
             <div className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-blue-50">
               <div className="flex items-center gap-4">
@@ -216,18 +220,37 @@ export default function ProfilePagePenerima() {
             </div>
           </Link>
 
-          <button className="group w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-orange-50 text-left cursor-pointer">
-            <div className="flex items-center gap-4 ">
-              <div className="bg-orange-100 p-2.5 rounded-xl text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors">
-                <FileText size={22} />
+          <div className="h-px bg-gray-100 mx-4 my-2"></div>
+
+          {/* PUSAT BANTUAN */}
+          <Link href="/PusatBantuan" className="group">
+            <div className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-orange-50 cursor-pointer">
+              <div className="flex items-center gap-4">
+                <div className="bg-orange-100 p-2.5 rounded-xl text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors">
+                  <HelpCircle size={22} />
+                </div>
+                <span className="font-bold text-gray-700 text-sm">Pusat Bantuan</span>
               </div>
-              <span className="font-bold text-gray-700 text-sm">Pusat Bantuan</span>
+              <ChevronRight size={18} className="text-gray-300 group-hover:translate-x-1 transition-all" />
             </div>
-            <ChevronRight size={18} className="text-gray-300 group-hover:translate-x-1 transition-all" />
-          </button>
+          </Link>
+
+          {/* SYARAT & KETENTUAN */}
+          <Link href="/SyaratKetentuan" className="group">
+            <div className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-teal-50 cursor-pointer">
+              <div className="flex items-center gap-4">
+                <div className="bg-teal-100 p-2.5 rounded-xl text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                  <Scale size={22} />
+                </div>
+                <span className="font-bold text-gray-700 text-sm">Syarat & Ketentuan</span>
+              </div>
+              <ChevronRight size={18} className="text-gray-300 group-hover:translate-x-1 transition-all" />
+            </div>
+          </Link>
 
           <div className="h-px bg-gray-100 mx-4 my-2"></div>
 
+          {/* LOGOUT */}
           <button
             onClick={handleLogout}
             disabled={loading}
