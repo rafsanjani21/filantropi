@@ -1,67 +1,85 @@
 "use client";
 
+import "@/lib/i18n"; // 🔥 Proteksi i18n
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/app/components/ui/user/navbar";
-import { User, Wallet, Save, Camera, Edit3, X } from "lucide-react";
+import { useTranslation } from "react-i18next"; // 🔥 Import Hook Terjemahan
+import { 
+  User, Wallet, Save, Camera, Edit3, X,
+  CheckCircle2, AlertCircle 
+} from "lucide-react";
 
 export default function UserPage() {
   const router = useRouter();
   const { getProfile, updateProfile } = useAuth();
+  const { t } = useTranslation();
 
-  const BASE_URL = "http://192.168.52.29:8080";
+  const BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
 
-  // State untuk mode Edit
   const [isEditing, setIsEditing] = useState(false);
+  const [isNew, setIsNew] = useState(false);
+
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  const showToast = (message: string, type: "success" | "error") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", wallet: "" });
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
 
-  // State cadangan untuk fitur "Batal Edit"
   const [originalForm, setOriginalForm] = useState({ name: "", wallet: "" });
   const [originalPreview, setOriginalPreview] = useState<string | null>(null);
 
-  const id_token = typeof window !== "undefined" ? sessionStorage.getItem("id_token") : null;
-
-  // 🔥 LOAD DATA AWAL
+  // LOAD DATA AWAL
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getProfile();
+    const idToken = sessionStorage.getItem("id_token");
+    const tempName = sessionStorage.getItem("temp_name");
 
-        const loadedForm = {
-          name: data.full_name || "",
-          wallet: data.wallet_address || "",
-        };
-
-        setForm(loadedForm);
-        setOriginalForm(loadedForm); // Simpan sebagai cadangan
-
-        if (data.photo_profile) {
-          const fullUrl = data.photo_profile.startsWith("http")
-            ? data.photo_profile
-            : `${BASE_URL}/${data.photo_profile}`;
-
-          const imgUrl = `${fullUrl}?t=${Date.now()}`;
-          setPreview(imgUrl);
-          setOriginalPreview(imgUrl); // Simpan sebagai cadangan
-        } else {
-          setPreview(null);
-          setOriginalPreview(null);
-        }
-      } catch {
-        console.error("Gagal ambil profile");
-      }
-    };
-
-    fetchProfile();
+    if (idToken) {
+      setIsNew(true);
+      setIsEditing(true);
+      setForm((prev) => ({ ...prev, name: tempName || "" }));
+    } else {
+      fetchProfile();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 🔥 HANDLE FILE
+  const fetchProfile = async () => {
+    try {
+      const data = await getProfile();
+
+      const loadedForm = {
+        name: data.full_name || "",
+        wallet: data.wallet_address || "",
+      };
+
+      setForm(loadedForm);
+      setOriginalForm(loadedForm); 
+
+      if (data.photo_profile) {
+        const fullUrl = data.photo_profile.startsWith("http")
+          ? data.photo_profile
+          : `${BASE_URL}/${data.photo_profile.replace(/^\/+/, '')}`;
+
+        const imgUrl = `${fullUrl}?t=${Date.now()}`;
+        setPreview(imgUrl);
+        setOriginalPreview(imgUrl); 
+      } else {
+        setPreview(null);
+        setOriginalPreview(null);
+      }
+    } catch {
+      console.error("Gagal ambil profile");
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       const selectedFile = e.target.files[0];
@@ -70,110 +88,161 @@ export default function UserPage() {
     }
   };
 
-  // 🔥 BATAL EDIT
   const handleCancel = () => {
-    // Kembalikan semua data ke original
     setForm(originalForm);
     setPreview(originalPreview);
     setFile(null);
-    setIsEditing(false); // Matikan mode edit
+    setIsEditing(false); 
   };
 
-  // 🔥 SUBMIT
+  // SUBMIT (Pendaftaran Baru ATAU Pembaruan Data) disamakan dengan PagePenerima
   const handleSubmit = async () => {
+    if (!form.name || !form.wallet) {
+      showToast(t("name_wallet_required"), "error");
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // 1. Siapkan FormData persis seperti PagePenerima
       const formData = new FormData();
       formData.append("full_name", form.name);
       formData.append("wallet_address", form.wallet);
+      formData.append("role", "user"); // Role wajib disertakan
 
+      // Jika ada gambar, masukkan ke FormData
       if (file) {
         formData.append("photo_profile", file);
       }
 
-      await updateProfile(formData, "donor"); 
+      if (isNew) {
+        // ==========================================
+        // PENDAFTARAN USER BARU (Dengan Foto)
+        // ==========================================
+        const idToken = sessionStorage.getItem("id_token");
+        if (!idToken) throw new Error(t("access_denied_relogin"));
 
-      // Perbarui data cadangan dengan data yang baru disimpan
-      setOriginalForm(form);
-      setOriginalPreview(preview);
+        formData.append("id_token", idToken);
+
+        // 🔥 PERBAIKAN FATAL: URL harus persis "/api/auth/register/donor"
+        const res = await fetch(`${BASE_URL}/api/auth/register/donor`, {
+          method: "POST",
+          body: formData 
+          // JANGAN atur Content-Type manual, browser akan mengisinya otomatis untuk FormData
+        });
+
+        const text = await res.text();
+        let data;
+        try {
+          data = text ? JSON.parse(text) : {};
+        } catch (e) {
+          data = { message: text };
+        }
+
+        if (!res.ok) throw new Error(data.message || `Error Server: ${res.status}`);
+        
+        // Simpan token untuk login otomatis
+        localStorage.setItem("access_token", data.data?.access_token || data.access_token);
+        localStorage.setItem("refresh_token", data.data?.refresh_token || data.refresh_token);
+
+        sessionStorage.removeItem("id_token");
+        sessionStorage.removeItem("temp_name");
+
+        showToast(t("registration_success"), "success");
+        
+        setTimeout(() => {
+          router.replace("/");
+        }, 1500);
+
+      } else {
+        // ==========================================
+        // PEMBARUAN PROFIL (USER LAMA)
+        // ==========================================
+        // Menggunakan updateProfile dari useAuth
+        await updateProfile(formData, "donor"); 
+
+        setOriginalForm(form);
+        setOriginalPreview(preview);
+        
+        setIsEditing(false); 
+        showToast(t("profile_updated_success"), "success");
+      }
       
-      setIsEditing(false); // Kunci kembali form setelah berhasil
-      alert("Profil berhasil diperbarui!");
-      
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Gagal menyimpan data");
+      showToast(err.message || t("fail_process_data"), "error");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-b from-[#7C3996] to-[#E5AFE7] shadow-2xl">
+    <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-b from-[#7C3996] to-[#b359d4] shadow-2xl relative overflow-x-hidden">
+      
+      {toast && (
+        <div className={`fixed top-10 left-1/2 transform -translate-x-1/2 px-6 py-3.5 rounded-full shadow-2xl backdrop-blur-md flex items-center gap-3 z-50 animate-in fade-in slide-in-from-top-5 duration-300 border w-[90%] max-w-sm ${
+          toast.type === "success" ? "bg-green-600/90 border-green-400 text-white" : "bg-red-600/90 border-red-400 text-white"
+        }`}>
+          {toast.type === "success" ? <CheckCircle2 size={24} className="shrink-0" /> : <AlertCircle size={24} className="shrink-0" />}
+          <span className="font-bold text-sm tracking-wide leading-snug">{toast.message}</span>
+        </div>
+      )}
+
       <Navbar />
 
       <main className="flex-1 px-8 pt-8 pb-12 flex flex-col items-center">
         
         <div className="w-full mb-8 text-center">
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Profil Saya</h1>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">
+            {isNew ? t("complete_profile") : t("my_profile")}
+          </h1>
           <p className="text-purple-200 text-sm mt-2">
-            {isEditing ? "Mode edit aktif. Silakan ubah data Anda." : "Kelola data diri dan dompet digital Anda"}
+            {isNew 
+              ? t("complete_wallet_desc") 
+              : isEditing ? t("edit_mode_active") : t("manage_profile_desc")}
           </p>
         </div>
 
-        {/* Card Container */}
         <div className="w-full bg-white/95 backdrop-blur-md rounded-[2.5rem] p-8 shadow-xl border border-white/40">
           
-          {/* FOTO UPLOAD SECTION */}
-          <div className="flex flex-col items-center mb-10">
-            <div className={`relative group ${isEditing ? "cursor-pointer" : ""}`}>
-              {/* Cincin Gradasi (Hanya nyala kalau mode edit) */}
+          {/* 🔥 UI FOTO PROFIL Disamakan dengan PagePenerima */}
+          <div className="flex flex-col items-center justify-center mb-8">
+            <label htmlFor="photo-upload" className={`relative group ${isEditing ? "cursor-pointer" : ""}`}>
               {isEditing && (
                 <div className="absolute -inset-1.5 bg-linear-to-tr from-purple-500 to-[#E5AFE7] rounded-full blur-sm opacity-50 group-hover:opacity-100 transition duration-300"></div>
               )}
-              
-              <div className={`relative w-36 h-36 rounded-full p-1.5 bg-white shadow-md transition-all ${!isEditing && "opacity-90 grayscale-[10%]"}`}>
-                <div className="w-full h-full rounded-full overflow-hidden bg-gray-50 flex items-center justify-center">
-                  <img
-                    src={preview || "/profile.png"}
-                    alt="Preview"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = "/profile.png";
-                    }}
-                  />
-                </div>
+              <div className={`w-32 h-32 rounded-full overflow-hidden border-4 border-white bg-gray-50 flex items-center justify-center shadow-md relative transition-all ${!isEditing && "opacity-90 grayscale-[10%]"}`}>
+                {preview ? (
+                  <img key={preview} src={preview} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                ) : (
+                  <User size={50} className="text-gray-300" />
+                )}
+                {isEditing && (
+                  <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Camera size={24} className="text-white mb-1" />
+                    <span className="text-white text-[10px] font-bold text-center px-2">{t("change_photo")}</span>
+                  </div>
+                )}
               </div>
-
-              {/* Tombol Kamera (Hanya muncul saat Edit) */}
-              {isEditing && (
-                <label className="absolute bottom-1 right-1 bg-purple-600 hover:bg-purple-700 p-3 rounded-full text-white shadow-lg cursor-pointer transition-transform hover:scale-110 active:scale-95 border-2 border-white">
-                  <Camera size={18} />
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                </label>
-              )}
-            </div>
+            </label>
+            {isEditing && (
+              <input id="photo-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+            )}
           </div>
 
-          {/* INPUT FIELDS */}
           <div className="space-y-5">
             <InputField
-              label="Nama Lengkap"
+              label={t("full_name_label")}
               value={form.name}
               onChange={(e: any) => setForm({ ...form, name: e.target.value })}
               icon={<User size={18} />}
-              placeholder="Masukkan nama Anda"
-              disabled={!isEditing} // Lempar prop disabled ke komponen
+              placeholder={t("full_name_placeholder")}
+              disabled={!isEditing} 
             />
 
             <InputField
-              label="Wallet Address (Polygon)"
+              label={t("wallet_address_polygon_label")}
               value={form.wallet}
               onChange={(e: any) => setForm({ ...form, wallet: e.target.value })}
               icon={<Wallet size={18} />}
@@ -182,27 +251,28 @@ export default function UserPage() {
             />
           </div>
 
-          {/* AREA TOMBOL (Berubah sesuai state isEditing) */}
           {isEditing ? (
             <div className="flex gap-3 mt-10">
-              <button
-                onClick={handleCancel}
-                disabled={loading}
-                className="w-1/3 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 py-4 rounded-2xl font-bold transition-all duration-300 active:scale-95 disabled:opacity-60"
-              >
-                <X size={20} className="mr-1" /> Batal
-              </button>
+              {!isNew && (
+                <button
+                  onClick={handleCancel}
+                  disabled={loading}
+                  className="w-1/3 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 py-4 rounded-2xl font-bold transition-all duration-300 active:scale-95 disabled:opacity-60 cursor-pointer"
+                >
+                  <X size={20} className="mr-1" /> {t("cancel")}
+                </button>
+              )}
               
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="w-2/3 flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-4 px-6 rounded-2xl font-bold shadow-[0_10px_20px_-10px_rgba(124,57,150,0.5)] hover:shadow-[0_15px_30px_-10px_rgba(124,57,150,0.7)] hover:-translate-y-1 transition-all duration-300 active:scale-95 disabled:opacity-60"
+                className={`${isNew ? "w-full" : "w-2/3"} flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-4 px-6 rounded-2xl font-bold shadow-[0_10px_20px_-10px_rgba(124,57,150,0.5)] hover:shadow-[0_15px_30px_-10px_rgba(124,57,150,0.7)] hover:-translate-y-1 transition-all duration-300 active:scale-95 disabled:opacity-60 cursor-pointer`}
               >
                 {loading ? (
                   <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
                 ) : (
                   <>
-                    <Save size={20} /> Simpan Data
+                    <Save size={20} /> {isNew ? t("finish_registration") : t("save_data")}
                   </>
                 )}
               </button>
@@ -210,9 +280,9 @@ export default function UserPage() {
           ) : (
             <button
               onClick={() => setIsEditing(true)}
-              className="w-full mt-10 flex items-center justify-center gap-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border-2 border-purple-200 py-4 px-6 rounded-2xl font-bold transition-all duration-300 active:scale-95"
+              className="w-full mt-10 flex items-center justify-center gap-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border-2 border-purple-200 py-4 px-6 rounded-2xl font-bold transition-all duration-300 active:scale-95 cursor-pointer"
             >
-              <Edit3 size={20} /> Edit Profil Saya
+              <Edit3 size={20} /> {t("edit_my_profile")}
             </button>
           )}
 
@@ -222,7 +292,7 @@ export default function UserPage() {
   );
 }
 
-// Komponen Input yang Mendukung Mode Disabled (Read-Only)
+// Komponen Input
 function InputField({ label, value, onChange, icon, placeholder, disabled }: any) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -231,7 +301,7 @@ function InputField({ label, value, onChange, icon, placeholder, disabled }: any
       </label>
       <div className={`flex items-center rounded-2xl px-4 py-3.5 transition-all duration-300 border-2 ${
         disabled 
-          ? "bg-gray-50/50 border-transparent" // Mode Read-Only (Tanpa border)
+          ? "bg-gray-50/50 border-transparent" 
           : "bg-gray-50 border-gray-100 focus-within:bg-white focus-within:border-purple-400 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)] group"
       }`}>
         

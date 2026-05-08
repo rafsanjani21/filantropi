@@ -1,7 +1,13 @@
+"use client"; // Tambahkan use client karena butuh hook i18n
+
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
+import "@/lib/i18n"; // Pastikan i18n menyala
 
 export default function NavbarLogin() {
+  const { t } = useTranslation();
+
   return (
     <nav className="w-full bg-transparent pt-6 pb-4 relative flex items-center justify-center">
       <button className="absolute left-6 flex items-center">
@@ -10,7 +16,9 @@ export default function NavbarLogin() {
         </Link>
       </button>
 
-      <p className="text-2xl text-white font-bold mb-6 text-center mt-6">Masuk</p>
+      <p className="text-2xl text-white font-bold mb-6 text-center mt-6">
+        {t("login_title")}
+      </p>
     </nav>
   );
 }

@@ -2,7 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const items = [1, 2, 3, 4];
+// Ganti array items menjadi kumpulan objek berisi URL gambar.
+// Anda bisa mengganti URL di bawah ini dengan gambar Anda sendiri (misal: /banner1.png)
+const items = [
+  { id: 1, src: "/blockchain.jpg" },
+  { id: 2, src: "/donate.jpg" },
+  { id: 3, src: "/crypto.jpg" },
+  { id: 4, src: "/metamask.jpg" },
+];
 
 export default function Carousel() {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -14,7 +21,7 @@ export default function Carousel() {
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
-  // 🔥 AUTO SCROLL (PAKAI scrollIntoView BIAR AKURAT)
+  // 🔥 AUTO SCROLL
   useEffect(() => {
     const interval = setInterval(() => {
       if (!scrollRef.current || isDown || isHover) return;
@@ -35,7 +42,7 @@ export default function Carousel() {
     return () => clearInterval(interval);
   }, [active, isDown, isHover]);
 
-  //  UPDATE INDEX SAAT SCROLL MANUAL
+  // UPDATE INDEX SAAT SCROLL MANUAL
   const handleScroll = () => {
     if (!scrollRef.current) return;
 
@@ -108,16 +115,22 @@ export default function Carousel() {
       >
         {items.map((item, i) => (
           <div
-            key={i}
+            key={item.id}
             className="
               w-[80%] h-44
               bg-white rounded-xl
               shrink-0 snap-center
               shadow-md
-              flex items-center justify-center text-xl font-bold
+              flex items-center justify-center 
+              overflow-hidden relative
             "
           >
-            Card {item}
+            {/* GAMBAR SUNGGUHAN */}
+            <img 
+              src={item.src} 
+              alt={`Carousel Banner ${i + 1}`} 
+              className="w-full h-full object-cover pointer-events-none"
+            />
           </div>
         ))}
       </div>

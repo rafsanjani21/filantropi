@@ -13,14 +13,16 @@ export default function FccBalanceCard({ walletAddress }: FccBalanceCardProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  // ⚠️ GANTI DENGAN CONTRACT ADDRESS TOKEN FCC ANDA DI POLYGON
-  const FCC_CONTRACT_ADDRESS = "0x5feE45dd5435C6D502753b94c412Df59ad209258"; 
+  // 🔥 UBAH: Sesuaikan nama variabel dengan yang ada di .env.local
+  // Tambahkan || "" agar TypeScript tahu ini pasti string, bukan undefined
+  const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || ""; 
   
   // URL Public RPC Polygon (Gratis, tidak butuh API Key)
-  const POLYGON_RPC_URL = "https://polygon.llamarpc.com";
+  const POLYGON_RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://polygon-rpc.com";
 
   const fetchBalance = async () => {
-    if (!walletAddress) {
+    // 🔥 UBAH: Jangan lanjut jika alamat wallet kosong ATAU alamat contract belum diset di .env
+    if (!walletAddress || !CONTRACT_ADDRESS) {
       setLoading(false);
       return;
     }
@@ -39,7 +41,7 @@ export default function FccBalanceCard({ walletAddress }: FccBalanceCardProps) {
       ];
 
       // 3. Panggil Smart Contract Token FCC
-      const contract = new ethers.Contract(FCC_CONTRACT_ADDRESS, minABI, provider);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, minABI, provider);
 
       // 4. Ambil saldo mentah dan jumlah desimal token
       const rawBalance = await contract.balanceOf(walletAddress);

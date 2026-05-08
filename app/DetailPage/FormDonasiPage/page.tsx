@@ -1,5 +1,6 @@
 "use client";
 
+import "@/lib/i18n"; // 🔥 Proteksi i18n
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft, Heart, MessageSquare, Hash, User, CheckCircle2, AlertCircle, Coins, QrCode, Copy } from "lucide-react";
@@ -7,10 +8,12 @@ import QRCode from "react-qr-code";
 import { useAuth } from "@/hooks/useAuth";
 import { apiFetch } from "@/lib/api"; 
 import { AuthService } from "@/lib/auth.service"; 
+import { useTranslation } from "react-i18next"; // 🔥 Import Hook Terjemahan
 
 export default function FormDonasiPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { t } = useTranslation(); // 🔥 Panggil fungsi t
   
   // Fleksibel: Bisa menangkap ?id=... ataupun ?slug=...
   const campaignIdentifier = searchParams.get("id") || searchParams.get("slug");
@@ -40,7 +43,7 @@ export default function FormDonasiPage() {
         const data = await getProfile();
         setUserWallet(data.wallet_address || "");
       } catch (err) {
-        showToast("Anda harus login untuk berdonasi.", "error");
+        showToast(t("login_required_donate"), "error");
         setTimeout(() => router.push("/login"), 2000);
       }
     };
@@ -48,7 +51,7 @@ export default function FormDonasiPage() {
     // 2. Fetch Detail Campaign
     const fetchCampaign = async () => {
       if (!campaignIdentifier) {
-        showToast("ID/Slug Kampanye tidak ditemukan di URL!", "error");
+        showToast(t("campaign_not_found_url"), "error");
         return;
       }
 
@@ -74,7 +77,7 @@ export default function FormDonasiPage() {
     fetchUser();
     fetchCampaign();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaignIdentifier]);
+  }, [campaignIdentifier, t]);
 
   // ALAMAT PENERIMA (Mencari di berbagai kemungkinan tempat dari Golang)
   const receiverWallet = 
@@ -82,25 +85,25 @@ export default function FormDonasiPage() {
     campaign?.user?.wallet_address || 
     campaign?.User?.wallet_address || 
     campaign?.beneficiary?.wallet_address || 
-    "0xBelumAdaWalletDiBackend...";
+    t("no_wallet_backend");
 
   const handleCopyWallet = (e: React.MouseEvent) => {
     e.preventDefault(); 
-    if (receiverWallet && receiverWallet !== "0xBelumAdaWalletDiBackend...") {
+    if (receiverWallet && receiverWallet !== t("no_wallet_backend")) {
       navigator.clipboard.writeText(receiverWallet);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } else {
-      showToast("Alamat wallet tidak tersedia untuk disalin", "warning");
+      showToast(t("wallet_not_available_copy"), "warning");
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!campaign || !campaign.id) return showToast("Data Kampanye belum siap!", "error");
-    if (!amount || Number(amount) <= 0) return showToast("Masukkan nominal donasi yang valid.", "warning");
-    if (!txHash) return showToast("TxHash wajib diisi sebagai bukti transfer.", "warning");
+    if (!campaign || !campaign.id) return showToast(t("campaign_data_not_ready"), "error");
+    if (!amount || Number(amount) <= 0) return showToast(t("invalid_donation_amount"), "warning");
+    if (!txHash) return showToast(t("txhash_required"), "warning");
 
     setLoading(true);
 
@@ -108,26 +111,26 @@ export default function FormDonasiPage() {
       campaign_id: campaign.id,
       wallet_address: userWallet,
       amount: Number(amount),
-      message: message || "Doa terbaik untuk kesuksesan kampanye ini!",
+      message: message || t("default_prayer"),
       transaction_hash: txHash,
       is_anonymous: isAnonymous
     };
 
     try {
-      const res = await apiFetch("/api/donations", {
+      const res = await apiFetch("/donations", {
         method: "POST",
         body: JSON.stringify(payload),
       });
 
       // Anggap berhasil jika tidak masuk catch
-      showToast("Donasi berhasil diverifikasi! Terima kasih orang baik.", "success");
+      showToast(t("donation_verified_success"), "success");
       
       setTimeout(() => {
-        router.push(`/DetailPage?id=${campaign.id}`);
+        router.push(`/ProgramPage/DetailPage?id=${campaign.id}`);
       }, 2000);
 
     } catch (err: any) {
-      showToast(err.message || "Terjadi kesalahan pada server.", "error");
+      showToast(err.message || t("server_error"), "error");
     } finally {
       setLoading(false);
     }
@@ -163,14 +166,14 @@ export default function FormDonasiPage() {
         <button type="button" onClick={() => router.back()} className="text-gray-500 hover:text-gray-800 transition active:scale-95 cursor-pointer">
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-lg font-black text-gray-800">Pembayaran Donasi</h1>
+        <h1 className="text-lg font-black text-gray-800">{t("donation_payment")}</h1>
       </div>
 
       <div className="px-6 pt-6 flex flex-col gap-6">
         
         {/* INFO KAMPANYE SINGKAT */}
         <div className="bg-purple-600 rounded-3xl p-5 text-white shadow-lg shadow-purple-200">
-          <p className="text-purple-200 text-xs font-semibold uppercase tracking-wider mb-1">Tujuan Donasi</p>
+          <p className="text-purple-200 text-xs font-semibold uppercase tracking-wider mb-1">{t("donation_purpose")}</p>
           <h2 className="font-bold text-lg line-clamp-2 leading-snug">{campaign.title}</h2>
         </div>
 
@@ -178,7 +181,7 @@ export default function FormDonasiPage() {
           
           {/* 1. NOMINAL DONASI */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-            <label className="text-sm font-bold text-gray-800 mb-3 block">Nominal Donasi (FCC)</label>
+            <label className="text-sm font-bold text-gray-800 mb-3 block">{t("donation_amount_fcc")}</label>
             <div className="flex items-center bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3 focus-within:bg-white focus-within:border-purple-500 transition-all">
               <Coins className="text-purple-500 mr-3 shrink-0" size={24} />
               <input 
@@ -215,9 +218,9 @@ export default function FormDonasiPage() {
             <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mb-4">
               <QrCode size={24} />
             </div>
-            <h3 className="font-bold text-gray-800 mb-1">Transfer ke Sini</h3>
+            <h3 className="font-bold text-gray-800 mb-1">{t("transfer_here")}</h3>
             <p className="text-xs text-gray-500 mb-6 px-4 leading-relaxed">
-              Buka MetaMask atau wallet pilihan Anda, lalu scan QR di bawah ini untuk mengirimkan token FCC.
+              {t("scan_qr_metamask")}
             </p>
 
             <div className="bg-white p-4 rounded-2xl border-2 border-gray-100 shadow-sm mb-6 inline-block">
@@ -225,7 +228,7 @@ export default function FormDonasiPage() {
             </div>
 
             <div className="w-full text-left">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Atau Salin Manual:</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{t("or_copy_manual")}</p>
               <button 
                 type="button"
                 onClick={handleCopyWallet}
@@ -240,10 +243,10 @@ export default function FormDonasiPage() {
           {/* 3. TRANSACTION HASH */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col gap-1.5">
             <label className="text-sm font-bold text-gray-800 flex items-center gap-2">
-              <Hash size={16} className="text-purple-600" /> Bukti Transaksi (TxHash)
+              <Hash size={16} className="text-purple-600" /> {t("tx_proof_hash")}
             </label>
             <p className="text-xs text-gray-500 mb-2 leading-relaxed">
-              Setelah transfer sukses, tempelkan ID transaksinya di sini agar sistem kami dapat memverifikasi donasi Anda di blockchain.
+              {t("paste_tx_hash_desc")}
             </p>
             <input 
               type="text" 
@@ -257,12 +260,12 @@ export default function FormDonasiPage() {
           {/* 4. PESAN / DOA */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col gap-1.5">
             <label className="text-sm font-bold text-gray-800 flex items-center gap-2">
-              <MessageSquare size={16} className="text-purple-600" /> Tulis Doa & Dukungan
+              <MessageSquare size={16} className="text-purple-600" /> {t("write_prayer_support")}
             </label>
             <textarea 
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Doa terbaik untuk kesuksesan kampanye ini!"
+              placeholder={t("default_prayer")}
               rows={3}
               className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 outline-none focus:bg-white focus:border-purple-500 transition-all text-sm text-gray-700 mt-2 resize-none"
             />
@@ -275,8 +278,8 @@ export default function FormDonasiPage() {
                 <User size={20} />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-bold text-gray-800">Sembunyikan Nama Saya</span>
-                <span className="text-[10px] text-gray-500">Donasi sebagai Hamba Allah</span>
+                <span className="text-sm font-bold text-gray-800">{t("hide_my_name")}</span>
+                <span className="text-[10px] text-gray-500">{t("donate_as_anonymous")}</span>
               </div>
             </div>
             
@@ -292,9 +295,9 @@ export default function FormDonasiPage() {
             className="w-full mt-2 flex items-center justify-center gap-2 bg-purple-600 text-white font-bold text-lg py-4 rounded-2xl shadow-[0_10px_20px_-10px_rgba(124,57,150,0.5)] hover:bg-purple-700 transition-all active:scale-95 disabled:opacity-60"
           >
             {loading ? (
-              <><div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div> Memproses...</>
+              <><div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div> {t("processing")}</>
             ) : (
-              <><Heart className="fill-white/20" size={20} /> Konfirmasi Donasi</>
+              <><Heart className="fill-white/20" size={20} /> {t("confirm_donation")}</>
             )}
           </button>
 

@@ -2,17 +2,19 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import UrgentCard from "./urgentcard"; // Pastikan path ini benar
+import UrgentCard from "./urgentcard"; 
 import { ChevronRight } from "lucide-react";
-import { AuthService } from "@/lib/auth.service"; // Pastikan path ini benar
+import { AuthService } from "@/lib/auth.service"; 
+import { useTranslation } from "react-i18next"; // 🔥 1. Import i18n
 
 export default function UrgentDonation() {
+  const { t } = useTranslation(); // 🔥 2. Panggil fungsi t()
+  
   const [urgentCampaigns, setUrgentCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const IMAGE_BASE_URL = "http://192.168.52.29:8080";
+  const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
 
-  // RUMUS MENGHITUNG SISA HARI
   const calculateDaysLeft = (endDateStr: string) => {
     if (!endDateStr) return 0;
     const end = new Date(endDateStr);
@@ -22,16 +24,17 @@ export default function UrgentDonation() {
     return diffDays > 0 ? diffDays : 0;
   };
 
+  // 🔥 3. Kategori diganti dengan i18n keys
   const getCategoryName = (id: number) => {
-  const categoryMap: Record<number, string> = {
-    1: "Kesehatan",
-    2: "Pendidikan",
-    3: "Bencana Alam",
-    4: "Kemanusiaan",
-    5: "Panti Asuhan",
+    const categoryMap: Record<number, string> = {
+      1: t("cat_health"),
+      2: t("cat_education"),
+      3: t("cat_disaster"),
+      4: t("cat_humanity"),
+      5: t("cat_orphanage"),
+    };
+    return categoryMap[id] || t("cat_general");
   };
-  return categoryMap[id] || "Umum";
-};
 
   useEffect(() => {
     const fetchUrgentCampaigns = async () => {
@@ -41,7 +44,6 @@ export default function UrgentDonation() {
         const data = res.data || res;
 
         if (Array.isArray(data)) {
-          // FILTER: Hanya ambil yang sisa harinya < 6 DAN masih belum kadaluarsa (> 0)
           const urgentData = data.filter((campaign) => {
             const daysLeft = calculateDaysLeft(campaign.end_date);
             return daysLeft > 0 && daysLeft < 6;
@@ -59,7 +61,6 @@ export default function UrgentDonation() {
     fetchUrgentCampaigns();
   }, []);
 
-  // Jika sedang loading, berikan efek skeleton/teks ringan
   if (loading) {
     return (
       <div className="w-full px-6 py-8 flex flex-col gap-4 animate-pulse">
@@ -72,7 +73,6 @@ export default function UrgentDonation() {
     );
   }
 
-  // Jika tidak ada kampanye yang mendesak, hilangkan seluruh blok ini (Lebih rapi)
   if (urgentCampaigns.length === 0) {
     return null; 
   }
@@ -81,16 +81,15 @@ export default function UrgentDonation() {
     <div className="w-full">
       <div className="flex justify-between items-end px-6 mb-4">
         <h2 className="text-lg font-bold text-gray-800">
-          Penggalangan Dana Mendesak
+          {t("urgent_donation_title")} {/* 🔥 4. Ubah judul */}
         </h2>
         <Link href="/DonasiPage" className="text-sm font-bold text-purple-600 hover:text-purple-800 flex items-center transition-colors">
-          Lihat Semua <ChevronRight className="w-4 h-4 ml-0.5" />
+          {t("see_all")} <ChevronRight className="w-4 h-4 ml-0.5" /> {/* 🔥 5. Ubah teks link */}
         </Link>
       </div>
 
       <div className="flex gap-5 overflow-x-auto no-scrollbar pb-8 px-6 w-full snap-x snap-mandatory">
         {urgentCampaigns.map((campaign) => {
-          // Hitung logika persentase aman
           const target = campaign.target_amount || 1;
           const collected = campaign.current_amount || 0;
           const progressRaw = (collected / target) * 100;
@@ -98,25 +97,25 @@ export default function UrgentDonation() {
           
           const daysLeft = calculateDaysLeft(campaign.end_date);
 
-          // Render gambar dinamis
           const imageUrl = campaign.image_banner 
-            ? (campaign.image_banner.startsWith('http') ? campaign.image_banner : `${IMAGE_BASE_URL}/${campaign.image_banner.replace(/^\/+/, '')}`)
+            ? (campaign.image_banner.startsWith('http') ? campaign.image_banner : `${IMAGE_BASE_URL}/${campaign.image_banner.replace(/^\/+/, '')}?t=${Date.now()}`)
             : "/bencana.png";
 
           return (
-  <UrgentCard
-    key={campaign.id}
-    id={campaign.slug || campaign.id}
-    image={imageUrl}
-    foundation={campaign.full_name || "Penerima Manfaat"}
-    title={campaign.title}
-    collected={`${collected} FCC`}
-    target={`${target} FCC`}
-    progress={progress}
-    daysLeft={daysLeft}
-    category={getCategoryName(campaign.category_id)} // <--- Tambahkan ini
-  />
-);
+            <UrgentCard
+              key={campaign.id}
+              id={campaign.slug || campaign.id}
+              image={imageUrl}
+              foundation={campaign.full_name || t("beneficiary")} // 🔥 6. Ubah teks fallback nama
+              title={campaign.title}
+              collected={`${collected} FCC`}
+              target={`${target} FCC`}
+              progress={progress}
+              daysLeft={daysLeft}
+              category={getCategoryName(campaign.category_id)}
+              walletAddress={campaign.wallet_address || campaign.user?.wallet_address} 
+            />
+          );
         })}
       </div>
     </div>

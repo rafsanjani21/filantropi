@@ -40,7 +40,7 @@ export default function HomeHeader({ name, walletAddress }: HomeHeaderProps) {
   }, [walletAddress]);
 
   return (
-    <div className="bg-linear-to-r from-[#7C3996] to-[#E5AFE7] px-6 pt-12 pb-10 rounded-b-[3rem] shadow-lg">
+    <div className="bg-linear-to-r from-[#7C3996] to-[#b359d4] px-6 pt-12 pb-10 rounded-b-[3rem] shadow-lg">
       <div className="flex justify-between items-start text-white mb-8">
         <div>
           <p className="text-purple-100 text-xs font-medium uppercase tracking-widest opacity-80">Selamat Datang,</p>

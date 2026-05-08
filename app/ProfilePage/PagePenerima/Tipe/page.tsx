@@ -1,11 +1,14 @@
 "use client";
 
+import "@/lib/i18n"; // Proteksi i18n
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { User, Building2, ArrowRight, CheckCircle2 } from "lucide-react";
+import { useTranslation } from "react-i18next"; // Import Hook Terjemahan
 
 export default function PilihTipePenerima() {
   const router = useRouter();
+  const { t } = useTranslation(); // Panggil fungsi t
   
   // State untuk menyimpan pilihan ('perorangan' atau 'organisasi')
   const [selectedType, setSelectedType] = useState<string | null>(null);
@@ -27,15 +30,15 @@ export default function PilihTipePenerima() {
   };
 
   return (
-    <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-b from-[#7C3996] to-[#E5AFE7] shadow-2xl overflow-hidden">
+    <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-b from-[#7C3996] to-[#b359d4] shadow-2xl overflow-hidden">
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 mt-10">
         
         <div className="w-full max-w-md text-center mb-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
           <h1 className="text-3xl font-extrabold text-white tracking-tight mb-3">
-            Siapa yang Anda Wakili?
+            {t("who_you_represent")}
           </h1>
           <p className="text-purple-100 text-sm px-4">
-            Pilih tipe akun agar kami dapat menyesuaikan kebutuhan penggalangan dana Anda.
+            {t("choose_account_type")}
           </p>
         </div>
 
@@ -61,10 +64,10 @@ export default function PilihTipePenerima() {
               )}
             </div>
             <h3 className={`text-xl font-bold mb-1 ${selectedType === "perorangan" ? "text-purple-800" : "text-gray-800"}`}>
-              Perorangan
+              {t("individual")}
             </h3>
             <p className="text-sm text-gray-500 font-medium">
-              Mendaftar untuk diri sendiri, anggota keluarga, atau kerabat yang membutuhkan bantuan.
+              {t("individual_desc")}
             </p>
           </button>
 
@@ -88,10 +91,10 @@ export default function PilihTipePenerima() {
               )}
             </div>
             <h3 className={`text-xl font-bold mb-1 ${selectedType === "organisasi" ? "text-purple-800" : "text-gray-800"}`}>
-              Organisasi / Yayasan
+              {t("organization")}
             </h3>
             <p className="text-sm text-gray-500 font-medium">
-              Mewakili Panti Asuhan, Yayasan Sosial, Lembaga Pendidikan, atau Entitas Resmi lainnya.
+              {t("organization_desc")}
             </p>
           </button>
 
@@ -113,7 +116,7 @@ export default function PilihTipePenerima() {
               <div className="w-6 h-6 border-3 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
             ) : (
               <>
-                Lanjutkan Langkah Berikutnya
+                {t("continue_next")}
                 <ArrowRight size={20} className={selectedType ? "text-purple-500" : "opacity-50"} />
               </>
             )}

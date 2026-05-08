@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ChevronDown, MessageCircle, Mail, HelpCircle, ShieldAlert } from "lucide-react";
+import { ArrowLeft, ChevronDown, Mail, HelpCircle, ShieldAlert, Phone, MapPin } from "lucide-react"; // Import Phone & MapPin ditambahkan
 
 export default function PusatBantuanPage() {
   const router = useRouter();
@@ -34,8 +34,8 @@ export default function PusatBantuanPage() {
   return (
     <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-gray-50 pb-10">
       
-      {/* HEADER (Diperbaiki: z-50, pb-6, dan rounded-b-3xl agar scroll aman) */}
-      <div className="bg-linear-to-r from-[#7C3996] to-[#E5AFE7] px-6 pt-8 pb-6 flex items-center gap-4 sticky top-0 z-50 text-white shadow-md rounded-b-3xl">
+      {/* HEADER */}
+      <div className="bg-linear-to-r from-[#7C3996] to-[#b359d4] px-6 pt-8 pb-6 flex items-center gap-4 sticky top-0 z-50 text-white shadow-md rounded-b-3xl">
         <button onClick={() => router.back()} className="hover:bg-white/20 p-2 rounded-full transition cursor-pointer">
           <ArrowLeft size={24} />
         </button>
@@ -45,18 +45,48 @@ export default function PusatBantuanPage() {
         </div>
       </div>
 
-      {/* KONTEN (Diperbaiki: Diberi padding-top wajar, margin negatif dihapus) */}
+      {/* KONTEN */}
       <div className="px-6 pt-6 flex flex-col gap-6">
         
-        {/* KOTAK KONTAK CEPAT */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 flex gap-4">
-          <div className="flex-1 bg-purple-50 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-purple-100 transition active:scale-95">
-            <MessageCircle size={24} className="text-purple-600 mb-2" />
-            <span className="text-[10px] font-bold text-purple-800 uppercase">Live Chat</span>
-          </div>
-          <div className="flex-1 bg-sky-50 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-sky-100 transition active:scale-95">
-            <Mail size={24} className="text-sky-600 mb-2" />
-            <span className="text-[10px] font-bold text-sky-800 uppercase">Email Kami</span>
+        {/* INFORMASI KONTAK */}
+        <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 flex flex-col gap-4">
+          <h2 className="text-sm font-bold text-gray-800 px-1 mb-1">Hubungi Kami</h2>
+          
+          {/* Telepon */}
+          <a href="tel:+6281234567890" className="flex items-center gap-4 p-3.5 bg-emerald-50 rounded-2xl hover:bg-emerald-100 transition cursor-pointer group border border-emerald-100">
+            <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl group-hover:bg-emerald-200 transition">
+              <Phone size={20} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-wide">Telepon / WhatsApp</p>
+              <p className="text-sm font-semibold text-emerald-900 mt-0.5">+62 812-3456-7890</p>
+            </div>
+          </a>
+
+          {/* Email */}
+          <a href="mailto:support@filantropi.net" className="flex items-center gap-4 p-3.5 bg-sky-50 rounded-2xl hover:bg-sky-100 transition cursor-pointer group border border-sky-100">
+            <div className="p-3 bg-sky-100 text-sky-600 rounded-xl group-hover:bg-sky-200 transition">
+              <Mail size={20} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-sky-800 uppercase tracking-wide">Email</p>
+              <p className="text-sm font-semibold text-sky-900 mt-0.5">support@filantropi.net</p>
+            </div>
+          </a>
+
+          {/* Alamat */}
+          <div className="flex items-start gap-4 p-3.5 bg-purple-50 rounded-2xl border border-purple-100">
+            <div className="p-3 bg-purple-100 text-purple-600 rounded-xl mt-1">
+              <MapPin size={20} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-purple-800 uppercase tracking-wide mt-1">Kantor Pusat</p>
+              <p className="text-xs font-medium text-purple-900 mt-1 leading-relaxed pr-2">
+                Gedung Kebaikan Bersama Lt. 4<br />
+                Jl. Sudirman No. 123, Jakarta Selatan<br />
+                DKI Jakarta 12190
+              </p>
+            </div>
           </div>
         </div>
 

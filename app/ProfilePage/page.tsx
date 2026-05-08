@@ -1,9 +1,11 @@
 "use client";
 
+import "@/lib/i18n"; // 🔥 FIX: Wajib ditambahkan agar mesin bahasa menyala lebih dulu
 import Link from "next/link";
 import Navbar from "@/app/components/ui/profile/navbar"; 
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next"; 
 import {
   User,
   History,
@@ -17,8 +19,9 @@ import {
   MapPin,
   Mail,
   LayoutDashboard,
-  HelpCircle, // <-- Tambahan ikon
-  Scale       // <-- Tambahan ikon
+  HelpCircle, 
+  Scale,       
+  Globe 
 } from "lucide-react";
 
 export default function ProfilePagePenerima() {
@@ -26,19 +29,30 @@ export default function ProfilePagePenerima() {
   const [user, setUser] = useState<any>(null);
   const [copied, setCopied] = useState(false);
 
-  // --- SISTEM PENGECEKAN CERDAS (FALLBACK) ---
+  // PANGGIL FUNGSI TRANSLATOR DAN I18N OBJECT
+  const { t, i18n } = useTranslation();
+
+  // FUNGSI GANTI BAHASA
+  const toggleLanguage = () => {
+    const newLang = i18n.language === "id" ? "en" : "id";
+    
+    // 1. Ubah bahasa di layar saat ini
+    i18n.changeLanguage(newLang);
+    
+    // 2. 🔥 INI YANG PALING PENTING: Simpan ke memori browser!
+    // Jika baris ini tidak ada, maka I18nProvider tidak punya data untuk dibaca saat di-refresh
+    localStorage.setItem("app_lang", newLang); 
+  };
+
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
         let data;
         try {
-          // 1. Coba ambil data sebagai Pengguna Umum
           data = await getProfile(); 
         } catch (err: any) {
-          // 2. Jika gagal, tembak ke API Penerima Manfaat
           data = await getProfile("beneficiary");
         }
-        
         setUser(data);
       } catch (err) {
         console.error("Gagal mengambil data profil sama sekali:", err);
@@ -49,13 +63,12 @@ export default function ProfilePagePenerima() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const BASE_URL = "http://192.168.52.29:8080";
+  const BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
 
   const userPhoto = user?.photo_profile
     ? `${BASE_URL}/${user.photo_profile}?t=${Date.now()}`
     : "/profile.png";
 
-  // Fitur copy (Tetap menyalin alamat wallet full)
   const handleCopyWallet = () => {
     if (user?.wallet_address) {
       navigator.clipboard.writeText(user.wallet_address);
@@ -64,7 +77,6 @@ export default function ProfilePagePenerima() {
     }
   };
 
-  // Fitur penyingkat teks wallet untuk UI
   const formatWalletAddress = (address: string) => {
     if (!address) return "";
     if (address.length <= 12) return address;
@@ -72,14 +84,14 @@ export default function ProfilePagePenerima() {
   };
 
   return (
-    <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-b from-[#7C3996] to-[#E5AFE7] shadow-2xl">
+    <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-b from-[#7C3996] to-[#b359d4] shadow-2xl">
       <Navbar />
 
       {/* Toast Notification */}
       {copied && (
         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-900/90 backdrop-blur-sm text-white px-5 py-2.5 rounded-full shadow-2xl text-sm font-medium flex items-center gap-2 z-50 animate-in fade-in slide-in-from-top-5 duration-300">
           <CheckCircle2 size={18} className="text-green-400" />
-          Wallet berhasil disalin!
+          {t("copied_wallet")}
         </div>
       )}
 
@@ -96,7 +108,6 @@ export default function ProfilePagePenerima() {
               className="w-32 h-32 rounded-full object-cover border-4 border-white"
               onError={(e) => (e.currentTarget.src = "/profile.png")}
             />
-            {/* Badge Tipe Akun (Hanya muncul jika Penerima Manfaat) */}
             {user?.role === "beneficiary" || user?.role === "penerima_manfaat" ? (
               <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full shadow-md border border-purple-100 flex items-center gap-1.5 whitespace-nowrap">
                 {user?.beneficiary_type === "organization" ? (
@@ -105,7 +116,7 @@ export default function ProfilePagePenerima() {
                   <User size={12} className="text-purple-600" />
                 )}
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-700">
-                  {user?.beneficiary_type === "organization" ? "Organisasi" : "Individu"}
+                  {user?.beneficiary_type === "organization" ? (i18n.language === 'id' ? "Organisasi" : "Organization") : (i18n.language === 'id' ? "Individu" : "Individual")}
                 </span>
               </div>
             ) : null}
@@ -114,23 +125,22 @@ export default function ProfilePagePenerima() {
 
         <div className="text-center mb-10 flex flex-col items-center w-full">
           <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center justify-center gap-2">
-            {user?.name || user?.full_name || "Nama Pengguna"}
+            {user?.name || user?.full_name || "User"}
             {user?.beneficiary_type === "organization" && user?.registration_number && (
               <ShieldCheck size={20} className="text-blue-300" />
             )}
           </h1>
           
-          {/* --- LOGIKA PERUBAHAN TAMPILAN EMAIL / ALAMAT --- */}
           <div className="flex items-center gap-2 mt-1 text-purple-100 opacity-90 text-sm">
             {user?.role === "beneficiary" || user?.role === "penerima_manfaat" ? (
               <>
                 <MapPin size={14} />
-                <span className="truncate max-w-[250px]">{user?.alamat || "Alamat belum diatur"}</span>
+                <span className="truncate max-w-[250px]">{user?.alamat || t("no_address")}</span>
               </>
             ) : (
               <>
                 <Mail size={14} />
-                <span className="truncate max-w-[250px]">{user?.email || "Email belum tersedia"}</span>
+                <span className="truncate max-w-[250px]">{user?.email || t("no_email")}</span>
               </>
             )}
           </div>
@@ -148,7 +158,7 @@ export default function ProfilePagePenerima() {
               {copied ? <CheckCircle2 size={16} className="text-green-300" /> : <Copy size={16} className="text-purple-200 group-hover:text-white" />}
             </button>
           ) : (
-            <p className="text-purple-200/50 text-xs mt-5 italic">Belum ada wallet</p>
+            <p className="text-purple-200/50 text-xs mt-5 italic">{t("no_wallet")}</p>
           )}
         </div>
 
@@ -167,7 +177,6 @@ export default function ProfilePagePenerima() {
             onClick={(e) => {
               if (!user) {
                 e.preventDefault();
-                alert("Data profil belum siap atau terjadi error di server. Silakan muat ulang halaman.");
               }
             }}
           >
@@ -177,9 +186,9 @@ export default function ProfilePagePenerima() {
                   <User size={22} />
                 </div>
                 <div>
-                  <span className="font-bold text-gray-700 block text-sm">Detail Profil</span>
+                  <span className="font-bold text-gray-700 block text-sm">{t("profile_detail")}</span>
                   <span className="text-[10px] text-gray-400 font-medium uppercase">
-                    {!user ? "Memuat data..." : user.role === "beneficiary" || user.role === "penerima_manfaat" ? "Data Penerima & Legalitas" : "Pengaturan Akun Umum"}
+                    {!user ? "..." : user.role === "beneficiary" || user.role === "penerima_manfaat" ? t("beneficiary_data") : t("general_account")}
                   </span>
                 </div>
               </div>
@@ -196,9 +205,9 @@ export default function ProfilePagePenerima() {
                     <LayoutDashboard size={22} />
                   </div>
                   <div>
-                    <span className="font-bold text-gray-700 block text-sm">Program Saya</span>
+                    <span className="font-bold text-gray-700 block text-sm">{t("my_programs")}</span>
                     <span className="text-[10px] text-gray-400 font-medium uppercase">
-                      Pantau & Kelola Penggalangan
+                      {t("manage_campaigns")}
                     </span>
                   </div>
                 </div>
@@ -214,7 +223,7 @@ export default function ProfilePagePenerima() {
                 <div className="bg-blue-100 p-2.5 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                   <History size={22} />
                 </div>
-                <span className="font-bold text-gray-700 text-sm">Riwayat Donasi</span>
+                <span className="font-bold text-gray-700 text-sm">{t("donation_history")}</span>
               </div>
               <ChevronRight size={18} className="text-gray-300 group-hover:translate-x-1 transition-all" />
             </div>
@@ -229,7 +238,7 @@ export default function ProfilePagePenerima() {
                 <div className="bg-orange-100 p-2.5 rounded-xl text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors">
                   <HelpCircle size={22} />
                 </div>
-                <span className="font-bold text-gray-700 text-sm">Pusat Bantuan</span>
+                <span className="font-bold text-gray-700 text-sm">{t("help_center")}</span>
               </div>
               <ChevronRight size={18} className="text-gray-300 group-hover:translate-x-1 transition-all" />
             </div>
@@ -242,13 +251,29 @@ export default function ProfilePagePenerima() {
                 <div className="bg-teal-100 p-2.5 rounded-xl text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-colors">
                   <Scale size={22} />
                 </div>
-                <span className="font-bold text-gray-700 text-sm">Syarat & Ketentuan</span>
+                <span className="font-bold text-gray-700 text-sm">{t("terms_conditions")}</span>
               </div>
               <ChevronRight size={18} className="text-gray-300 group-hover:translate-x-1 transition-all" />
             </div>
           </Link>
 
           <div className="h-px bg-gray-100 mx-4 my-2"></div>
+
+          {/* 🔥 TOMBOL GANTI BAHASA 🔥 */}
+          <button
+            onClick={toggleLanguage}
+            className="group w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-slate-50 cursor-pointer"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-slate-100 p-2.5 rounded-xl text-slate-600 group-hover:bg-slate-600 group-hover:text-white transition-colors">
+                <Globe size={22} />
+              </div>
+              <span className="font-bold text-slate-700 text-sm">{t("change_language")}</span>
+            </div>
+            <span className="text-xs font-black text-slate-500 bg-slate-200 px-3 py-1 rounded-full uppercase">
+              {i18n.language === "id" ? "ID" : "EN"}
+            </span>
+          </button>
 
           {/* LOGOUT */}
           <button
@@ -261,7 +286,7 @@ export default function ProfilePagePenerima() {
                 <LogOut size={22} />
               </div>
               <span className="font-bold text-red-600 text-sm">
-                {loading ? "Keluar..." : "Keluar Akun"}
+                {loading ? t("logging_out") : t("logout")}
               </span>
             </div>
             {loading && <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>}

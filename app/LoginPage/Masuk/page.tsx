@@ -1,15 +1,18 @@
 "use client";
 
+import "@/lib/i18n"; // 🔥 Pastikan i18n menyala
 import { useState } from "react";
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "@/lib/firebase";
 import { useAuth } from "@/hooks/useAuth";
 import { AlertCircle, ShieldCheck } from "lucide-react";
 import NavbarLogin from "@/app/components/ui/login/navbar";
+import { useTranslation } from "react-i18next"; // 🔥 Import hook i18n
 
 export default function MasukPage() {
   const { smartAuth, loading } = useAuth();
   const [message, setMessage] = useState("");
+  const { t } = useTranslation(); // 🔥 Siapkan fungsi penerjemah
 
   const handleGoogleAuth = async () => {
     setMessage("");
@@ -19,23 +22,21 @@ export default function MasukPage() {
       const id_token = await result.user.getIdToken();
       const name = result.user.displayName || "User";
       
-      // Ambil role yang dipilih di halaman sebelumnya.
       const fallbackRole = sessionStorage.getItem("selected_role") || "user";
 
       try {
-        // Jalankan fungsi auth otomatis
         await smartAuth(id_token, name, fallbackRole);
       } catch (err: any) {
-        setMessage(err.message || "Gagal memproses autentikasi. Coba lagi nanti.");
+        setMessage(err.message || t("auth_fail_process"));
       }
     } catch (error) {
       console.error(error);
-      setMessage("Autentikasi Google dibatalkan atau gagal.");
+      setMessage(t("auth_fail_google"));
     }
   };
 
   return (
-    <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-b from-[#E5AFE7] to-[#7C3996] shadow-2xl overflow-hidden">
+    <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-t from-[#7C3996] to-[#b359d4] shadow-2xl overflow-hidden">
       <NavbarLogin />
 
       <main className="flex-1 flex flex-col items-center justify-center px-8 pb-12 mt-10">
@@ -47,10 +48,10 @@ export default function MasukPage() {
 
           <div className="text-center mb-8">
             <h1 className="text-2xl font-extrabold text-gray-800 flex items-center justify-center gap-2">
-              <ShieldCheck className="text-purple-600 w-6 h-6" /> Autentikasi
+              <ShieldCheck className="text-purple-600 w-6 h-6" /> {t("auth_title")}
             </h1>
             <p className="text-gray-500 text-sm mt-2 font-medium">
-              Satu langkah lagi untuk masuk ke akun Anda
+              {t("auth_subtitle")}
             </p>
           </div>
 
@@ -71,7 +72,7 @@ export default function MasukPage() {
             ) : (
               <>
                 <img src="/google.png" alt="Google" className="w-6 h-6" />
-                <span className="text-md">Lanjutkan dengan Google</span>
+                <span className="text-sm md:text-md">{t("continue_with_google")}</span>
               </>
             )}
           </button>
