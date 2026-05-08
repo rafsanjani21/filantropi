@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Clock } from "lucide-react";
 import { useState, useEffect } from "react";
 import { apiFetch } from "@/lib/api";
-import { useTranslation } from "react-i18next"; // 🔥 1. Import Hook i18n
+import { useTranslation } from "react-i18next"; 
 
 type UrgentCardProps = {
   id: string | number;
@@ -23,21 +23,25 @@ export default function UrgentCard({
   id, image, foundation, title, collected, target, progress, daysLeft, category, walletAddress
 }: UrgentCardProps) {
   
-  const { t } = useTranslation(); // 🔥 2. Panggil fungsi t()
-  const [liveBalance, setLiveBalance] = useState<number | null>(null);
+  const { t } = useTranslation(); 
+  
+  // 🔥 UBAH 1: Ganti nama state agar lebih relevan (dari liveBalance menjadi totalCollectedAmount)
+  const [totalCollectedAmount, setTotalCollectedAmount] = useState<number | null>(null);
 
   useEffect(() => {
     if (!walletAddress) return;
 
     const fetchLive = async () => {
       try {
-        const res = await apiFetch(`/donations/wallet/balance/${walletAddress}`, { method: "GET" });
-        if (res && res.data !== undefined) {
-          const balanceData = typeof res.data === 'object' ? res.data.balance : res.data;
-          setLiveBalance(parseFloat(balanceData || "0"));
+        // 🔥 UBAH 2: Tembak ke endpoint /donations/amount/:wallet
+        const res = await apiFetch(`/donations/amount/${walletAddress}`, { method: "GET" });
+        
+        // 🔥 UBAH 3: Ekstrak data dari atribut total_amount
+        if (res && res.data && res.data.total_amount !== undefined) {
+          setTotalCollectedAmount(parseFloat(res.data.total_amount));
         }
       } catch (e) {
-        console.error("Gagal menarik live balance di UrgentCard:", e);
+        console.error("Gagal menarik total donasi di UrgentCard:", e);
       }
     };
 
@@ -47,8 +51,8 @@ export default function UrgentCard({
   const parsedCollected = typeof collected === 'string' ? parseFloat(collected.replace(/[^\d.-]/g, '')) : collected;
   const parsedTarget = typeof target === 'string' ? parseFloat(target.replace(/[^\d.-]/g, '')) : target;
 
-  // Nilai ini akan menampilkan angka utuh (termasuk desimal panjang jika ada) karena tidak menggunakan .toFixed(2)
-  const displayCollected = liveBalance !== null ? liveBalance : Number(parsedCollected || 0);
+  // 🔥 UBAH 4: Gunakan state totalCollectedAmount yang baru
+  const displayCollected = totalCollectedAmount !== null ? totalCollectedAmount : Number(parsedCollected || 0);
   const numTarget = Number(parsedTarget || 1);
   
   const calculateProgress = () => {
@@ -66,7 +70,7 @@ export default function UrgentCard({
         <div className="relative w-full h-40">
           <img src={image} alt={title} className="w-full h-full object-cover" />
           <div className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm animate-pulse uppercase">
-            {t("urgent")} {/* 🔥 3. i18n */}
+            {t("urgent")} 
           </div>
         </div>
 
@@ -87,12 +91,12 @@ export default function UrgentCard({
             <div className="flex justify-between items-end mb-2">
               <div className="flex flex-col">
                 <span className="text-[10px] text-gray-400 font-medium mb-0.5 uppercase tracking-wider">
-                  {t("collected_card")} {/* 🔥 4. i18n */}
+                  {t("collected_card")} 
                 </span>
                 <div className="flex items-baseline gap-1">
                   <span className="text-sm font-bold text-purple-700">{displayCollected} FCC</span>
                   <span className="text-[10px] text-gray-400 font-normal">
-                    {t("from")} {numTarget} {/* 🔥 5. i18n */}
+                    {t("from")} {numTarget} 
                   </span>
                 </div>
               </div>
@@ -105,12 +109,11 @@ export default function UrgentCard({
 
             <div className="flex justify-between items-center mt-3">
               <span className="text-[10px] font-bold text-gray-400">
-                {t("time_limit")} {/* 🔥 6. Menggunakan key time_limit agar seragam dengan CampaignCard */}
+                {t("time_limit")} 
               </span>
               <div className="flex items-center gap-1 bg-red-50 border border-red-100 px-2 py-1 rounded-md">
                 <Clock className="w-3 h-3 text-red-500" />
                 <span className="text-[10px] font-bold text-red-600">
-                  {/* 🔥 7. Logika sisa hari dengan i18n */}
                   {daysLeft > 0 ? `${t("remaining")} ${daysLeft} ${t("days")}` : t("has_ended")}
                 </span>
               </div>

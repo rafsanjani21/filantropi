@@ -27,7 +27,6 @@ export default function ProgramPage() {
   const [userProfile, setUserProfile] = useState<any>(null); 
   const [loading, setLoading] = useState(true);
   
-  // State Modal
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [showUnverifiedModal, setShowUnverifiedModal] = useState(false); 
 
@@ -48,28 +47,30 @@ export default function ProgramPage() {
         const rawData = res.data || res;
         
         if (Array.isArray(rawData)) {
-          const campaignsWithLiveBalance = await Promise.all(
+          const campaignsWithTotalCollected = await Promise.all(
             rawData.map(async (campaign) => {
               const wallet = campaign.wallet_address || campaign.user?.wallet_address;
-              let liveTotal = campaign.current_amount || 0;
+              // Default ke current_amount dari DB jika API blockchain gagal
+              let totalAmount = campaign.current_amount || 0;
               
               if (wallet) {
                 try {
-                  // 🔥 OPTIMASI: Langsung hit API balance, tidak perlu tarik riwayat
-                  const balanceRes = await apiFetch(`/donations/wallet/balance/${wallet}`, { method: "GET" });
-                  if (balanceRes && balanceRes.data !== undefined) {
-                    const balanceData = typeof balanceRes.data === 'object' ? balanceRes.data.balance : balanceRes.data;
-                    liveTotal = parseFloat(balanceData || "0");
+                  // 🔥 UBAH 1: Tembak ke endpoint /donations/amount/:wallet (Akumulasi, bukan sisa balance)
+                  const amountRes = await apiFetch(`/donations/amount/${wallet}`, { method: "GET" });
+                  
+                  // 🔥 UBAH 2: Ambil data dari total_amount
+                  if (amountRes && amountRes.data && amountRes.data.total_amount !== undefined) {
+                    totalAmount = parseFloat(amountRes.data.total_amount || "0");
                   }
                 } catch (err) {
-                  console.warn("Gagal ambil live balance untuk", wallet);
+                  console.warn("Gagal ambil total donasi untuk", wallet);
                 }
               }
-              return { ...campaign, live_collected: liveTotal };
+              return { ...campaign, live_collected: totalAmount };
             })
           );
           
-          setCampaigns(campaignsWithLiveBalance);
+          setCampaigns(campaignsWithTotalCollected);
         }
       } catch (error) {
         console.error("Gagal mengambil data program saya:", error);
@@ -222,6 +223,8 @@ export default function ProgramPage() {
         ) : campaigns.length > 0 ? (
           campaigns.map((campaign) => {
             const target = campaign.target_amount || 1;
+            
+            // 🔥 UBAH 3: Gunakan live_collected yang sudah berisi total_amount dari blockchain
             const collected = campaign.live_collected !== undefined ? campaign.live_collected : (campaign.current_amount || 0);
             
             let progress: number | string = 0;

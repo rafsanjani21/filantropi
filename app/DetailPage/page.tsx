@@ -32,7 +32,7 @@ function DetailContent() {
 
   const [walletHistory, setWalletHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [liveBalance, setLiveBalance] = useState<number | null>(null);
+  const [totalCollected, setTotalCollected] = useState<number | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -136,9 +136,10 @@ function DetailContent() {
       
       setLoadingHistory(true);
       try {
-        const [historyRes, balanceRes] = await Promise.all([
+        // 🔥 UBAH: Tembak endpoint /donations/amount/:wallet
+        const [historyRes, amountRes] = await Promise.all([
           apiFetch(`/donations/wallets/history/${receiverWallet}`, { method: "GET" }).catch(() => null),
-          apiFetch(`/donations/wallet/balance/${receiverWallet}`, { method: "GET" }).catch(() => null)
+          apiFetch(`/donations/amount/${receiverWallet}`, { method: "GET" }).catch(() => null)
         ]);
         
         if (historyRes && historyRes.data) {
@@ -150,11 +151,11 @@ function DetailContent() {
           setWalletHistory([]);
         }
 
-        if (balanceRes && balanceRes.data !== undefined) {
-          const balanceData = typeof balanceRes.data === 'object' ? balanceRes.data.balance : balanceRes.data;
-          setLiveBalance(parseFloat(balanceData || "0"));
+        // 🔥 UBAH: Ambil data dari total_amount
+        if (amountRes && amountRes.data && amountRes.data.total_amount !== undefined) {
+          setTotalCollected(parseFloat(amountRes.data.total_amount));
         } else {
-          setLiveBalance(0);
+          setTotalCollected(0);
         }
       } catch (err) {
         console.error("Gagal menarik riwayat donasi kampanye:", err);
@@ -281,7 +282,8 @@ function DetailContent() {
   const rawTarget = campaign?.target_amount || 1;
   const target = typeof rawTarget === 'string' ? parseFloat(rawTarget.replace(/[^\d.-]/g, '')) : rawTarget;
   
-  const rawCollected = liveBalance !== null ? liveBalance : (campaign?.current_amount || 0);
+  // 🔥 UBAH: Gunakan totalCollected dari API baru Anda
+  const rawCollected = totalCollected !== null ? totalCollected : (campaign?.current_amount || 0);
   const collected = typeof rawCollected === 'string' ? parseFloat(rawCollected.replace(/[^\d.-]/g, '')) : rawCollected;
   
   const calculateProgress = () => {

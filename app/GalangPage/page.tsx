@@ -296,25 +296,27 @@ export default function GalangPage() {
             required 
           />
 
-          {/* 🔥 HANYA TAMPILKAN INPUT WALLET JIKA INDIVIDU 🔥 */}
+          {/* 🔥 HANYA TAMPILKAN INPUT WALLET JIKA INDIVIDU (READONLY/LOCKED) 🔥 */}
           {beneficiaryType === "individual" && (
             <div className="flex flex-col gap-1.5 w-full">
               <label className="text-sm font-bold text-gray-700 ml-1">{t("wallet_address_label", "Alamat Wallet")}</label>
-              <div className="group flex items-center bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 transition-all duration-300 focus-within:bg-white focus-within:border-purple-400 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)]">
-                <div className="text-gray-400 group-focus-within:text-purple-600 transition-colors duration-300">
+              <div className="flex items-center bg-gray-100 border-2 border-gray-200 rounded-2xl px-4 py-3.5 opacity-80 cursor-not-allowed">
+                <div className="text-gray-400">
                   <Wallet size={18} />
                 </div>
                 <input
                   type="text"
                   value={form.wallet_address}
-                  onChange={(e) => handleChange("wallet_address", e.target.value)}
-                  placeholder="0x..."
-                  required
-                  className="ml-3 w-full bg-transparent outline-none text-gray-800 font-mono text-sm placeholder:text-gray-300 placeholder:font-sans"
+                  readOnly
+                  placeholder="Memuat wallet dari profil..."
+                  className="ml-3 w-full bg-transparent outline-none text-gray-600 font-mono text-sm cursor-not-allowed"
                 />
+                {/* Ikon Gembok sebagai indikator terkunci */}
+                <Lock size={16} className="text-gray-400 ml-2 shrink-0" />
               </div>
-              <p className="text-[10px] text-orange-600 font-medium ml-1">
-                {t("wallet_address_warning", "Pastikan alamat dompet Polygon (MATIC) sudah benar.")}
+              <p className="text-[10px] text-gray-500 font-medium ml-1 flex items-center gap-1 mt-1">
+                <AlertCircle size={12} className="shrink-0" />
+                {t("wallet_address_locked", "Alamat dompet ini otomatis terhubung dari profil Anda dan tidak dapat diubah di sini.")}
               </p>
             </div>
           )}

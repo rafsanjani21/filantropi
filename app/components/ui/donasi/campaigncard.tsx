@@ -25,29 +25,33 @@ export default function CampaignCard({
 }: CampaignCardProps) {
   
   const { t } = useTranslation(); 
-  const [liveBalance, setLiveBalance] = useState<number | null>(null);
+  
+  // 🔥 UBAH 1: Ganti nama state menjadi totalCollectedAmount
+  const [totalCollectedAmount, setTotalCollectedAmount] = useState<number | null>(null);
 
   useEffect(() => {
     if (!walletAddress) return;
-    const fetchLive = async () => {
+    const fetchTotalAmount = async () => {
       try {
-        // 🔥 OPTIMASI: Langsung tembak API balance, bukan history
-        const res = await apiFetch(`/donations/wallet/balance/${walletAddress}`, { method: "GET" });
-        if (res && res.data !== undefined) {
-          const balanceData = typeof res.data === 'object' ? res.data.balance : res.data;
-          setLiveBalance(parseFloat(balanceData || "0"));
+        // 🔥 UBAH 2: Tembak ke endpoint /donations/amount/:wallet
+        const res = await apiFetch(`/donations/amount/${walletAddress}`, { method: "GET" });
+        
+        // 🔥 UBAH 3: Ekstrak data dari atribut total_amount
+        if (res && res.data && res.data.total_amount !== undefined) {
+          setTotalCollectedAmount(parseFloat(res.data.total_amount));
         }
       } catch (e) {
-        console.warn("Gagal menarik balance di CampaignCard:", e);
+        console.warn("Gagal menarik total donasi di CampaignCard:", e);
       }
     };
-    fetchLive();
+    fetchTotalAmount();
   }, [walletAddress]);
 
   const parsedCollected = typeof collected === 'string' ? parseFloat(collected.replace(/[^\d.-]/g, '')) : collected;
   const parsedTarget = typeof target === 'string' ? parseFloat(target.replace(/[^\d.-]/g, '')) : target;
 
-  const displayCollected = liveBalance !== null ? liveBalance : Number(parsedCollected || 0);
+  // 🔥 UBAH 4: Gunakan state totalCollectedAmount
+  const displayCollected = totalCollectedAmount !== null ? totalCollectedAmount : Number(parsedCollected || 0);
   const numTarget = Number(parsedTarget || 1);
   
   const calculateProgress = () => {
