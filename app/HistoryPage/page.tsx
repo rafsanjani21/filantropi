@@ -27,38 +27,25 @@ export default function HistoryPage() {
   const [myWallet, setMyWallet] = useState(""); 
   const [searchInput, setSearchInput] = useState(""); 
   const [activeWallet, setActiveWallet] = useState(""); 
-  
-  // 🔥 STATE BARU: Menyimpan role pengguna saat ini
-  const [userRole, setUserRole] = useState<"donor" | "beneficiary" | null>(null);
 
   const [transactions, setTransactions] = useState<WalletHistory[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // 1. Ambil Profil User yang Sedang Login
   useEffect(() => {
     const fetchMyProfile = async () => {
       try {
         let profile = null;
-        let detectedRole: "donor" | "beneficiary" | null = null;
-        
         try {
-          // Coba ambil profil sebagai donatur
           profile = await getProfile("donor");
-          detectedRole = "donor";
         } catch (err) {
           try {
-            // Jika gagal, coba ambil sebagai penerima manfaat
             profile = await getProfile("beneficiary");
-            detectedRole = "beneficiary";
           } catch (errFallback) {
-            console.warn("Bukan user terdaftar / Guest mode");
+            console.warn("Guest mode");
           }
         }
 
-        if (detectedRole) {
-          setUserRole(detectedRole);
-        }
-
-        // Ambil wallet dari response (menyesuaikan struktur data axios/fetch)
         const profileData = profile?.data || profile;
         const wallet = profileData?.wallet_address?.trim();
         
@@ -78,6 +65,7 @@ export default function HistoryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 2. Tarik Data Riwayat (Otomatis Gabungkan In & Out)
   useEffect(() => {
     if (!activeWallet) return;
 
@@ -85,43 +73,47 @@ export default function HistoryPage() {
       try {
         setLoading(true);
         setTransactions([]); 
+        
+        let allTransactions: WalletHistory[] = [];
 
-        // 🔥 LOGIKA BARU: Cek role untuk menentukan endpoint & mapping data
-        if (userRole === "beneficiary") {
-          // PENERIMA MANFAAT: Cek donasi masuk (IN)
-          const res = await apiFetch(`/donations/in/${activeWallet}`, { method: "GET" });
-          
-          if (res && res.data && Array.isArray(res.data.history)) {
-            const mappedData: WalletHistory[] = res.data.history.map((tx: any) => ({
+        // 🔥 TEMBAK ENDPOINT IN (Donasi Masuk)
+        try {
+          const resIn = await apiFetch(`/donations/in/${activeWallet}`, { method: "GET" });
+          if (resIn && resIn.data && Array.isArray(resIn.data.history)) {
+            const mappedIn: WalletHistory[] = resIn.data.history.map((tx: any) => ({
               tx_hash: tx.tx_hash,
               date: tx.created_at,
               type: "In",
               amount: tx.amount.toString(),
               from_to: tx.donatur_address || "Anonim",
             }));
-            
-            // Urutkan dari yang terbaru
-            mappedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            setTransactions(mappedData);
+            allTransactions = [...allTransactions, ...mappedIn];
           }
-        } else {
-          // DONATUR (Atau Guest): Cek donasi keluar (OUT)
-          const res = await apiFetch(`/donations/out/${activeWallet}`, { method: "GET" });
-          
-          if (res && Array.isArray(res.data)) {
-            const mappedData: WalletHistory[] = res.data.map((tx: any) => ({
+        } catch (errIn) {
+          console.warn("Tidak ada data IN untuk wallet ini", errIn);
+        }
+
+        // 🔥 TEMBAK ENDPOINT OUT (Donasi Keluar)
+        try {
+          const resOut = await apiFetch(`/donations/out/${activeWallet}`, { method: "GET" });
+          if (resOut && Array.isArray(resOut.data)) {
+            const mappedOut: WalletHistory[] = resOut.data.map((tx: any) => ({
               tx_hash: tx.tx_hash,
               date: tx.created_at,
               type: "Out",
               amount: tx.amount.toString(),
               from_to: tx.campaign_wallet || "Anonim",
             }));
-            
-            // Urutkan dari yang terbaru
-            mappedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            setTransactions(mappedData);
+            allTransactions = [...allTransactions, ...mappedOut];
           }
+        } catch (errOut) {
+          console.warn("Tidak ada data OUT untuk wallet ini", errOut);
         }
+
+        // Urutkan gabungan transaksi dari yang terbaru
+        allTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        
+        setTransactions(allTransactions);
 
       } catch (err) {
         console.error("Gagal memuat riwayat dari backend:", err);
@@ -131,7 +123,7 @@ export default function HistoryPage() {
     };
 
     fetchHistoryFromBackend();
-  }, [activeWallet, userRole]); 
+  }, [activeWallet]); 
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -238,7 +230,6 @@ export default function HistoryPage() {
           </div>
         ) : (
           transactions.map((tx, index) => {
-            // Evaluasi berdasarkan maping data API
             const isMasuk = tx.type === "In";
             
             return (
@@ -253,7 +244,6 @@ export default function HistoryPage() {
                     <p className="font-bold text-gray-800 text-sm">
                       {isMasuk ? t("token_in", "Token Masuk") : t("token_out", "Token Keluar")}
                     </p>
-                    {/* 🔥 Penyesuaian UI Label untuk memperjelas dari/ke mana aliran dana */}
                     <p className="text-[10px] font-medium text-gray-400 mt-0.5 w-32 truncate" title={tx.from_to}>
                       {isMasuk ? `Dari: ${tx.from_to}` : `Ke: ${tx.from_to}`}
                     </p>

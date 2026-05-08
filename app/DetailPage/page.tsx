@@ -136,29 +136,38 @@ function DetailContent() {
       
       setLoadingHistory(true);
       try {
-        // 🔥 UBAH: Tembak endpoint /donations/amount/:wallet
-        const [historyRes, amountRes] = await Promise.all([
-          apiFetch(`/donations/wallets/history/${receiverWallet}`, { method: "GET" }).catch(() => null),
-          apiFetch(`/donations/amount/${receiverWallet}`, { method: "GET" }).catch(() => null)
-        ]);
+        // 🔥 UBAH: Menggunakan endpoint gabungan /donations/in/:wallet
+        const resIn = await apiFetch(`/donations/in/${receiverWallet}`, { method: "GET" }).catch(() => null);
         
-        if (historyRes && historyRes.data) {
-          const incomingDonations = historyRes.data
-            .filter((tx: any) => tx.type?.toLowerCase() === "in")
-            .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        if (resIn && resIn.data && Array.isArray(resIn.data.history)) {
+          // Format data history sesuai yang dibutuhkan UI
+          const incomingDonations = resIn.data.history.map((tx: any) => ({
+            tx_hash: tx.tx_hash,
+            date: tx.created_at,
+            type: "In",
+            amount: tx.amount.toString(),
+            from_to: tx.donatur_address || t("anonymous", "Anonim"),
+          }));
+
+          // Urutkan dari yang terbaru
+          incomingDonations.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
           setWalletHistory(incomingDonations);
+
+          // 🔥 Ambil total donasi terkumpul dari total_balance
+          if (resIn.data.total_balance !== undefined) {
+            setTotalCollected(parseFloat(resIn.data.total_balance));
+          } else {
+            setTotalCollected(0);
+          }
         } else {
           setWalletHistory([]);
-        }
-
-        // 🔥 UBAH: Ambil data dari total_amount
-        if (amountRes && amountRes.data && amountRes.data.total_amount !== undefined) {
-          setTotalCollected(parseFloat(amountRes.data.total_amount));
-        } else {
           setTotalCollected(0);
         }
+
       } catch (err) {
         console.error("Gagal menarik riwayat donasi kampanye:", err);
+        setWalletHistory([]);
+        setTotalCollected(0);
       } finally {
         setLoadingHistory(false);
       }
@@ -282,7 +291,7 @@ function DetailContent() {
   const rawTarget = campaign?.target_amount || 1;
   const target = typeof rawTarget === 'string' ? parseFloat(rawTarget.replace(/[^\d.-]/g, '')) : rawTarget;
   
-  // 🔥 UBAH: Gunakan totalCollected dari API baru Anda
+  // Menggunakan totalCollected dari API backend (total_balance)
   const rawCollected = totalCollected !== null ? totalCollected : (campaign?.current_amount || 0);
   const collected = typeof rawCollected === 'string' ? parseFloat(rawCollected.replace(/[^\d.-]/g, '')) : rawCollected;
   

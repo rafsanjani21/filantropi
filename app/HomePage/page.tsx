@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation"; 
 import { useAuth } from "@/hooks/useAuth";
-import { apiFetch } from "@/lib/api"; // 🔥 Menggunakan apiFetch, bukan ethers
+import { ethers } from "ethers"; 
 import { useTranslation } from "react-i18next"; 
 
 export default function HomePage() {
@@ -22,7 +22,7 @@ export default function HomePage() {
   const [userProfile, setUserProfile] = useState<any>(null);
 
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const [balance, setBalance] = useState<string>("0.00"); // Default 0.00
+  const [balance, setBalance] = useState<string>("0.00"); 
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "warning" | "error" | "success" } | null>(null);
 
@@ -62,29 +62,55 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 🔥 FUNGSI FETCH BALANCE YANG SUDAH DIPERBARUI MENGGUNAKAN API BACKEND
+  const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || ""; 
+
   const fetchBalance = async () => {
-    if (!userProfile?.wallet_address) return;
+    if (!userProfile?.wallet_address || !CONTRACT_ADDRESS) return;
     
     const cleanWallet = userProfile.wallet_address.trim();
-
     setLoadingBalance(true);
+
     try {
-      // Hit API backend Anda langsung
-      const res = await apiFetch(`/donations/wallet/balance/${cleanWallet}`, { method: "GET" });
-      
-      if (res && res.data !== undefined) {
-        // Antisipasi jika backend mengirim object { balance: "..." } atau langsung string
-        const balanceData = typeof res.data === 'object' ? res.data.balance : res.data;
-        
-        // Format agar selalu menampilkan 2 angka desimal
-        setBalance(balanceData || "0");
-      } else {
-        setBalance("0.00");
+      // 🔥 LOGIKA BARU: Fallback Multi-RPC agar kebal dari error CORS
+      const rpcUrls = [
+        process.env.NEXT_PUBLIC_RPC_URL,
+        "https://polygon.rpc.thirdweb.com",
+        "https://polygon-bor-rpc.publicnode.com",
+        "https://rpc-mainnet.maticvigil.com"
+      ].filter(Boolean) as string[];
+
+      const minABI = [
+        "function balanceOf(address owner) view returns (uint256)",
+        "function decimals() view returns (uint8)"
+      ];
+
+      let rawBalance;
+      let decimals;
+
+      // Coba koneksi ke beberapa RPC bergantian
+      for (const url of rpcUrls) {
+        try {
+          const provider = new ethers.JsonRpcProvider(url);
+          const contract = new ethers.Contract(CONTRACT_ADDRESS, minABI, provider);
+          
+          rawBalance = await contract.balanceOf(cleanWallet);
+          decimals = await contract.decimals();
+          break; // Jika sukses, keluar dari loop
+        } catch (err) {
+          console.warn(`RPC ${url} diblokir/gagal, mencoba cadangan...`);
+        }
       }
+
+      if (rawBalance === undefined || decimals === undefined) {
+        throw new Error("Semua penyedia RPC gagal merespon permintaan.");
+      }
+
+      const formattedBalance = ethers.formatUnits(rawBalance, decimals);
+      setBalance(parseFloat(formattedBalance).toFixed(2));
+
     } catch (err) {
-      console.error("Gagal memuat saldo dari API:", err);
-      showToast(t("fail_fetch_balance"), "error");
+      console.error("Gagal memuat saldo dari blockchain:", err);
+      showToast(t("fail_fetch_balance", "Gagal menyinkronkan saldo dompet."), "error");
       setBalance("0.00");
     } finally {
       setLoadingBalance(false);

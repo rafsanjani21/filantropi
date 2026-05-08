@@ -13,15 +13,9 @@ export default function FccBalanceCard({ walletAddress }: FccBalanceCardProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  // 🔥 UBAH: Sesuaikan nama variabel dengan yang ada di .env.local
-  // Tambahkan || "" agar TypeScript tahu ini pasti string, bukan undefined
   const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || ""; 
-  
-  // URL Public RPC Polygon (Gratis, tidak butuh API Key)
-  const POLYGON_RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://polygon-rpc.com";
 
   const fetchBalance = async () => {
-    // 🔥 UBAH: Jangan lanjut jika alamat wallet kosong ATAU alamat contract belum diset di .env
     if (!walletAddress || !CONTRACT_ADDRESS) {
       setLoading(false);
       return;
@@ -31,27 +25,44 @@ export default function FccBalanceCard({ walletAddress }: FccBalanceCardProps) {
     setError(false);
 
     try {
-      // 1. Konek ke jaringan Polygon sebagai "Tamu" (Read-Only)
-      const provider = new ethers.JsonRpcProvider(POLYGON_RPC_URL);
+      // 🔥 LOGIKA BARU: Fallback Multi-RPC agar kebal dari error CORS
+      const rpcUrls = [
+        process.env.NEXT_PUBLIC_RPC_URL,
+        "https://polygon.rpc.thirdweb.com",
+        "https://polygon-bor-rpc.publicnode.com",
+        "https://rpc-mainnet.maticvigil.com"
+      ].filter(Boolean) as string[];
 
-      // 2. ABI minimal untuk membaca saldo ERC-20
       const minABI = [
         "function balanceOf(address owner) view returns (uint256)",
         "function decimals() view returns (uint8)"
       ];
 
-      // 3. Panggil Smart Contract Token FCC
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, minABI, provider);
+      let rawBalance;
+      let decimals;
 
-      // 4. Ambil saldo mentah dan jumlah desimal token
-      const rawBalance = await contract.balanceOf(walletAddress);
-      const decimals = await contract.decimals();
+      // Coba satu per satu sampai ada yang berhasil
+      for (const url of rpcUrls) {
+        try {
+          const provider = new ethers.JsonRpcProvider(url);
+          const contract = new ethers.Contract(CONTRACT_ADDRESS, minABI, provider);
+          
+          rawBalance = await contract.balanceOf(walletAddress);
+          decimals = await contract.decimals();
+          break; // Jika berhasil, hentikan loop
+        } catch (err) {
+          console.warn(`RPC ${url} gagal, mencoba cadangan...`);
+        }
+      }
 
-      // 5. Format angka (contoh: dari 1000000000000000000 menjadi 1.0)
+      // Jika semua RPC gagal
+      if (rawBalance === undefined || decimals === undefined) {
+        throw new Error("Semua koneksi RPC gagal merespon.");
+      }
+
       const formattedBalance = ethers.formatUnits(rawBalance, decimals);
-      
-      // Bulatkan ke 2 angka di belakang koma untuk UI
       setBalance(parseFloat(formattedBalance).toFixed(2));
+      
     } catch (err) {
       console.error("Gagal mengambil saldo dari blockchain:", err);
       setError(true);
@@ -69,7 +80,6 @@ export default function FccBalanceCard({ walletAddress }: FccBalanceCardProps) {
 
   return (
     <div className="bg-linear-to-r from-purple-600 to-[#7C3996] rounded-3xl p-5 text-white shadow-lg shadow-purple-200 mt-5 w-full max-w-sm mx-auto relative overflow-hidden">
-      {/* Efek Lingkaran Dekoratif */}
       <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
       
       <div className="relative z-10 flex items-center justify-between mb-4">
