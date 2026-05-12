@@ -18,6 +18,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Filantropi",
   description: "Web kebaikan berbasis blockchain",
+  // 🔥 Tambahkan ini agar sistem Next.js mengirim meta tag light mode
+  colorScheme: "light",
 };
 
 export default function RootLayout({
@@ -28,6 +30,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      // 🔥 Kunci paksa style root ke light
+      style={{ colorScheme: "light" }}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

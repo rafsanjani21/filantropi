@@ -8,7 +8,7 @@ import { ethers } from "ethers";
 import { AuthService } from "@/lib/auth.service"; 
 import { apiFetch } from "@/lib/api"; 
 import { useAuth } from "@/hooks/useAuth"; 
-import { useTranslation } from "react-i18next"; // 🔥 IMPORT I18N
+import { useTranslation } from "react-i18next"; 
 import { 
   ArrowLeft, ImageIcon, Type, Tag, Calendar, FileText, Save, 
   CheckCircle2, AlertCircle, BookOpen, Wallet, Lock
@@ -20,7 +20,9 @@ function KelolaProgramContent() {
   const id = searchParams.get("id"); 
 
   const { getProfile } = useAuth();
-  const { t } = useTranslation(); // 🔥 INISIALISASI I18N
+  const { t } = useTranslation(); 
+
+  const MAX_FILE_SIZE = 1048576; // Batas 1 MB
 
   const [loadingData, setLoadingData] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -48,7 +50,6 @@ function KelolaProgramContent() {
     wallet_address: "", 
   });
 
-  // 1. AMBIL DATA KAMPANYE & PROFIL
   useEffect(() => {
     const fetchData = async () => {
       if (!id || id === "undefined" || id === "null") {
@@ -110,15 +111,22 @@ function KelolaProgramContent() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  // 🔥 LOGIKA UBAH: Validasi 1 MB pada proses Ganti Banner
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      
+      if (file.size > MAX_FILE_SIZE) {
+        showToast("Maximum photo size is 1 MB!", "error");
+        e.target.value = ""; // Reset input
+        return;
+      }
+
       setSelectedFile(file);
       setPreviewUrl(URL.createObjectURL(file)); 
     }
   };
 
-  // 2. LOGIKA UPDATE DATA KE BACKEND
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -188,7 +196,6 @@ function KelolaProgramContent() {
         </div>
       )}
 
-      {/* NAVBAR */}
       <nav className="w-full px-6 pt-8 pb-4 flex items-center justify-between z-10">
         <button 
           onClick={() => router.back()}
@@ -202,13 +209,14 @@ function KelolaProgramContent() {
         <div className="w-10 h-10" /> 
       </nav>
 
-      {/* FORM CONTAINER */}
       <div className="flex-1 w-full bg-white/95 backdrop-blur-md rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] p-8 mt-4">
         <form onSubmit={handleSubmit} className="space-y-6">
 
-          {/* 1. UPLOAD BANNER */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-bold text-gray-700 ml-1">{t("campaign_banner_label", "Gambar Banner Kampanye")}</label>
+            <div className="flex justify-between items-center ml-1">
+              <label className="text-sm font-bold text-gray-700">{t("campaign_banner_label", "Gambar Banner Kampanye")}</label>
+              <span className="text-[10px] text-gray-400 font-medium">Maks. 1 MB</span>
+            </div>
             <label className="relative flex flex-col items-center justify-center w-full h-48 bg-gray-50 border-2 border-dashed border-purple-200 rounded-2xl cursor-pointer hover:bg-purple-50 hover:border-purple-400 transition-all overflow-hidden group">
               {previewUrl ? (
                 <>
@@ -230,7 +238,6 @@ function KelolaProgramContent() {
             <p className="text-[10px] text-gray-400 ml-1">{t("leave_blank_to_keep_image", "*Biarkan kosong jika tidak ingin mengubah gambar lama.")}</p>
           </div>
 
-          {/* 2. INPUT JUDUL */}
           <InputField 
             label={`${t("campaign_title_label", "Judul Kampanye")} *`} 
             value={form.title} onChange={(e: any) => handleChange("title", e.target.value)} 
@@ -238,7 +245,6 @@ function KelolaProgramContent() {
             required 
           />
 
-          {/* 3. INPUT WALLET ADDRESS (HANYA INDIVIDU & DIKUNCI READONLY) */}
           {beneficiaryType === "individual" && (
             <div className="flex flex-col gap-1.5 w-full">
               <label className="text-sm font-bold text-gray-700 ml-1">{t("wallet_address_label", "Alamat Wallet")}</label>
@@ -262,7 +268,6 @@ function KelolaProgramContent() {
             </div>
           )}
 
-          {/* 4. PILIH KATEGORI */}
           <div className="flex flex-col gap-1.5 w-full">
             <label className="text-sm font-bold text-gray-700 ml-1">{t("category_label_req", "Kategori *")}</label>
             <div className="group flex items-center bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 transition-all duration-300 focus-within:bg-white focus-within:border-purple-400 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)]">
@@ -282,7 +287,6 @@ function KelolaProgramContent() {
             </div>
           </div>
 
-          {/* 5. TARGET & BATAS WAKTU */}
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5 w-full">
               <label className="text-sm font-bold text-gray-700 ml-1">{t("target_amount_label_req", "Target Dana *")}</label>
@@ -305,7 +309,6 @@ function KelolaProgramContent() {
             />
           </div>
 
-          {/* 6. TEXTAREA DESKRIPSI SINGKAT */}
           <div className="flex flex-col gap-1.5 w-full">
             <label className="text-sm font-bold text-gray-700 ml-1">{t("short_desc_label_req", "Deskripsi Singkat *")}</label>
             <div className="group flex items-start bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 transition-all duration-300 focus-within:bg-white focus-within:border-purple-400 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)]">
@@ -321,7 +324,6 @@ function KelolaProgramContent() {
             </div>
           </div>
 
-          {/* 7. TEXTAREA STORY (CERITA LENGKAP) */}
           <div className="flex flex-col gap-1.5 w-full">
             <label className="text-sm font-bold text-gray-700 ml-1">{t("story_label_req", "Cerita Detail Kampanye *")}</label>
             <div className="group flex items-start bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 transition-all duration-300 focus-within:bg-white focus-within:border-purple-400 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)]">
@@ -337,7 +339,6 @@ function KelolaProgramContent() {
             </div>
           </div>
 
-          {/* SUBMIT BUTTON */}
           <button
             type="submit"
             disabled={submitLoading}
@@ -359,7 +360,6 @@ function KelolaProgramContent() {
   );
 }
 
-// Komponen Input Lokal
 function InputField({ label, value, onChange, icon, placeholder, type = "text", required = false }: any) {
   return (
     <div className="flex flex-col gap-1.5 w-full">

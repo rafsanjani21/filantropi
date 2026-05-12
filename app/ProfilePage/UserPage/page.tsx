@@ -17,6 +17,8 @@ export default function UserPage() {
   const { t } = useTranslation();
 
   const BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
+  // Batas Maksimal File: 1 MB
+  const MAX_FILE_SIZE = 1048576;
 
   const [isEditing, setIsEditing] = useState(false);
   const [isNew, setIsNew] = useState(false);
@@ -80,9 +82,17 @@ export default function UserPage() {
     }
   };
 
+  // 🔥 LOGIKA UBAH: Validasi 1 MB
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       const selectedFile = e.target.files[0];
+      
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        showToast("Maximum photo size is 1 MB!", "error");
+        e.target.value = ""; // Reset input
+        return;
+      }
+
       setFile(selectedFile);
       setPreview(URL.createObjectURL(selectedFile));
     }
@@ -95,7 +105,6 @@ export default function UserPage() {
     setIsEditing(false); 
   };
 
-  // SUBMIT (Pendaftaran Baru ATAU Pembaruan Data) disamakan dengan PagePenerima
   const handleSubmit = async () => {
     if (!form.name || !form.wallet) {
       showToast(t("name_wallet_required"), "error");
@@ -105,31 +114,24 @@ export default function UserPage() {
     setLoading(true);
 
     try {
-      // 1. Siapkan FormData persis seperti PagePenerima
       const formData = new FormData();
       formData.append("full_name", form.name);
       formData.append("wallet_address", form.wallet);
-      formData.append("role", "user"); // Role wajib disertakan
+      formData.append("role", "user"); 
 
-      // Jika ada gambar, masukkan ke FormData
       if (file) {
         formData.append("photo_profile", file);
       }
 
       if (isNew) {
-        // ==========================================
-        // PENDAFTARAN USER BARU (Dengan Foto)
-        // ==========================================
         const idToken = sessionStorage.getItem("id_token");
         if (!idToken) throw new Error(t("access_denied_relogin"));
 
         formData.append("id_token", idToken);
 
-        // 🔥 PERBAIKAN FATAL: URL harus persis "/api/auth/register/donor"
         const res = await fetch(`${BASE_URL}/api/auth/register/donor`, {
           method: "POST",
           body: formData 
-          // JANGAN atur Content-Type manual, browser akan mengisinya otomatis untuk FormData
         });
 
         const text = await res.text();
@@ -142,7 +144,6 @@ export default function UserPage() {
 
         if (!res.ok) throw new Error(data.message || `Error Server: ${res.status}`);
         
-        // Simpan token untuk login otomatis
         localStorage.setItem("access_token", data.data?.access_token || data.access_token);
         localStorage.setItem("refresh_token", data.data?.refresh_token || data.refresh_token);
 
@@ -156,10 +157,6 @@ export default function UserPage() {
         }, 1500);
 
       } else {
-        // ==========================================
-        // PEMBARUAN PROFIL (USER LAMA)
-        // ==========================================
-        // Menggunakan updateProfile dari useAuth
         await updateProfile(formData, "donor"); 
 
         setOriginalForm(form);
@@ -206,7 +203,6 @@ export default function UserPage() {
 
         <div className="w-full bg-white/95 backdrop-blur-md rounded-[2.5rem] p-8 shadow-xl border border-white/40">
           
-          {/* 🔥 UI FOTO PROFIL Disamakan dengan PagePenerima */}
           <div className="flex flex-col items-center justify-center mb-8">
             <label htmlFor="photo-upload" className={`relative group ${isEditing ? "cursor-pointer" : ""}`}>
               {isEditing && (
@@ -292,7 +288,6 @@ export default function UserPage() {
   );
 }
 
-// Komponen Input
 function InputField({ label, value, onChange, icon, placeholder, disabled }: any) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -304,11 +299,9 @@ function InputField({ label, value, onChange, icon, placeholder, disabled }: any
           ? "bg-gray-50/50 border-transparent" 
           : "bg-gray-50 border-gray-100 focus-within:bg-white focus-within:border-purple-400 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)] group"
       }`}>
-        
         <div className={`transition-colors duration-300 ${disabled ? "text-gray-300" : "text-gray-400 group-focus-within:text-purple-600"}`}>
           {icon}
         </div>
-        
         <input
           value={value}
           onChange={onChange}

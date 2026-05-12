@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next"; // 🔥 Import Hook
 import { 
   User, Wallet, Save, Phone, MapPin, 
   FileText, CreditCard, Calendar, Briefcase, Building, Camera, Edit3, X,
-  CheckCircle2, AlertCircle, Scale, ShieldCheck, AlertTriangle, Image as ImageIcon
+  CheckCircle2, AlertCircle, Scale, ShieldCheck, AlertTriangle, Image as ImageIcon, Lock
 } from "lucide-react";
 
 const toTitleCase = (str: string) => {
@@ -22,7 +22,7 @@ const toTitleCase = (str: string) => {
 export default function PagePenerima() {
   const router = useRouter();
   const { getProfile, updateProfile } = useAuth();
-  const { t } = useTranslation(); // 🔥 Panggil fungsi t
+  const { t } = useTranslation(); 
 
   const [loading, setLoading] = useState(false);
   const [tipePenerima, setTipePenerima] = useState<string>("perorangan"); 
@@ -73,6 +73,9 @@ export default function PagePenerima() {
 
   const [originalForm, setOriginalForm] = useState(form);
   const BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
+
+  // Batas Maksimal File: 1 MB (dalam satuan Bytes)
+  const MAX_FILE_SIZE = 1048576;
 
   useEffect(() => {
     const idToken = sessionStorage.getItem("id_token");
@@ -209,17 +212,33 @@ export default function PagePenerima() {
     setForm((prev) => ({ ...prev, [field]: newVal }));
   };
 
+  // 🔥 LOGIKA UBAH: Validasi 1 MB pada Foto Profil
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      
+      if (file.size > MAX_FILE_SIZE) {
+        showToast(t("err_max_file_size", "Maximum photo size is 1 MB!"), "error");
+        e.target.value = ""; // Reset input
+        return;
+      }
+
       setSelectedFile(file); 
       setPreviewUrl(URL.createObjectURL(file)); 
     }
   };
 
+  // 🔥 LOGIKA UBAH: Validasi 1 MB pada Foto KTP
   const handleKtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      
+      if (file.size > MAX_FILE_SIZE) {
+        showToast(t("err_max_file_size_ktp", "Maximum photo size is 1 MB!"), "error");
+        e.target.value = ""; // Reset input
+        return;
+      }
+
       setSelectedKtp(file); 
       setPreviewKtp(URL.createObjectURL(file)); 
     }
@@ -254,7 +273,7 @@ export default function PagePenerima() {
 
       const formData = new FormData();
       formData.append("full_name", form.name);
-      formData.append("wallet_address", form.wallet);
+      formData.append("wallet_address", tipePenerima === "organisasi" ? "" : form.wallet);
       formData.append("role", "beneficiary");
       formData.append("beneficiary_type", typeStr);
       formData.append("phone_number", form.phone_number);
@@ -446,11 +465,21 @@ export default function PagePenerima() {
               error={errors.phone_number} 
             />
 
-            <InputField 
-              label={t("wallet_address_polygon_label")} value={form.wallet} onChange={(e: any) => handleChange("wallet", e.target.value)} 
-              icon={<Wallet size={18} />} placeholder="0x..." 
-              disabled={!isEditing}
-            />
+            {tipePenerima === "perorangan" && (
+              <div className="flex flex-col gap-1 w-full">
+                <InputField 
+                  label={t("wallet_address_polygon_label")} 
+                  value={form.wallet} 
+                  onChange={() => {}} 
+                  icon={<Wallet size={18} />} 
+                  placeholder="Memuat dari profil..." 
+                  disabled={true} 
+                />
+                <p className="text-[10px] text-gray-400 font-medium ml-2 -mt-1 flex items-center gap-1">
+                  <Lock size={10} /> Alamat dompet terhubung otomatis dari sistem dan tidak dapat diubah.
+                </p>
+              </div>
+            )}
 
             <TextAreaField 
               label={tipePenerima === "perorangan" ? t("home_address_label") : t("office_address_label")} 
@@ -487,11 +516,14 @@ export default function PagePenerima() {
               error={errors.nik} 
             />
 
-            {/* FOTO KTP */}
+            {/* FOTO KTP DENGAN PANDUAN UKURAN */}
             <div className="flex flex-col gap-1 w-full mt-2">
-              <label className={`text-sm font-bold ml-1 transition-colors ${!isEditing ? "text-gray-500" : "text-gray-700"}`}>
-                {t("upload_ktp_image")}
-              </label>
+              <div className="flex justify-between items-center ml-1">
+                <label className={`text-sm font-bold transition-colors ${!isEditing ? "text-gray-500" : "text-gray-700"}`}>
+                  {t("upload_ktp_image")}
+                </label>
+                <span className="text-[10px] text-gray-400 font-medium">Maks. 1 MB</span>
+              </div>
               <label className={`relative flex flex-col items-center justify-center w-full h-40 bg-gray-50 border-2 border-dashed rounded-2xl transition-all overflow-hidden ${!isEditing ? "border-transparent cursor-not-allowed opacity-70" : "border-purple-200 cursor-pointer hover:bg-purple-50 hover:border-purple-400 group"}`}>
                 {previewKtp ? (
                   <>

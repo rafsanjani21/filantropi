@@ -19,10 +19,10 @@ export default function GalangPage() {
   const { createCampaign, getProfile, loading: authLoading } = useAuth(); 
   const { t } = useTranslation(); 
 
+  const MAX_FILE_SIZE = 1048576; // Batas 1 MB
+
   const [isCheckingAccess, setIsCheckingAccess] = useState(true);
   const [isBlocked, setIsBlocked] = useState(false);
-  
-  // 🔥 STATE BARU: Untuk mengecek is_verified (0 atau 1)
   const [isUnverified, setIsUnverified] = useState(false);
 
   const [beneficiaryType, setBeneficiaryType] = useState<string>("");
@@ -50,18 +50,14 @@ export default function GalangPage() {
     const checkAccess = async () => {
       try {
         const profile = await getProfile("beneficiary");
-        
-        // 🔥 LOGIKA BARU: Cek is_verified (0 = belum, 1 = sudah)
         const isVerified = Number(profile?.is_verified || 0);
         
-        // Jika is_verified adalah 0, blokir akses!
         if (isVerified === 0) {
           setIsUnverified(true);
           setIsCheckingAccess(false);
-          return; // Hentikan fungsi di sini
+          return; 
         }
 
-        // Lanjut eksekusi normal jika sudah terverifikasi
         const type = profile?.beneficiary_type?.toLowerCase();
         const isIndividual = type === "individu" || type === "individual";
         
@@ -92,9 +88,17 @@ export default function GalangPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  // 🔥 LOGIKA UBAH: Validasi 1 MB pada Banner
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      
+      if (file.size > MAX_FILE_SIZE) {
+        showToast("Maximum photo size is 1 MB!", "error");
+        e.target.value = ""; // Reset input
+        return;
+      }
+
       setSelectedFile(file);
       setPreviewUrl(URL.createObjectURL(file));
     }
@@ -108,7 +112,6 @@ export default function GalangPage() {
       return;
     }
 
-    // 🔥 VALIDASI WALLET HANYA UNTUK INDIVIDU
     if (beneficiaryType === "individual") {
       if (!ethers.isAddress(form.wallet_address.trim())) {
         showToast(t("invalid_wallet_error", "Alamat wallet tidak valid!"), "error");
@@ -125,7 +128,6 @@ export default function GalangPage() {
       formData.append("target_amount", form.target_amount);
       formData.append("end_date", form.end_date); 
       
-      // 🔥 JIKA INDIVIDU, KIRIM WALLET. JIKA LEMBAGA, KOSONGKAN.
       if (beneficiaryType === "individual") {
         formData.append("wallet_address", form.wallet_address.trim()); 
       } else {
@@ -148,7 +150,6 @@ export default function GalangPage() {
     }
   };
 
-  // 1. LAYAR LOADING
   if (isCheckingAccess) {
     return (
       <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col items-center justify-center bg-linear-to-b from-[#7C3996] to-[#b359d4]">
@@ -158,7 +159,6 @@ export default function GalangPage() {
     );
   }
 
-  // 2. LAYAR JIKA AKUN BELUM DIVERIFIKASI ADMIN (is_verified === 0)
   if (isUnverified) {
     return (
       <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-b from-amber-500 to-orange-500 shadow-2xl relative">
@@ -193,7 +193,6 @@ export default function GalangPage() {
     );
   }
 
-  // 3. LAYAR JIKA INDIVIDU SUDAH MENCAPAI LIMIT KAMPANYE
   if (isBlocked) {
     return (
       <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-b from-[#7C3996] to-[#b359d4] shadow-2xl relative">
@@ -228,7 +227,6 @@ export default function GalangPage() {
     );
   }
 
-  // 4. LAYAR UTAMA PEMBUATAN KAMPANYE
   return (
     <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-b from-[#7C3996] to-[#b359d4] shadow-2xl relative overflow-x-hidden">
       
@@ -267,7 +265,10 @@ export default function GalangPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-bold text-gray-700 ml-1">{t("campaign_banner_label", "Banner Kampanye")}</label>
+            <div className="flex justify-between items-center ml-1">
+              <label className="text-sm font-bold text-gray-700">{t("campaign_banner_label", "Banner Kampanye")}</label>
+              <span className="text-[10px] text-gray-400 font-medium">Maks. 1 MB</span>
+            </div>
             <label className="relative flex flex-col items-center justify-center w-full h-48 bg-gray-50 border-2 border-dashed border-purple-200 rounded-2xl cursor-pointer hover:bg-purple-50 hover:border-purple-400 transition-all overflow-hidden group">
               {previewUrl ? (
                 <>
@@ -296,7 +297,6 @@ export default function GalangPage() {
             required 
           />
 
-          {/* 🔥 HANYA TAMPILKAN INPUT WALLET JIKA INDIVIDU (READONLY/LOCKED) 🔥 */}
           {beneficiaryType === "individual" && (
             <div className="flex flex-col gap-1.5 w-full">
               <label className="text-sm font-bold text-gray-700 ml-1">{t("wallet_address_label", "Alamat Wallet")}</label>
@@ -311,7 +311,6 @@ export default function GalangPage() {
                   placeholder="Memuat wallet dari profil..."
                   className="ml-3 w-full bg-transparent outline-none text-gray-600 font-mono text-sm cursor-not-allowed"
                 />
-                {/* Ikon Gembok sebagai indikator terkunci */}
                 <Lock size={16} className="text-gray-400 ml-2 shrink-0" />
               </div>
               <p className="text-[10px] text-gray-500 font-medium ml-1 flex items-center gap-1 mt-1">

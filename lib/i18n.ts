@@ -212,7 +212,7 @@ const resources = {
         // Halaman Login
       choose_role: "Pilih Peran Akun",
       beneficiary: "Penerima Manfaat",
-      general_user: "Pengguna Umum",
+      general_user: "Filantropis",
       
       // Halaman Awalan
       welcome_headline: "Kebaikan Tanpa Batas",
@@ -558,7 +558,7 @@ no_progress_yet: "No Progress Yet",
         // Login Page
       choose_role: "Select Account Role",
       beneficiary: "Beneficiary",
-      general_user: "General User",
+      general_user: "Philanthropist",
 
       // Onboarding Page
       welcome_headline: "Limitless Kindness",
