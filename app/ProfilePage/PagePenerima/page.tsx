@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next"; // 🔥 Import Hook
 import { 
   User, Wallet, Save, Phone, MapPin, 
   FileText, CreditCard, Calendar, Briefcase, Building, Camera, Edit3, X,
-  CheckCircle2, AlertCircle, Scale, ShieldCheck, AlertTriangle, Image as ImageIcon, Lock
+  CheckCircle2, AlertCircle, Scale, ShieldCheck, AlertTriangle, Image as ImageIcon
 } from "lucide-react";
 
 const toTitleCase = (str: string) => {
@@ -212,13 +212,12 @@ export default function PagePenerima() {
     setForm((prev) => ({ ...prev, [field]: newVal }));
   };
 
-  // 🔥 LOGIKA UBAH: Validasi 1 MB pada Foto Profil
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       
       if (file.size > MAX_FILE_SIZE) {
-        showToast(t("err_max_file_size", "Maximum photo size is 1 MB!"), "error");
+        showToast("Maximum photo size is 1 MB!", "error");
         e.target.value = ""; // Reset input
         return;
       }
@@ -228,13 +227,12 @@ export default function PagePenerima() {
     }
   };
 
-  // 🔥 LOGIKA UBAH: Validasi 1 MB pada Foto KTP
   const handleKtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       
       if (file.size > MAX_FILE_SIZE) {
-        showToast(t("err_max_file_size_ktp", "Maximum photo size is 1 MB!"), "error");
+        showToast("Maximum photo size is 1 MB!", "error");
         e.target.value = ""; // Reset input
         return;
       }
@@ -266,6 +264,12 @@ export default function PagePenerima() {
       return;
     }
 
+    // Validasi tambahan jika perorangan, wallet wajib diisi
+    if (tipePenerima === "perorangan" && !form.wallet.trim()) {
+      showToast(t("name_wallet_required", "Nama dan Wallet wajib diisi!"), "error");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -273,7 +277,10 @@ export default function PagePenerima() {
 
       const formData = new FormData();
       formData.append("full_name", form.name);
-      formData.append("wallet_address", tipePenerima === "organisasi" ? "" : form.wallet);
+      
+      // 🔥 LOGIKA BARU: Jika individu, kirim wallet dari inputan form. Jika organisasi, kirim kosong.
+      formData.append("wallet_address", tipePenerima === "organisasi" ? "" : form.wallet.trim());
+      
       formData.append("role", "beneficiary");
       formData.append("beneficiary_type", typeStr);
       formData.append("phone_number", form.phone_number);
@@ -465,20 +472,16 @@ export default function PagePenerima() {
               error={errors.phone_number} 
             />
 
+            {/* 🔥 LOGIKA BARU: Tampilkan input Wallet untuk Individu & BISA DIEDIT SAAT IS-EDITING AKTIF */}
             {tipePenerima === "perorangan" && (
-              <div className="flex flex-col gap-1 w-full">
-                <InputField 
-                  label={t("wallet_address_polygon_label")} 
-                  value={form.wallet} 
-                  onChange={() => {}} 
-                  icon={<Wallet size={18} />} 
-                  placeholder="Memuat dari profil..." 
-                  disabled={true} 
-                />
-                <p className="text-[10px] text-gray-400 font-medium ml-2 -mt-1 flex items-center gap-1">
-                  <Lock size={10} /> Alamat dompet terhubung otomatis dari sistem dan tidak dapat diubah.
-                </p>
-              </div>
+              <InputField 
+                label={t("wallet_address_polygon_label")} 
+                value={form.wallet} 
+                onChange={(e: any) => handleChange("wallet", e.target.value)} 
+                icon={<Wallet size={18} />} 
+                placeholder="0x..." 
+                disabled={!isEditing} // Bisa diedit saat daftar/edit
+              />
             )}
 
             <TextAreaField 
