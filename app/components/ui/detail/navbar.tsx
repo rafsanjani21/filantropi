@@ -1,55 +1,90 @@
 "use client";
 
-import "@/lib/i18n"; // 🔥 Proteksi i18n
+import "@/lib/i18n";
+
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next"; // 🔥 Import Hook
+import { ArrowLeft, Share2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function NavbarDetail() {
   const router = useRouter();
-  const { t } = useTranslation(); // 🔥 Panggil fungsi t
+  const { t } = useTranslation();
+
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      setIsScrolled(window.scrollY > 80);
     };
 
     window.addEventListener("scroll", handleScroll);
+
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          url: window.location.href,
+        });
+      } catch {}
+    }
+  };
+
   return (
-    <nav className={`fixed max-w-lg w-full top-0 left-1/2 -translate-x-1/2 z-50 px-6 pt-8 pb-4 flex items-center justify-between transition-all duration-300 ${
-      isScrolled 
-        ? "bg-[#7C3996] shadow-md pointer-events-auto" 
-        : "bg-transparent pointer-events-none"
-    }`}>
-      
-      <button 
-        onClick={() => router.back()} 
-        className={`w-10 h-10 flex items-center justify-center rounded-full text-white transition-all active:scale-95 pointer-events-auto cursor-pointer ${
-          isScrolled 
-            ? "bg-white/20 hover:bg-white/30" 
-            : "bg-black/20 backdrop-blur-md hover:bg-black/40" 
+    <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-lg z-50 pointer-events-none">
+
+      <nav
+        className={`mx-4 mt-4 rounded-2xl transition-all duration-500
+        ${
+          isScrolled
+            ? "bg-white/80 backdrop-blur-2xl border border-white/30 shadow-xl"
+            : "bg-transparent"
         }`}
       >
-        <ArrowLeft className="w-5 h-5" />
-      </button>
+        <div className="h-16 px-4 flex items-center justify-between">
 
-      <h1 className={`text-lg text-white font-bold tracking-wide pointer-events-auto transition-all duration-300 ${
-        isScrolled ? "drop-shadow-none" : "drop-shadow-md"
-      }`}>
-        {t("campaign_detail")}
-      </h1>
+          {/* BACK */}
+          <button
+            onClick={() => router.back()}
+            className={`pointer-events-auto
+            w-11
+            h-11
+            rounded-full
+            flex
+            items-center
+            justify-center
+            transition-all
+            duration-300
+            active:scale-90
+            ${
+              isScrolled
+                ? "bg-white text-gray-800 shadow-lg"
+                : "bg-black/30 backdrop-blur-md text-white border border-white/20"
+            }`}
+          >
+            <ArrowLeft size={20} />
+          </button>
 
-      <div className="w-10 h-10" />
-      
-    </nav>
+          {/* TITLE */}
+          <div
+            className={`absolute left-1/2 -translate-x-1/2 transition-all duration-500
+            ${
+              isScrolled
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 -translate-y-3"
+            }`}
+          >
+            <h2 className="font-bold text-gray-800 text-base">
+              {t("campaign_detail", "Detail Kampanye")}
+            </h2>
+          </div>
+
+        </div>
+      </nav>
+
+    </div>
   );
 }

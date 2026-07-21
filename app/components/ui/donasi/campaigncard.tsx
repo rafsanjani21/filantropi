@@ -2,73 +2,47 @@
 
 import "@/lib/i18n"; 
 import Link from "next/link";
-import { Clock } from "lucide-react";
-import { useState, useEffect } from "react";
-import { apiFetch } from "@/lib/api";
+import { Clock, Infinity } from "lucide-react"; // 🔥 Tambahkan Infinity
+import { useState } from "react";
 import { useTranslation } from "react-i18next"; 
 
+// 🔥 1. PERBAIKAN PROPS: Izinkan target dan daysLeft menerima null
 type CampaignCardProps = {
   id: string | number;
   image: string;
   foundation: string;
   title: string;
   collected: string | number;
-  target: string | number;
+  target: string | number | null; 
   progress: number;
-  daysLeft: number;
-  category: string;
-  walletAddress?: string; 
+  daysLeft: number | null; 
+  category: string; 
 };
 
 export default function CampaignCard({
-  id, image, foundation, title, collected, target, progress, daysLeft, category, walletAddress
+  id, image, foundation, title, collected, target, progress, daysLeft, category
 }: CampaignCardProps) {
   
   const { t } = useTranslation(); 
-  
-  // 🔥 UBAH 1: Ganti nama state menjadi totalCollectedAmount
-  const [totalCollectedAmount, setTotalCollectedAmount] = useState<number | null>(null);
+  const [totalCollectedAmount] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (!walletAddress) return;
-    const fetchTotalAmount = async () => {
-      try {
-        // 🔥 UBAH 2: Tembak ke endpoint /donations/amount/:wallet
-        const res = await apiFetch(`/donations/amount/${walletAddress}`, { method: "GET" });
-        
-        // 🔥 UBAH 3: Ekstrak data dari atribut total_amount
-        if (res && res.data && res.data.total_amount !== undefined) {
-          setTotalCollectedAmount(parseFloat(res.data.total_amount));
-        }
-      } catch (e) {
-        console.warn("Gagal menarik total donasi di CampaignCard:", e);
-      }
-    };
-    fetchTotalAmount();
-  }, [walletAddress]);
+  // 🔥 2. LOGIKA UNLIMITED
+  const isUnlimitedTarget = target === null || target === 0 || target === "";
+  const isUnlimitedTime = daysLeft === null;
 
-  const parsedCollected = typeof collected === 'string' ? parseFloat(collected.replace(/[^\d.-]/g, '')) : collected;
-  const parsedTarget = typeof target === 'string' ? parseFloat(target.replace(/[^\d.-]/g, '')) : target;
-
-  // 🔥 UBAH 4: Gunakan state totalCollectedAmount
+  const parsedCollected = typeof collected === 'string' ? parseFloat(String(collected).replace(/[^\d.-]/g, '')) : collected;
   const displayCollected = totalCollectedAmount !== null ? totalCollectedAmount : Number(parsedCollected || 0);
-  const numTarget = Number(parsedTarget || 1);
   
-  const calculateProgress = () => {
-    if (numTarget === 0) return 0;
-    const percent = (displayCollected / numTarget) * 100;
-    if (percent >= 100) return 100;
-    if (percent > 99) return percent.toFixed(1);
-    return Math.floor(percent);
-  };
-  const displayProgress = calculateProgress();
+  // Jika unlimited target, set target ke 1 agar tidak error pembagian
+  const numTarget = isUnlimitedTarget ? 1 : (typeof target === 'string' ? parseFloat(String(target).replace(/[^\d.-]/g, '')) : Number(target));
 
   return (
     <Link href={`/DetailPage?slug=${id}`} className="w-full block transition-transform active:scale-95">
       <div className="w-full rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 flex flex-col hover:shadow-md transition-shadow">
         <div className="relative w-full h-44">
           <img src={image} alt={title} className="w-full h-full object-cover" />
-          {daysLeft > 0 && daysLeft < 6 && (
+          {/* Badge Urgent hanya jika bukan unlimited time dan mendekati deadline */}
+          {!isUnlimitedTime && (daysLeft as number) > 0 && (daysLeft as number) < 6 && (
             <div className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm animate-pulse">
               {t("urgent")}
             </div>
@@ -93,22 +67,37 @@ export default function CampaignCard({
               <div className="flex flex-col">
                 <span className="text-xs text-gray-400 font-medium mb-0.5">{t("collected_card")}</span>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-sm font-bold text-purple-700">{displayCollected} FCC</span>
-                  <span className="text-[10px] text-gray-400 font-normal">{t("from")} {numTarget} FCC</span>
+                  <span className="text-sm font-bold text-purple-700">Rp {displayCollected.toLocaleString("id-ID")}</span>
+                  {!isUnlimitedTarget && (
+                    <span className="text-[10px] text-gray-400 font-normal">{t("from")} Rp {numTarget.toLocaleString("id-ID")}</span>
+                  )}
                 </div>
               </div>
-              <span className="text-sm font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100">{displayProgress}%</span>
+              {!isUnlimitedTarget && (
+                <span className="text-sm font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100">{progress}%</span>
+              )}
             </div>
 
-            <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden border border-gray-50">
-              <div className="h-full bg-purple-700 rounded-full transition-all duration-1000 ease-out" style={{ width: `${displayProgress}%` }} />
-            </div>
+            {!isUnlimitedTarget && (
+              <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden border border-gray-50">
+                <div className="h-full bg-purple-700 rounded-full transition-all duration-1000 ease-out" style={{ width: `${progress}%` }} />
+              </div>
+            )}
 
             <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-50">
                <span className="text-xs text-gray-400 font-medium">{t("time_limit")}</span>
-               <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold ${daysLeft <= 5 && daysLeft > 0 ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-gray-50 text-gray-600 border border-gray-100'}`}>
-                 <Clock size={12} className={daysLeft <= 5 && daysLeft > 0 ? "text-red-500" : "text-gray-400"} />
-                 {daysLeft > 0 ? `${t("remaining")} ${daysLeft} ${t("days")}` : t("has_ended")}
+               <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold ${!isUnlimitedTime && (daysLeft as number) <= 5 && (daysLeft as number) > 0 ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-gray-50 text-gray-600 border border-gray-100'}`}>
+                 {isUnlimitedTime ? (
+                   <>
+                     <Infinity size={14} className="text-purple-500" />
+                     <span className="text-purple-600">Tanpa Batas</span>
+                   </>
+                 ) : (
+                   <>
+                     <Clock size={12} className={(daysLeft as number) <= 5 && (daysLeft as number) > 0 ? "text-red-500" : "text-gray-400"} />
+                     {(daysLeft as number) > 0 ? `${t("remaining")} ${daysLeft} ${t("days")}` : t("has_ended")}
+                   </>
+                 )}
                </div>
             </div>
           </div>

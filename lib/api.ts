@@ -2,7 +2,7 @@
 export const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export async function apiFetch(endpoint: string, options: RequestInit) {
-  let access_token = localStorage.getItem("access_token") || localStorage.getItem("admin_token");
+  const access_token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token") || localStorage.getItem("admin_token");
 
   const noAuthEndpoints = [
     "/auth/login",
@@ -11,7 +11,9 @@ export async function apiFetch(endpoint: string, options: RequestInit) {
     "/auth/logout",
   ];
 
-  const isNoAuth = noAuthEndpoints.some((url) => endpoint.includes(url));
+  const isPublicCampaignRead = options.method === "GET" && (endpoint === "/campaigns/" || (/^\/campaigns\/[^/]+$/.test(endpoint) && endpoint !== "/campaigns/me"));
+  const isPublicDonationRead = options.method === "GET" && (endpoint.startsWith("/donations/in/") || endpoint.startsWith("/donations/amount/"));
+  const isNoAuth = isPublicCampaignRead || isPublicDonationRead || noAuthEndpoints.some((url) => endpoint.includes(url));
   const isFormData = options.body instanceof FormData;
 
   const doFetch = async (token: string | null) => {
@@ -32,28 +34,32 @@ export async function apiFetch(endpoint: string, options: RequestInit) {
 
   // 🔥 HANDLE TOKEN EXPIRED
   if (res.status === 401 && !isNoAuth) {
-    const refresh_token = localStorage.getItem("refresh_token") || localStorage.getItem("admin_refresh_token");
+    const refresh_token = localStorage.getItem("refresh_token") || sessionStorage.getItem("refresh_token") || localStorage.getItem("admin_refresh_token");
 
     // 🔥 FUNGSI BANTUAN UNTUK LOGOUT PAKSA + NOTIFIKASI
     const forceLogout = () => {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-      localStorage.removeItem("admin_token");
-      localStorage.removeItem("admin_refresh_token");
-      sessionStorage.clear();
+  // 1. DAFTARKAN HALAMAN YANG BOLEH TANPA TOKEN
+  const allowedPaths = [
+    "/LoginPage", 
+    "/LoginPage/Masuk", 
+    "/ProfilePage/PagePenerima/Tipe", // 🔥 TAMBAHKAN INI
+    "/ProfilePage/UserPage"            // 🔥 TAMBAHKAN INI
+  ];
 
-      // Munculkan notifikasi ke user
-      alert("Sesi Anda telah habis. Silakan login kembali untuk melanjutkan.");
+  // 2. CEK APAKAH USER SEDANG DI HALAMAN PENDAFTARAN
+  const isAllowed = allowedPaths.some(path => window.location.pathname.startsWith(path));
 
-      // Cek apakah ini halaman admin atau user biasa
-      if (typeof window !== "undefined") {
-        if (window.location.pathname.startsWith("/admin")) {
-          window.location.href = "/admin/login";
-        } else {
-          window.location.href = "/LoginPage/Masuk";
-        }
-      }
-    };
+  // 3. JIKA SEDANG DI HALAMAN PENDAFTARAN, JANGAN LOGOUT!
+  if (isAllowed) return;
+
+  // 4. LOGOUT HANYA JIKA BUKAN DI HALAMAN PENDAFTARAN
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("refresh_token");
+  sessionStorage.clear();
+  
+  alert("Sesi Anda telah habis. Silakan login kembali.");
+  window.location.href = "/LoginPage/Masuk";
+};
 
     // Jika tidak ada refresh token sama sekali
     if (!refresh_token) {
@@ -79,6 +85,8 @@ export async function apiFetch(endpoint: string, options: RequestInit) {
       // Cek nyimpannya harus sebagai admin_token atau access_token
       if (localStorage.getItem("admin_token")) {
         localStorage.setItem("admin_token", newToken);
+      } else if (sessionStorage.getItem("access_token")) {
+        sessionStorage.setItem("access_token", newToken);
       } else {
         localStorage.setItem("access_token", newToken);
       }
@@ -103,7 +111,7 @@ export async function apiFetch(endpoint: string, options: RequestInit) {
   }
 
   if (!res.ok) {
-    throw new Error(data.message || "API Error");
+    throw new Error(`${res.status} ${endpoint}: ${data.message || data.error || "API Error"}`);
   }
 
   return data;

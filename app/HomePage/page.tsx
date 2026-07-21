@@ -1,30 +1,35 @@
 "use client";
 
-import "@/lib/i18n"; 
-import { HandCoins, Heart, Lock, AlertCircle, Wallet, RefreshCw } from "lucide-react"; 
+import "@/lib/i18n";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 import Navbar from "../components/ui/homepage/navbar";
+import BottomNav from "../components/ui/root/BottomNav";
 import Carousel from "../components/ui/homepage/carousel";
-import UrgentDonation from "../components/ui/homepage/urgentdonation";
+import LiveDonationBlink from "../components/ui/detail/LiveDonationBlink";
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { ethers } from "ethers"; 
-import { useTranslation } from "react-i18next"; 
+import { useTranslation } from "react-i18next";
+
+// 🔥 OPTIMASI: Lazy load komponen yang berada di bawah untuk mempercepat render layar pertama
+import UrgentDonation from "../components/ui/homepage/urgentdonation";
+import LatestPrograms from "../components/ui/homepage/latestprograms";
+import { apiFetch } from "@/lib/api";
 
 export default function HomePage() {
-  const router = useRouter(); 
-  const [search, setSearch] = useState("");
+  const router = useRouter();
   const { getProfile } = useAuth();
-  const { t } = useTranslation(); 
-  
+  const { t } = useTranslation();
+
   const [role, setRole] = useState<"donor" | "beneficiary" | "guest" | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [recentDonations, setRecentDonations] = useState<any[]>([]);
 
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const [balance, setBalance] = useState<string>("0.00"); 
-  const [loadingBalance, setLoadingBalance] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: "warning" | "error" | "success" } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "warning" | "error" | "success";
+  } | null>(null);
 
   const showToast = (message: string, type: "warning" | "error" | "success") => {
     setToast({ message, type });
@@ -33,28 +38,31 @@ export default function HomePage() {
 
   useEffect(() => {
     const checkUserRole = async () => {
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      
+      const token =
+        localStorage.getItem("access_token") ||
+        sessionStorage.getItem("access_token");
+
       if (!token) {
-        router.replace("/LoginPage");
-        return; 
+        setRole("guest");
+        setIsCheckingAuth(false);
+        return;
       }
 
       try {
         const data = await getProfile();
         setRole("donor");
         setUserProfile(data);
-        setIsCheckingAuth(false); 
       } catch (err) {
         try {
           const data = await getProfile("beneficiary");
           setRole("beneficiary");
           setUserProfile(data);
-          setIsCheckingAuth(false);
         } catch (err) {
           localStorage.removeItem("access_token");
           router.replace("/LoginPage");
         }
+      } finally {
+        setIsCheckingAuth(false);
       }
     };
 
@@ -62,214 +70,122 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || ""; 
-
-  const fetchBalance = async () => {
-    if (!userProfile?.wallet_address || !CONTRACT_ADDRESS) return;
-    
-    const cleanWallet = userProfile.wallet_address.trim();
-    setLoadingBalance(true);
-
-    try {
-      // 🔥 LOGIKA BARU: Fallback Multi-RPC agar kebal dari error CORS
-      const rpcUrls = [
-        process.env.NEXT_PUBLIC_RPC_URL,
-        "https://polygon.rpc.thirdweb.com",
-        "https://polygon-bor-rpc.publicnode.com",
-        "https://rpc-mainnet.maticvigil.com"
-      ].filter(Boolean) as string[];
-
-      const minABI = [
-        "function balanceOf(address owner) view returns (uint256)",
-        "function decimals() view returns (uint8)"
-      ];
-
-      let rawBalance;
-      let decimals;
-
-      // Coba koneksi ke beberapa RPC bergantian
-      for (const url of rpcUrls) {
-        try {
-          const provider = new ethers.JsonRpcProvider(url);
-          const contract = new ethers.Contract(CONTRACT_ADDRESS, minABI, provider);
-          
-          rawBalance = await contract.balanceOf(cleanWallet);
-          decimals = await contract.decimals();
-          break; // Jika sukses, keluar dari loop
-        } catch (err) {
-          console.warn(`RPC ${url} diblokir/gagal, mencoba cadangan...`);
-        }
-      }
-
-      if (rawBalance === undefined || decimals === undefined) {
-        throw new Error("Semua penyedia RPC gagal merespon permintaan.");
-      }
-
-      const formattedBalance = ethers.formatUnits(rawBalance, decimals);
-      setBalance(parseFloat(formattedBalance).toFixed(2));
-
-    } catch (err) {
-      console.error("Gagal memuat saldo dari blockchain:", err);
-      showToast(t("fail_fetch_balance", "Gagal menyinkronkan saldo dompet."), "error");
-      setBalance("0.00");
-    } finally {
-      setLoadingBalance(false);
-    }
-  };
-
+  // 🔥 MENGGUNAKAN API BACKEND ASLI UNTUK DONASI GLOBAL
   useEffect(() => {
-    if (!isCheckingAuth && userProfile?.wallet_address) {
-      fetchBalance();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userProfile?.wallet_address, isCheckingAuth]);
+    const fetchGlobalRecentDonations = async () => {
+      try {
+        // Memanggil endpoint /api/donations/all
+        const res = await apiFetch(`/donations/all`, {
+          method: "GET",
+        });
 
-  const isDonasiLocked = role === "beneficiary"; 
-  const isGalangLocked = role === "donor" || role === "guest";
+        if (res && res.data) {
+          // Menyesuaikan penangkapan array (jika dibungkus dalam 'history' atau langsung array)
+          const historyArray = Array.isArray(res.data.history) 
+            ? res.data.history 
+            : (Array.isArray(res.data) ? res.data : []);
+          
+          // Mapping data sesuai yang dibutuhkan oleh komponen LiveDonationBlink
+          const apiHistory = historyArray.map((tx: any) => ({
+            from_to: tx.donatur_name || t("anonymous", "Anonim"),
+            amount: String(tx.amount_idr || 0),
+          }));
 
-  const handleDonasiClick = (e: React.MouseEvent) => {
-    if (isDonasiLocked) {
-      e.preventDefault();
-      showToast(t("lock_donate_beneficiary"), "warning");
+          setRecentDonations(apiHistory);
+        }
+      } catch (err) {
+        console.error("Gagal memuat semua donasi di Homepage:", err);
+      }
+    };
+    
+    fetchGlobalRecentDonations();
+  }, [t]);
+
+  // Render teks sapaan dengan status loading yang rapi
+  const renderGreetingName = () => {
+    if (isCheckingAuth) {
+      return <span className="inline-block w-32 h-6 bg-white/20 rounded-md animate-pulse"></span>;
     }
+    return userProfile?.name || userProfile?.full_name || (role === "guest" ? t("Dermawan") : t("good_person"));
   };
-
-  const handleGalangClick = (e: React.MouseEvent) => {
-    if (isGalangLocked) {
-      e.preventDefault();
-      showToast(t("lock_galang_user"), "warning");
-    }
-  };
-
-  if (isCheckingAuth) {
-    return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-linear-to-b from-[#7C3996] to-[#b359d4]">
-        <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-      </div>
-    );
-  }
 
   return (
-    <main className="flex min-h-screen w-full max-w-lg justify-center mx-auto bg-gray-50 shadow-2xl relative overflow-x-hidden">
-    <div className="flex flex-col w-full min-h-screen relative bg-white"> 
-      
-      {toast && (
-        <div className={`fixed top-10 left-1/2 transform -translate-x-1/2 px-6 py-3.5 rounded-full shadow-2xl backdrop-blur-md flex items-center gap-3 z-50 animate-in fade-in slide-in-from-top-5 duration-300 border w-[90%] max-w-sm ${
-          toast.type === "warning" 
-            ? "bg-orange-600/95 border-orange-400 text-white" 
-            : toast.type === "success" 
-            ? "bg-green-600/95 border-green-400 text-white" 
-            : "bg-red-600/95 border-red-400 text-white"
-        }`}>
-          <AlertCircle size={24} className="shrink-0" />
-          <span className="font-semibold text-sm leading-snug">{toast.message}</span>
-        </div>
-      )}
+    <main className="flex min-h-screen w-full max-w-lg justify-center mx-auto bg-[#FBF8F3] shadow-2xl relative overflow-x-hidden">
+      <LiveDonationBlink history={recentDonations} />
 
-      <div className="absolute top-0 left-0 w-full h-[28rem] bg-linear-to-b from-[#7C3996] to-[#b359d4] rounded-b-[3rem] z-0 shadow-lg" />
+      <div className="flex flex-col w-full min-h-screen relative bg-[#FBF8F3] pb-28">
+        
+        {toast && (
+          <div
+            role="status"
+            className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm rounded-xl bg-white shadow-xl border-l-4 flex items-start gap-3 px-4 py-3.5 animate-in fade-in slide-in-from-top-4 duration-300 ${
+              toast.type === "warning"
+                ? "border-[#E8B94A]"
+                : toast.type === "success"
+                  ? "border-emerald-500"
+                  : "border-red-500"
+            }`}
+          >
+            {toast.type === "success" ? (
+              <CheckCircle2 size={20} className="shrink-0 mt-0.5 text-emerald-500" />
+            ) : (
+              <AlertCircle size={20} className={`shrink-0 mt-0.5 ${toast.type === "warning" ? "text-[#C9971F]" : "text-red-500"}`} />
+            )}
+            <span className="text-sm font-medium leading-snug text-[#2A1B33]">
+              {toast.message}
+            </span>
+          </div>
+        )}
 
-      <div className="relative z-10 flex flex-col flex-1 w-full pt-4">
-        <Navbar />
+        {/* Hero */}
+        <div className="relative w-full overflow-hidden bg-gradient-to-b from-[#3E1854] via-[#6B2E88] to-[#8A45A8] rounded-b-[2.25rem] shadow-lg pt-4 pb-14 flex flex-col z-0">
+          <svg
+            className="absolute inset-0 w-full h-full opacity-[0.09] pointer-events-none"
+            preserveAspectRatio="xMidYMid slice"
+            aria-hidden="true"
+          >
+            <defs>
+              <pattern id="kawung" width="56" height="56" patternUnits="userSpaceOnUse">
+                <g fill="none" stroke="#F3D48A" strokeWidth="1.1">
+                  <ellipse cx="14" cy="14" rx="12" ry="8" transform="rotate(45 14 14)" />
+                  <ellipse cx="42" cy="14" rx="12" ry="8" transform="rotate(-45 42 14)" />
+                  <ellipse cx="14" cy="42" rx="12" ry="8" transform="rotate(-45 14 42)" />
+                  <ellipse cx="42" cy="42" rx="12" ry="8" transform="rotate(45 42 42)" />
+                </g>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#kawung)" />
+          </svg>
 
-        <div className="px-6 mt-6 mb-8">
-          <h1 className="text-2xl font-extrabold text-white mb-1 drop-shadow-sm">
-            {t("hello")}, {userProfile?.name || userProfile?.full_name || t("good_person")}!
-          </h1>
-          <p className="text-purple-100 text-sm mb-6 font-medium">
-            {t("let_do_good")}
-          </p>
+          <Navbar isLoggedIn={role !== "guest"} />
 
-          {userProfile?.wallet_address && (
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-5 flex items-center justify-between mb-6 shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="w-8 h-8 md:w-12 md:h-12 bg-white rounded-2xl flex items-center justify-center text-purple-600 shadow-inner">
-                  <Wallet size={24} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-purple-100 uppercase tracking-widest opacity-80">{t("your_fcc_balance")}</p>
-                  <div className="flex items-baseline gap-1.5 mt-0.5">
-                    {loadingBalance ? (
-                      <div className="h-6 w-20 bg-white/20 animate-pulse rounded-md"></div>
-                    ) : (
-                      <>
-                        <span className="text-sm md:text-2xl font-black text-white tracking-tighter">{balance}</span>
-                        <span className="text-xs font-bold text-purple-200">FCC</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              <button 
-                onClick={fetchBalance}
-                disabled={loadingBalance}
-                className="p-2.5 bg-white/10 rounded-xl hover:bg-white/20 active:scale-90 transition-all text-white disabled:opacity-50"
-              >
-                <RefreshCw size={18} className={loadingBalance ? "animate-spin" : ""} />
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="mb-8">
-          <Carousel />
-        </div>
-
-        <div className="bg-white rounded-t-[2.5rem] flex-1 w-full pt-8 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] flex flex-col gap-8 pb-12">
-          
-          <div className="px-6">
-            <h2 className="text-lg font-bold mb-4 text-gray-800">
-              {t("philanthropy_program")}
-            </h2>
-
-            <div className="grid grid-cols-2 gap-4">
-              
-              <Link
-                href={isDonasiLocked ? "#" : "/DonasiPage"}
-                onClick={handleDonasiClick}
-                className={`group relative flex flex-col items-center justify-center p-5 rounded-3xl border transition-all duration-300 ${
-                  isDonasiLocked 
-                    ? "bg-gray-50 border-gray-200 cursor-not-allowed opacity-75" 
-                    : "bg-purple-50 border-purple-100 hover:bg-purple-600 hover:shadow-xl hover:shadow-purple-200 active:scale-95 cursor-pointer" 
-                }`}
-              >
-                {isDonasiLocked && <Lock className="absolute top-3 right-3 w-4 h-4 text-gray-400" />}
-                
-                <div className={`p-3.5 rounded-2xl shadow-sm mb-3 transition-transform duration-300 ${isDonasiLocked ? "bg-gray-200" : "bg-white group-hover:scale-110"}`}>
-                  <Heart className={`w-7 h-7 ${isDonasiLocked ? "text-gray-400" : "text-purple-600"}`} />
-                </div>
-                <span className={`font-bold text-sm transition-colors ${isDonasiLocked ? "text-gray-400" : "text-gray-700 group-hover:text-white"}`}>
-                  {t("donate")}
-                </span>
-              </Link>
-
-              <Link
-                href={isGalangLocked ? "#" : "/GalangPage"}
-                onClick={handleGalangClick}
-                className={`group relative flex flex-col items-center justify-center p-5 rounded-3xl border transition-all duration-300 ${
-                  isGalangLocked 
-                    ? "bg-gray-50 border-gray-200 cursor-not-allowed opacity-75" 
-                    : "bg-blue-50 border-blue-100 hover:bg-blue-600 hover:shadow-xl hover:shadow-blue-200 active:scale-95 cursor-pointer" 
-                }`}
-              >
-                {isGalangLocked && <Lock className="absolute top-3 right-3 w-4 h-4 text-gray-400" />}
-
-                <div className={`p-3.5 rounded-2xl shadow-sm mb-3 transition-transform duration-300 ${isGalangLocked ? "bg-gray-200" : "bg-white group-hover:scale-110"}`}>
-                  <HandCoins className={`w-7 h-7 ${isGalangLocked ? "text-gray-400" : "text-blue-600"}`} />
-                </div>
-                <span className={`font-bold text-sm transition-colors ${isGalangLocked ? "text-gray-400" : "text-gray-700 group-hover:text-white"}`}>
-                  {t("raise_funds")}
-                </span>
-              </Link>
-
-            </div>
+          <div className="relative px-6 mt-4">
+            <h1 className="font-jakarta text-[1.75rem] leading-snug font-extrabold text-white drop-shadow-sm">
+              {t("hello")},<br />
+              {renderGreetingName()}!
+            </h1>
+            <p className="text-purple-100/90 text-sm mt-1.5 mb-5 font-medium">
+              {t("let_do_good")}
+            </p>
           </div>
 
-          <UrgentDonation />
+          <div className="mt-5">
+            <Carousel />
+          </div>
+        </div>
 
+        <div className="relative w-full -mt-8 z-10">
+          <div className="flex justify-center pt-3 pb-1">
+            <span className="w-10 h-1 rounded-full bg-[#7C3996]/15" />
+          </div>
+          <div className="bg-[#FBF8F3] rounded-t-[1.75rem] flex-1 w-full  pt-6 flex flex-col gap-8">
+            <UrgentDonation />
+            <LatestPrograms />
+          </div>
         </div>
       </div>
-    </div>
+
+      <BottomNav />
     </main>
   );
 }

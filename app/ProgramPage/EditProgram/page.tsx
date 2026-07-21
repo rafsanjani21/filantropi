@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next"; 
 import { 
   ArrowLeft, ImageIcon, Type, Tag, Calendar, FileText, Save, 
-  CheckCircle2, AlertCircle, BookOpen, Wallet, Lock
+  CheckCircle2, AlertCircle, BookOpen, Wallet, Lock, X // <-- Tambahkan X disini
 } from "lucide-react";
 
 function KelolaProgramContent() {
@@ -23,15 +23,17 @@ function KelolaProgramContent() {
   const { t } = useTranslation(); 
 
   const MAX_FILE_SIZE = 1048576; // Batas 1 MB
+  const MAX_IMAGES = 5; // Batas maksimal foto
 
   const [loadingData, setLoadingData] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
-  
   const [beneficiaryType, setBeneficiaryType] = useState<string>("");
-
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [toastAlert, setToastAlert] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  // STATE FOTO: Pisahkan foto dari API (Lama) dan File lokal (Baru)
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [newFilePreviews, setNewFilePreviews] = useState<string[]>([]);
 
   const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
 
@@ -65,7 +67,7 @@ function KelolaProgramContent() {
         setBeneficiaryType(isIndividual ? "individual" : "organization");
 
         const res = await AuthService.getCampaignDetail(id);
-        const data = res.data || res;
+        const data = res.data?.data ?? res.data ?? res;
 
         if (!data || !data.id) {
             throw new Error(t("empty_campaign_data", "Data kampanye kosong dari server."));
@@ -87,13 +89,16 @@ function KelolaProgramContent() {
           wallet_address: data.wallet_address || data.user?.wallet_address || "",
         });
 
-        if (data.image_banner) {
-          setPreviewUrl(
-            data.image_banner.startsWith('http') 
-              ? data.image_banner 
-              : `${IMAGE_BASE_URL}/${data.image_banner.replace(/^\/+/, '')}`
+        // Parse foto dari API
+        const rawImages = data.images ?? data.image_banners ?? data.campaign_images ?? data.image_banner ?? [];
+        const imageList = Array.isArray(rawImages) ? rawImages : [rawImages];
+        const images = imageList
+          .filter((item) => typeof item === "string")
+          .map((image: string) =>
+            image.startsWith("http") ? image : `${IMAGE_BASE_URL}/${image.replace(/^\/+/, "")}`
           );
-        }
+
+        setExistingImages(images);
 
       } catch (error: any) {
         console.error("Gagal mengambil data:", error);
@@ -111,21 +116,54 @@ function KelolaProgramContent() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  // 🔥 LOGIKA UBAH: Validasi 1 MB pada proses Ganti Banner
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      
-      if (file.size > MAX_FILE_SIZE) {
-        showToast("Maximum photo size is 1 MB!", "error");
-        e.target.value = ""; // Reset input
-        return;
-      }
+  // --- LOGIKA UPLOAD & HAPUS FOTO ---
 
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file)); 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    // Hitung slot tersisa
+    const currentTotal = existingImages.length + newFiles.length;
+    const availableSlots = MAX_IMAGES - currentTotal;
+
+    if (availableSlots <= 0) {
+      showToast("Maksimal 5 foto telah tercapai!", "error");
+      return;
     }
+
+    const filesToAdd = files.slice(0, availableSlots);
+    const validFiles: File[] = [];
+
+    // Validasi ukuran
+    filesToAdd.forEach((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        showToast(`Ukuran ${file.name} melebihi 1MB!`, "error");
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    if (validFiles.length > 0) {
+      setNewFiles((prev) => [...prev, ...validFiles]);
+      setNewFilePreviews((prev) => [...prev, ...validFiles.map((f) => URL.createObjectURL(f))]);
+    }
+
+    e.target.value = ""; // Reset input
   };
+
+  const removeExistingImage = (indexToRemove: number) => {
+    setExistingImages((prev) => prev.filter((_, index) => index !== indexToRemove));
+  };
+
+  const removeNewFile = (indexToRemove: number) => {
+    setNewFiles((prev) => prev.filter((_, index) => index !== indexToRemove));
+    setNewFilePreviews((prev) => {
+      const urlToRevoke = prev[indexToRemove];
+      if (urlToRevoke) URL.revokeObjectURL(urlToRevoke);
+      return prev.filter((_, index) => index !== indexToRemove);
+    });
+  };
+
+  // --- LOGIKA SUBMIT ---
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,9 +190,11 @@ function KelolaProgramContent() {
         formData.append("wallet_address", form.wallet_address.trim()); 
       }
       
-      if (selectedFile) {
-        formData.append("image_banner", selectedFile);
-      }
+      // Kirim foto lama yang tidak dihapus (sesuaikan "existing_images[]" dengan API backend Anda)
+      existingImages.forEach((url) => formData.append("existing_images[]", url));
+
+      // Kirim foto baru
+      newFiles.forEach((file) => formData.append("image_banner", file)); // Sesuaikan key jika API minta image_banner[]
 
       await apiFetch(`/campaigns/${id}`, {
         method: "PUT", 
@@ -212,31 +252,64 @@ function KelolaProgramContent() {
       <div className="flex-1 w-full bg-white/95 backdrop-blur-md rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] p-8 mt-4">
         <form onSubmit={handleSubmit} className="space-y-6">
 
+          {/* SECTION GAMBAR KAMPANYE */}
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center ml-1">
               <label className="text-sm font-bold text-gray-700">{t("campaign_banner_label", "Gambar Banner Kampanye")}</label>
-              <span className="text-[10px] text-gray-400 font-medium">Maks. 1 MB</span>
+              <span className="text-[10px] text-gray-400 font-medium">
+                {existingImages.length + newFiles.length}/5 (Maks. 1MB/foto)
+              </span>
             </div>
-            <label className="relative flex flex-col items-center justify-center w-full h-48 bg-gray-50 border-2 border-dashed border-purple-200 rounded-2xl cursor-pointer hover:bg-purple-50 hover:border-purple-400 transition-all overflow-hidden group">
-              {previewUrl ? (
-                <>
-                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-white font-semibold text-sm bg-black/50 px-4 py-2 rounded-full">{t("change_photo", "Ganti Foto")}</span>
-                  </div>
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <div className="bg-purple-100 p-3 rounded-full mb-3 text-purple-600">
-                    <ImageIcon size={24} />
-                  </div>
-                  <p className="text-sm text-gray-500 font-semibold">{t("click_to_upload", "Klik untuk unggah foto")}</p>
+            
+            <div className="flex flex-wrap items-center gap-3 w-full bg-gray-50 border-2 border-dashed border-purple-200 rounded-2xl p-4">
+              
+              {/* Render Foto Lama */}
+              {existingImages.map((url, index) => (
+                <div key={`existing-${index}`} className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-white shadow-md group">
+                  <img src={url} alt={`Existing ${index}`} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeExistingImage(index)}
+                    className="absolute top-1 right-1 bg-red-500/90 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-sm cursor-pointer"
+                  >
+                    <X size={14} />
+                  </button>
                 </div>
+              ))}
+
+              {/* Render Foto Baru */}
+              {newFilePreviews.map((url, index) => (
+                <div key={`new-${index}`} className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-purple-300 shadow-md group">
+                  <img src={url} alt={`New Preview ${index}`} className="w-full h-full object-cover" />
+                  <div className="absolute bottom-0 left-0 right-0 bg-purple-500/80 text-white text-[9px] text-center py-0.5">Baru</div>
+                  <button
+                    type="button"
+                    onClick={() => removeNewFile(index)}
+                    className="absolute top-1 right-1 bg-red-500/90 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-sm cursor-pointer"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+
+              {/* Tombol Tambah Foto (Hanya muncul jika total foto < 5) */}
+              {(existingImages.length + newFiles.length) < MAX_IMAGES && (
+                <label className="flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 border-2 border-dashed border-purple-300 rounded-xl cursor-pointer hover:bg-purple-100 hover:border-purple-500 transition-all">
+                  <ImageIcon size={24} className="text-purple-400 mb-1" />
+                  <span className="text-[10px] text-purple-600 font-semibold">Tambah</span>
+                  <input 
+                    type="file" 
+                    multiple 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={handleImageChange} 
+                  />
+                </label>
               )}
-              <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
-            </label>
-            <p className="text-[10px] text-gray-400 ml-1">{t("leave_blank_to_keep_image", "*Biarkan kosong jika tidak ingin mengubah gambar lama.")}</p>
+
+            </div>
           </div>
+          {/* END SECTION GAMBAR KAMPANYE */}
 
           <InputField 
             label={`${t("campaign_title_label", "Judul Kampanye")} *`} 
@@ -245,6 +318,7 @@ function KelolaProgramContent() {
             required 
           />
 
+          {/* ... (SISA KODE BAWAH SEPERTI SEBELUMNYA) ... */}
           {beneficiaryType === "individual" && (
             <div className="flex flex-col gap-1.5 w-full">
               <label className="text-sm font-bold text-gray-700 ml-1">{t("wallet_address_label", "Alamat Wallet")}</label>
@@ -281,8 +355,9 @@ function KelolaProgramContent() {
               >
                 <option value="1">{t("cat_education", "Pendidikan")}</option>
                 <option value="2">{t("cat_health", "Kesehatan")}</option>
-                <option value="3">{t("cat_disaster", "Bencana")}</option>
-                <option value="4">{t("cat_mosque", "Tempat Ibadah")}</option>
+                <option value="3">{t("cat_disaster", "Bencana Alam")}</option>
+                <option value="4">{t("cat_mosque", "Ekonomi")}</option>
+                <option value="5">{t("cat_general", "Umum")}</option>
               </select>
             </div>
           </div>
@@ -325,7 +400,7 @@ function KelolaProgramContent() {
           </div>
 
           <div className="flex flex-col gap-1.5 w-full">
-            <label className="text-sm font-bold text-gray-700 ml-1">{t("story_label_req", "Cerita Detail Kampanye *")}</label>
+            <label className="text-sm font-bold text-gray-700 ml-1">{t("objective_label_req", "Tujuan Detail Kampanye *")}</label>
             <div className="group flex items-start bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 transition-all duration-300 focus-within:bg-white focus-within:border-purple-400 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)]">
               <div className="text-gray-400 group-focus-within:text-purple-600 transition-colors duration-300 mt-1">
                 <BookOpen size={18} />

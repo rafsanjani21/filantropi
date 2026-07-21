@@ -1,6 +1,6 @@
 "use client";
 
-import "@/lib/i18n"; // Proteksi i18n
+import "@/lib/i18n"; 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -9,9 +9,9 @@ import { ethers } from "ethers";
 import { AuthService } from "@/lib/auth.service"; 
 import { useTranslation } from "react-i18next"; 
 import { 
-  ArrowLeft, ImageIcon, Type, Tag, Calendar, FileText, Send, 
+  ArrowLeft, Type, Tag, Calendar, FileText, Send, 
   CheckCircle2, AlertCircle, BookOpen, Wallet, Lock, ShieldAlert,
-  Clock 
+  Clock, X, Plus, UploadCloud, Gift
 } from "lucide-react";
 
 export default function GalangPage() {
@@ -27,11 +27,11 @@ export default function GalangPage() {
 
   const [beneficiaryType, setBeneficiaryType] = useState<string>("");
 
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "warning" } | null>(null);
 
-  const showToast = (message: string, type: "success" | "error") => {
+  const showToast = (message: string, type: "success" | "error" | "warning") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
@@ -44,6 +44,7 @@ export default function GalangPage() {
     description: "",
     story: "",        
     wallet_address: "", 
+    donation_type: "donasi",
   });
 
   useEffect(() => {
@@ -88,26 +89,43 @@ export default function GalangPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  // 🔥 LOGIKA UBAH: Validasi 1 MB pada Banner
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      
-      if (file.size > MAX_FILE_SIZE) {
-        showToast("Maximum photo size is 1 MB!", "error");
-        e.target.value = ""; // Reset input
-        return;
-      }
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
+    if (files.some((file) => file.size > MAX_FILE_SIZE)) {
+      showToast("Maksimal ukuran foto adalah 1 MB!", "error");
+      e.target.value = "";
+      return;
     }
+
+    const availableSlots = 5 - selectedFiles.length;
+    const allowedFiles = files.slice(0, availableSlots);
+
+    if (allowedFiles.length < files.length) {
+      showToast("Maksimal 5 foto yang dapat diunggah.", "warning");
+    }
+
+    const newSelected = [...selectedFiles, ...allowedFiles];
+    setSelectedFiles(newSelected);
+    setPreviewUrls(newSelected.map(file => URL.createObjectURL(file)));
+    
+    e.target.value = ""; 
+  };
+
+  const removeImage = (indexToRemove: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== indexToRemove));
+    setPreviewUrls(prev => {
+      const newUrls = prev.filter((_, i) => i !== indexToRemove);
+      URL.revokeObjectURL(prev[indexToRemove]);
+      return newUrls;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedFile) {
+    if (selectedFiles.length === 0) {
       showToast(t("upload_banner_error", "Banner kampanye wajib diunggah!"), "error");
       return;
     }
@@ -125,8 +143,21 @@ export default function GalangPage() {
       formData.append("title", form.title);
       formData.append("description", form.description);
       formData.append("story", form.story);
-      formData.append("target_amount", form.target_amount);
-      formData.append("end_date", form.end_date); 
+      
+      // 🔥 Masukkan nilai is_donasi dan is_wakaf berdasarkan pilihan user
+      const isWakaf = form.donation_type === "wakaf";
+      const isDonasi = form.donation_type === "donasi";
+      
+      formData.append("is_wakaf", isWakaf ? "true" : "false");
+      formData.append("is_donasi", isDonasi ? "true" : "false");
+
+      if (form.target_amount.trim() !== "") {
+        formData.append("target_amount", form.target_amount);
+      }
+
+      if (form.end_date.trim() !== "") {
+        formData.append("end_date", form.end_date);
+      } 
       
       if (beneficiaryType === "individual") {
         formData.append("wallet_address", form.wallet_address.trim()); 
@@ -134,7 +165,7 @@ export default function GalangPage() {
         formData.append("wallet_address", ""); 
       }
       
-      formData.append("image_banner", selectedFile);
+      selectedFiles.forEach((file) => formData.append("image_banner", file));
 
       await createCampaign(formData);
       
@@ -232,7 +263,8 @@ export default function GalangPage() {
       
       {toast && (
         <div className={`fixed top-10 left-1/2 transform -translate-x-1/2 px-6 py-3.5 rounded-full shadow-2xl backdrop-blur-md flex items-center gap-3 z-50 animate-in fade-in slide-in-from-top-5 duration-300 border w-[90%] max-w-sm ${
-          toast.type === "success" ? "bg-green-600/90 border-green-400 text-white" : "bg-red-600/90 border-red-400 text-white"
+          toast.type === "success" ? "bg-green-600/90 border-green-400 text-white" : 
+          toast.type === "warning" ? "bg-amber-500/90 border-amber-400 text-white" : "bg-red-600/90 border-red-400 text-white"
         }`}>
           {toast.type === "success" ? <CheckCircle2 size={24} className="shrink-0" /> : <AlertCircle size={24} className="shrink-0" />}
           <span className="font-bold text-sm tracking-wide leading-snug">{toast.message}</span>
@@ -264,30 +296,90 @@ export default function GalangPage() {
       <div className="flex-1 w-full bg-white/95 backdrop-blur-md rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
 
+          {/* 🔥 PILIHAN TIPE DONASI (DONASI / WAKAF) */}
+          <div className="flex flex-col gap-1.5 w-full">
+            <label className="text-sm font-bold text-gray-700 ml-1">Tipe Program</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleChange("donation_type", "donasi")}
+                className={`py-3.5 px-4 rounded-2xl font-bold text-sm border-2 transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  form.donation_type === "donasi" 
+                    ? "bg-purple-50 border-purple-500 text-purple-700 shadow-sm" 
+                    : "bg-gray-50 border-gray-100 text-gray-400 hover:bg-gray-100"
+                }`}
+              >
+                <Gift size={18} /> Donasi
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleChange("donation_type", "wakaf")}
+                className={`py-3.5 px-4 rounded-2xl font-bold text-sm border-2 transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  form.donation_type === "wakaf" 
+                    ? "bg-purple-50 border-purple-500 text-purple-700 shadow-sm" 
+                    : "bg-gray-50 border-gray-100 text-gray-400 hover:bg-gray-100"
+                }`}
+              >
+                <BookOpen size={18} /> Wakaf
+              </button>
+            </div>
+          </div>
+
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center ml-1">
-              <label className="text-sm font-bold text-gray-700">{t("campaign_banner_label", "Banner Kampanye")}</label>
-              <span className="text-[10px] text-gray-400 font-medium">Maks. 1 MB</span>
+              <label className="text-sm font-bold text-gray-700">{t("campaign_banner_label", "Foto/Banner Kampanye")}</label>
+              <span className={`text-[10px] px-2 py-1 rounded-md font-bold ${previewUrls.length === 5 ? 'bg-green-50 text-green-600' : 'bg-purple-50 text-purple-600'}`}>
+                {previewUrls.length} / 5 Foto
+              </span>
             </div>
-            <label className="relative flex flex-col items-center justify-center w-full h-48 bg-gray-50 border-2 border-dashed border-purple-200 rounded-2xl cursor-pointer hover:bg-purple-50 hover:border-purple-400 transition-all overflow-hidden group">
-              {previewUrl ? (
-                <>
-                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-white font-semibold text-sm bg-black/50 px-4 py-2 rounded-full">{t("change_photo", "Ganti Foto")}</span>
+
+            {previewUrls.length > 0 && (
+              <div className="grid grid-cols-3 gap-3 mb-2">
+                {previewUrls.map((url, index) => (
+                  <div key={url} className="relative group rounded-2xl overflow-hidden shadow-sm border border-gray-200 aspect-square">
+                    <img src={url} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
+                    
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-1.5 right-1.5 bg-red-500/80 hover:bg-red-600 text-white p-1 rounded-full backdrop-blur-sm transition-all scale-0 group-hover:scale-100 shadow-md"
+                    >
+                      <X size={14} />
+                    </button>
+
+                    {index === 0 && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-purple-600/90 text-white text-[9px] font-bold text-center py-1.5 backdrop-blur-sm">
+                        Cover Utama
+                      </div>
+                    )}
                   </div>
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <div className="bg-purple-100 p-3 rounded-full mb-3 text-purple-600">
-                    <ImageIcon size={24} />
-                  </div>
-                  <p className="text-sm text-gray-500 font-semibold">{t("click_to_upload", "Klik untuk upload")}</p>
-                  <p className="text-xs text-gray-400 mt-1">{t("format_recommendation", "Rekomendasi format: JPG, PNG")}</p>
+                ))}
+
+                {previewUrls.length < 5 && (
+                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-purple-200 rounded-2xl cursor-pointer hover:bg-purple-50 transition-colors aspect-square">
+                    <div className="bg-purple-100 p-2 rounded-full text-purple-600 mb-1">
+                       <Plus size={18} />
+                    </div>
+                    <span className="text-[10px] text-purple-600 font-bold">Tambah</span>
+                    <input type="file" className="hidden" accept="image/*" multiple onChange={handleImageChange} />
+                  </label>
+                )}
+              </div>
+            )}
+
+            {previewUrls.length === 0 && (
+              <label className="relative flex flex-col items-center justify-center w-full min-h-[200px] bg-gray-50 border-2 border-dashed border-purple-200 rounded-3xl cursor-pointer hover:bg-purple-50/50 hover:border-purple-400 transition-all overflow-hidden group p-6">
+                <div className="bg-white p-4 rounded-full shadow-sm border border-purple-100 mb-4 text-purple-500 group-hover:scale-110 transition-transform duration-300">
+                  <UploadCloud size={32} />
                 </div>
-              )}
-              <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
-            </label>
+                <p className="text-sm text-gray-700 font-bold mb-1">{t("click_to_upload", "Klik untuk mengunggah foto")}</p>
+                <p className="text-xs text-gray-400 text-center px-4 leading-relaxed">
+                  {t("format_recommendation", "Maks. 5 foto (Rekomendasi 16:9). Format JPG, PNG maksimal 1 MB/foto.")}
+                </p>
+                <input type="file" className="hidden" accept="image/*" multiple onChange={handleImageChange} />
+              </label>
+            )}
           </div>
 
           <InputField 
@@ -299,7 +391,7 @@ export default function GalangPage() {
 
           {beneficiaryType === "individual" && (
             <div className="flex flex-col gap-1.5 w-full">
-              <label className="text-sm font-bold text-gray-700 ml-1">{t("wallet_address_label", "Alamat Wallet")}</label>
+              <label className="text-sm font-bold text-gray-700 ml-1">{t("wallet_address_label", "Alamat Pencairan (Wallet / Rekening)")}</label>
               <div className="flex items-center bg-gray-100 border-2 border-gray-200 rounded-2xl px-4 py-3.5 opacity-80 cursor-not-allowed">
                 <div className="text-gray-400">
                   <Wallet size={18} />
@@ -308,14 +400,14 @@ export default function GalangPage() {
                   type="text"
                   value={form.wallet_address}
                   readOnly
-                  placeholder="Memuat wallet dari profil..."
+                  placeholder="Memuat dari profil..."
                   className="ml-3 w-full bg-transparent outline-none text-gray-600 font-mono text-sm cursor-not-allowed"
                 />
                 <Lock size={16} className="text-gray-400 ml-2 shrink-0" />
               </div>
               <p className="text-[10px] text-gray-500 font-medium ml-1 flex items-center gap-1 mt-1">
                 <AlertCircle size={12} className="shrink-0" />
-                {t("wallet_address_locked", "Alamat dompet ini otomatis terhubung dari profil Anda dan tidak dapat diubah di sini.")}
+                {t("wallet_address_locked", "Alamat ini otomatis terhubung dari profil Anda dan tidak dapat diubah di sini.")}
               </p>
             </div>
           )}
@@ -333,32 +425,45 @@ export default function GalangPage() {
               >
                 <option value="1">{t("cat_education", "Pendidikan")}</option>
                 <option value="2">{t("cat_health", "Kesehatan")}</option>
-                <option value="3">{t("cat_disaster", "Bencana")}</option>
-                <option value="4">{t("cat_mosque", "Tempat Ibadah")}</option>
+                <option value="3">{t("cat_disaster", "Bencana Alam")}</option>
+                <option value="4">{t("cat_mosque", "Ekonomi")}</option>
+                <option value="5">{t("cat_general", "Umum")}</option>
               </select>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5 w-full">
-              <label className="text-sm font-bold text-gray-700 ml-1">{t("target_amount_label", "Target (FCC)")}</label>
+              <label className="text-sm font-bold text-gray-700 ml-1">{t("target_amount_label", "Target (Rp)")}</label>
               <div className="group flex items-center bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 transition-all duration-300 focus-within:bg-white focus-within:border-purple-400 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)]">
-                <div className="text-purple-600 font-bold text-sm mr-2">FCC</div>
-                <input 
-                  type="number" 
-                  value={form.target_amount} onChange={(e) => handleChange("target_amount", e.target.value)} 
-                  placeholder="1000" className="w-full bg-transparent outline-none text-gray-800 font-medium placeholder:text-gray-300 placeholder:font-normal" 
-                  required min="1" step="0.01" 
+                <div className="text-purple-600 font-bold text-base mr-2">Rp</div>
+                <input
+                  type="number"
+                  value={form.target_amount}
+                  onChange={(e) => handleChange("target_amount", e.target.value)}
+                  placeholder="Kosongkan untuk Unlimited"
+                  className="w-full bg-transparent outline-none text-gray-800 font-medium placeholder:text-gray-300"
+                  min="1000"
+                  step="1"
                 />
               </div>
+              <p className="text-[10px] text-gray-400 font-medium ml-1 leading-tight">
+                *Kosongkan jika tidak ada target dana
+              </p>
             </div>
 
-            <InputField 
-              label={t("end_date_label", "Berakhir")} type="date"
-              value={form.end_date} onChange={(e: any) => handleChange("end_date", e.target.value)} 
-              icon={<Calendar size={18} />} placeholder="" 
-              required 
-            />
+            <div className="flex flex-col gap-1.5 w-full">
+              <InputField
+                label={t("end_date_label", "Berakhir")}
+                type="date"
+                value={form.end_date}
+                onChange={(e: any) => handleChange("end_date", e.target.value)}
+                icon={<Calendar size={18} />} 
+              />
+              <p className="text-[10px] text-gray-400 font-medium ml-1 leading-tight">
+                *Kosongkan jika berjalan tanpa batas waktu
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-col gap-1.5 w-full">
@@ -377,7 +482,7 @@ export default function GalangPage() {
           </div>
 
           <div className="flex flex-col gap-1.5 w-full">
-            <label className="text-sm font-bold text-gray-700 ml-1">{t("story_label", "Cerita Lengkap")}</label>
+            <label className="text-sm font-bold text-gray-700 ml-1">{t("objective_label", "Tujuan Lengkap")}</label>
             <div className="group flex items-start bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 transition-all duration-300 focus-within:bg-white focus-within:border-purple-400 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)]">
               <div className="text-gray-400 group-focus-within:text-purple-600 transition-colors duration-300 mt-1">
                 <BookOpen size={18} />

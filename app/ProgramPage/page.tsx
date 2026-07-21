@@ -34,6 +34,13 @@ export default function ProgramPage() {
 
   useEffect(() => {
     const fetchMyCampaigns = async () => {
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+
+      if (!token) {
+        router.replace("/LoginPage");
+        return;
+      }
+
       setLoading(true);
       try {
         try {
@@ -50,15 +57,13 @@ export default function ProgramPage() {
           const campaignsWithTotalCollected = await Promise.all(
             rawData.map(async (campaign) => {
               const wallet = campaign.wallet_address || campaign.user?.wallet_address;
-              // Default ke current_amount dari DB jika API blockchain gagal
-              let totalAmount = campaign.current_amount || 0;
+              // Default ke current_amount_idr dari DB jika API blockchain gagal
+              let totalAmount = campaign.current_amount_idr || 0;
               
               if (wallet) {
                 try {
-                  // 🔥 UBAH 1: Tembak ke endpoint /donations/amount/:wallet (Akumulasi, bukan sisa balance)
                   const amountRes = await apiFetch(`/donations/amount/${wallet}`, { method: "GET" });
                   
-                  // 🔥 UBAH 2: Ambil data dari total_amount
                   if (amountRes && amountRes.data && amountRes.data.total_amount !== undefined) {
                     totalAmount = parseFloat(amountRes.data.total_amount || "0");
                   }
@@ -222,10 +227,12 @@ export default function ProgramPage() {
           ))
         ) : campaigns.length > 0 ? (
           campaigns.map((campaign) => {
-            const target = campaign.target_amount || 1;
             
-            // 🔥 UBAH 3: Gunakan live_collected yang sudah berisi total_amount dari blockchain
-            const collected = campaign.live_collected !== undefined ? campaign.live_collected : (campaign.current_amount || 0);
+            // 🔥 LOGIKA UNLIMITED TARGET
+            const isUnlimitedTarget = !campaign.target_amount || campaign.target_amount === 0;
+            const target = isUnlimitedTarget ? 1 : Number(campaign.target_amount);
+            
+            const collected = campaign.live_collected !== undefined ? campaign.live_collected : (campaign.current_amount_idr || 0);
             
             let progress: number | string = 0;
             const percent = (collected / target) * 100;
@@ -237,8 +244,12 @@ export default function ProgramPage() {
               progress = Math.floor(percent); 
             }
             
-            const imageUrl = campaign.image_banner 
-              ? (campaign.image_banner.startsWith('http') ? campaign.image_banner : `${IMAGE_BASE_URL}/${campaign.image_banner.replace(/^\/+/, '')}?t=${Date.now()}`)
+            const banner = Array.isArray(campaign.image_banner) 
+              ? campaign.image_banner[0] 
+              : campaign.image_banner;
+
+            const imageUrl = typeof banner === "string" && banner.trim() !== ""
+              ? (banner.startsWith('http') ? banner : `${IMAGE_BASE_URL}/${banner.replace(/^\/+/, '')}?t=${Date.now()}`)
               : "/placeholder.png";
 
             const campaignIdentifier = campaign.slug || campaign.id;
@@ -259,30 +270,37 @@ export default function ProgramPage() {
                       {campaign.title}
                     </h3>
 
-                    <div className="flex items-center justify-between bg-purple-50 px-3 py-2.5 rounded-xl mb-4 border border-purple-100/50">
-                      <div className="flex items-center gap-2">
-                        <Wallet size={14} className="text-purple-600 shrink-0" />
-                        <span className="text-[10px] font-bold text-purple-800 uppercase tracking-tight">{t("wallet_label")}</span>
-                      </div>
-                      <span className="text-[11px] font-mono text-purple-600 font-bold bg-white px-2 py-1 rounded-md shadow-sm border border-purple-100">
-                        {truncateWallet(campaign.wallet_address || campaign.user?.wallet_address)}
-                      </span>
-                    </div>
-
                     {campaign.status === 'active' ? (
                       <div className="space-y-3 mb-3">
                         <div className="flex justify-between items-end mb-2">
                           <div className="flex flex-col">
                             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">{t("collected_label")}</span>
-                            <span className="text-sm font-black text-purple-600">{collected} FCC <span className="text-[10px] text-gray-400 font-normal">/ {target} FCC</span></span>
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-sm font-black text-purple-600">Rp {Number(collected).toLocaleString("id-ID")}</span>
+                              
+                              {/* 🔥 Sembunyikan pembagi target dana jika Unlimited */}
+                              {!isUnlimitedTarget && (
+                                <span className="text-[10px] text-gray-400 font-normal">
+                                  / Rp {target.toLocaleString("id-ID")}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <span className="text-xs font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100 shadow-sm">
-                            {progress}%
-                          </span>
+                          
+                          {/* 🔥 Sembunyikan persentase jika Unlimited */}
+                          {!isUnlimitedTarget && (
+                            <span className="text-xs font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100 shadow-sm">
+                              {progress}%
+                            </span>
+                          )}
                         </div>
-                        <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
-                          <div className="bg-purple-600 h-full rounded-full transition-all duration-1000" style={{ width: `${progress}%` }} />
-                        </div>
+                        
+                        {/* 🔥 Sembunyikan bar persentase jika Unlimited */}
+                        {!isUnlimitedTarget && (
+                          <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
+                            <div className="bg-purple-600 h-full rounded-full transition-all duration-1000" style={{ width: `${progress}%` }} />
+                          </div>
+                        )}
                       </div>
                     ) : campaign.status === 'rejected' ? (
                       <div className="mb-3 p-3 bg-red-50 rounded-2xl border border-red-100 flex items-start gap-2.5">

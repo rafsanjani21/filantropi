@@ -1,8 +1,8 @@
 "use client";
 
 import "@/lib/i18n";
-import { useState, useEffect } from "react";
-import { ArrowLeft, Search, ListFilter } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { ArrowLeft, Search, ListFilter, Loader2 } from "lucide-react";
 import Link from "next/link";
 import CampaignCard from "../components/ui/donasi/campaigncard";
 import { AuthService } from "@/lib/auth.service";
@@ -12,12 +12,15 @@ export default function DonasiPage() {
   const [search, setSearch] = useState("");
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // 🔥 TAMBAHAN PAGINATION (LAZY RENDERING)
+  const [visibleCount, setVisibleCount] = useState(6);
   const { t } = useTranslation();
 
   const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
 
-  const calculateDaysLeft = (endDateStr: string) => {
-    if (!endDateStr) return 0;
+  const calculateDaysLeft = (endDateStr: string | null) => {
+    if (!endDateStr) return null;
     const end = new Date(endDateStr);
     const today = new Date();
     const diffTime = end.getTime() - today.getTime();
@@ -30,25 +33,42 @@ export default function DonasiPage() {
     if (campaign.category_name) return campaign.category_name;
     
     const categoryMap: Record<number, string> = {
-      1: t("cat_health"),
-      2: t("cat_education"),
-      3: t("cat_disaster"),
-      4: t("cat_humanity"),
-      5: t("cat_orphanage"),
+      1: t("cat_education", "Pendidikan"),
+      2: t("cat_health", "Kesehatan"),
+      3: t("cat_disaster", "Bencana Alam"),
+      4: t("cat_mosque", "Ekonomi"),
+      5: t("cat_general", "Umum"),
     };
     
     return categoryMap[campaign.category_id] || t("cat_general");
   };
 
+  // 🔥 IMPLEMENTASI CACHING & FETCH EROSI BEBAN SERVER
   useEffect(() => {
     const fetchAllCampaigns = async () => {
       setLoading(true);
       try {
+        // Cek apakah data sudah ada di Session Cache browser
+        const cachedData = sessionStorage.getItem("cache_campaigns");
+        const cacheTime = sessionStorage.getItem("cache_campaigns_time");
+        const now = Date.now();
+
+        // Jika cache masih berlaku (kurang dari 3 menit / 180000 ms), pakai cache agar instan
+        if (cachedData && cacheTime && now - parseInt(cacheTime) < 180000) {
+          setCampaigns(JSON.parse(cachedData));
+          setLoading(false);
+          return;
+        }
+
+        // Jika belum ada/kedaluwarsa, ambil dari API
         const res = await AuthService.getCampaigns();
         const data = res.data || res;
         
         if (Array.isArray(data)) {
           setCampaigns(data);
+          // Simpan ke Session Cache
+          sessionStorage.setItem("cache_campaigns", JSON.stringify(data));
+          sessionStorage.setItem("cache_campaigns_time", now.toString());
         } else {
           setCampaigns([]);
         }
@@ -62,18 +82,37 @@ export default function DonasiPage() {
     fetchAllCampaigns();
   }, []);
 
-  const processedCampaigns = campaigns
-    .filter((c) => (c.title || "").toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => {
-      const daysA = calculateDaysLeft(a.end_date);
-      const daysB = calculateDaysLeft(b.end_date);
+  // Reset jumlah tampilan saat pengguna mengetik kata kunci pencarian baru
+  useEffect(() => {
+    setVisibleCount(6);
+  }, [search]);
 
-      if (daysA > 0 && daysB > 0) return daysA - daysB;
-      if (daysA > 0 && daysB <= 0) return -1;
-      if (daysA <= 0 && daysB > 0) return 1;
+  // 🔥 OPTIMASI PERFORMA MENGGUNAKAN useMemo
+  const processedCampaigns = useMemo(() => {
+    return campaigns
+      .filter((c) => (c.title || "").toLowerCase().includes(search.toLowerCase()))
+      .sort((a, b) => {
+        const daysA = calculateDaysLeft(a.end_date);
+        const daysB = calculateDaysLeft(b.end_date);
 
-      return 0;
-    });
+        const aActive = daysA === null || (daysA as number) > 0;
+        const bActive = daysB === null || (daysB as number) > 0;
+
+        if (aActive && bActive) {
+          if (daysA === null && daysB === null) return 0;
+          if (daysA === null) return 1;
+          if (daysB === null) return -1;
+          return (daysA as number) - (daysB as number);
+        }
+        if (aActive && !bActive) return -1;
+        if (!aActive && bActive) return 1;
+
+        return 0;
+      });
+  }, [campaigns, search]);
+
+  // Data yang benar-benar dirender ke layar sesuai batasan pagination
+  const displayedCampaigns = processedCampaigns.slice(0, visibleCount);
 
   return (
     <div className="min-h-screen w-full max-w-md mx-auto bg-linear-to-b from-[#7C3996] to-[#b359d4] flex flex-col pb-10">
@@ -111,35 +150,54 @@ export default function DonasiPage() {
              <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
              <p className="text-sm font-bold text-white animate-pulse">{t("syncing_data")}</p>
           </div>
-        ) : processedCampaigns.length > 0 ? (
-          processedCampaigns.map((campaign) => {
-            const collected = campaign.current_amount || 0;
-            const target = campaign.target_amount || 1; 
-            const progressRaw = (collected / target) * 100;
-            const progress = progressRaw > 100 ? 100 : Math.round(progressRaw);
-            const daysLeft = calculateDaysLeft(campaign.end_date);
-            const categoryName = getCategoryName(campaign);
+        ) : displayedCampaigns.length > 0 ? (
+          <>
+            {displayedCampaigns.map((campaign) => {
+              const isUnlimitedTarget = !campaign.target_amount || campaign.target_amount === 0;
+              const collected = campaign.current_amount_idr || 0;
+              const target = isUnlimitedTarget ? null : Number(campaign.target_amount); 
+              
+              const calcTarget = isUnlimitedTarget ? 1 : Number(target);
+              const progressRaw = (collected / calcTarget) * 100;
+              const progress = progressRaw > 100 ? 100 : Math.round(progressRaw);
+              
+              const daysLeft = calculateDaysLeft(campaign.end_date);
+              const categoryName = getCategoryName(campaign);
 
-            const imageUrl = campaign.image_banner 
-              ? (campaign.image_banner.startsWith('http') ? campaign.image_banner : `${IMAGE_BASE_URL}/${campaign.image_banner.replace(/^\/+/, '')}`)
-              : "/bencana.png"; 
+              const banner = Array.isArray(campaign.image_banner) 
+                ? campaign.image_banner[0] 
+                : campaign.image_banner;
 
-            return (
-              <CampaignCard
-                key={campaign.id}
-                id={campaign.slug || campaign.id}
-                image={imageUrl}
-                foundation={campaign.full_name || t("beneficiary")}
-                title={campaign.title}
-                collected={`${collected}`}
-                target={`${campaign.target_amount}`}
-                progress={progress}
-                daysLeft={daysLeft}
-                category={categoryName}
-                walletAddress={campaign.wallet_address || campaign.user?.wallet_address || campaign.beneficiary?.wallet_address}
-              />
-            );
-          })
+              const imageUrl = typeof banner === "string" && banner.trim() !== ""
+                ? (banner.startsWith('http') ? banner : `${IMAGE_BASE_URL}/${banner.replace(/^\/+/, '')}`)
+                : "/bencana.png"; 
+
+              return (
+                <CampaignCard
+                  key={campaign.id}
+                  id={campaign.slug || campaign.id}
+                  image={imageUrl}
+                  foundation={campaign.full_name || t("beneficiary")}
+                  title={campaign.title}
+                  collected={collected}
+                  target={target}
+                  progress={progress}
+                  daysLeft={daysLeft}
+                  category={categoryName}
+                />
+              );
+            })}
+
+            {/* 🔥 TOMBOL LOAD MORE (PAGINATION / LAZY LOADING) */}
+            {visibleCount < processedCampaigns.length && (
+              <button
+                onClick={() => setVisibleCount((prev) => prev + 6)}
+                className="w-full py-3.5 bg-white/20 hover:bg-white/30 text-white rounded-2xl font-bold text-sm backdrop-blur-md border border-white/30 transition-all active:scale-95 shadow-sm mt-2 flex items-center justify-center gap-2"
+              >
+                Muat Lebih Banyak ({processedCampaigns.length - visibleCount} lainnya)
+              </button>
+            )}
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 mt-4">
             <Search size={28} className="text-white mb-4 opacity-70" />

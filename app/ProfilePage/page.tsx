@@ -1,8 +1,9 @@
 "use client";
 
-import "@/lib/i18n"; // 🔥 FIX: Wajib ditambahkan agar mesin bahasa menyala lebih dulu
+import "@/lib/i18n"; 
 import Link from "next/link";
 import Navbar from "@/app/components/ui/profile/navbar"; 
+import BottomNav from "@/app/components/ui/root/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next"; 
@@ -39,8 +40,7 @@ export default function ProfilePagePenerima() {
     // 1. Ubah bahasa di layar saat ini
     i18n.changeLanguage(newLang);
     
-    // 2. 🔥 INI YANG PALING PENTING: Simpan ke memori browser!
-    // Jika baris ini tidak ada, maka I18nProvider tidak punya data untuk dibaca saat di-refresh
+    // 2. Simpan ke memori browser
     localStorage.setItem("app_lang", newLang); 
   };
 
@@ -84,7 +84,8 @@ export default function ProfilePagePenerima() {
   };
 
   return (
-    <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-b from-[#7C3996] to-[#b359d4] shadow-2xl">
+    // 🔥 Tambahkan pb-32 agar konten tidak tertutup BottomNav
+    <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-b from-[#7C3996] to-[#b359d4] shadow-2xl pb-32">
       <Navbar />
 
       {/* Toast Notification */}
@@ -144,22 +145,6 @@ export default function ProfilePagePenerima() {
               </>
             )}
           </div>
-
-          {/* Wallet */}
-          {user?.wallet_address ? (
-            <button
-              onClick={handleCopyWallet}
-              className="group mt-5 flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20 border border-white/20 px-5 py-2.5 rounded-2xl transition-all duration-300 cursor-pointer active:scale-95 w-fit max-w-sm"
-              title="Klik untuk menyalin"
-            >
-              <p className="text-purple-50 text-sm font-mono tracking-wide">
-                {formatWalletAddress(user.wallet_address)}
-              </p>
-              {copied ? <CheckCircle2 size={16} className="text-green-300" /> : <Copy size={16} className="text-purple-200 group-hover:text-white" />}
-            </button>
-          ) : (
-            <p className="text-purple-200/50 text-xs mt-5 italic">{t("no_wallet")}</p>
-          )}
         </div>
 
         {/* Menu Utama */}
@@ -259,7 +244,7 @@ export default function ProfilePagePenerima() {
 
           <div className="h-px bg-gray-100 mx-4 my-2"></div>
 
-          {/* 🔥 TOMBOL GANTI BAHASA 🔥 */}
+          {/* TOMBOL GANTI BAHASA */}
           <button
             onClick={toggleLanguage}
             className="group w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-slate-50 cursor-pointer"
@@ -297,6 +282,9 @@ export default function ProfilePagePenerima() {
           Kemas Foundation
         </p>
       </main>
+
+      {/* 🔥 Render BottomNav di bagian bawah */}
+      <BottomNav />
     </div>
   );
 }

@@ -16,21 +16,121 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+filantropi/
+├── app
+│   ├── AllProgramsPage
+│   │   └── page.tsx
+│   ├── components
+│   │   └── ui
+│   │       ├── detail
+│   │       │   ├── DisbursementModal.tsx
+│   │       │   ├── DonationTypeModal.tsx
+│   │       │   ├── LiveDonationBlink.tsx
+│   │       │   ├── navbar.tsx
+│   │       │   ├── PaymentModal.tsx
+│   │       │   ├── ReportModal.tsx
+│   │       │   └── WakafPledgeModal.tsx
+│   │       ├── donasi
+│   │       │   └── campaigncard.tsx
+│   │       ├── homepage
+│   │       │   ├── balancecard.tsx
+│   │       │   ├── carousel.tsx
+│   │       │   ├── homeheader.tsx
+│   │       │   ├── latestprograms.tsx
+│   │       │   ├── navbar.tsx
+│   │       │   ├── tentangcard.tsx
+│   │       │   ├── tentanglist.tsx
+│   │       │   ├── urgentcard.tsx
+│   │       │   └── urgentdonation.tsx
+│   │       ├── login
+│   │       │   └── navbar.tsx
+│   │       ├── profile
+│   │       │   └── navbar.tsx
+│   │       ├── register
+│   │       │   └── navbar.tsx
+│   │       ├── root
+│   │       │   └── BottomNav.tsx
+│   │       └── user
+│   │           └── navbar.tsx
+│   ├── DetailPage
+│   │   ├── FormDonasiPage
+│   │   │   └── page.tsx
+│   │   └── page.tsx
+│   ├── DonasiPage
+│   │   └── page.tsx
+│   ├── GalangPage
+│   │   └── page.tsx
+│   ├── HistoryPage
+│   │   └── page.tsx
+│   ├── HomePage
+│   │   └── page.tsx
+│   ├── LoginPage
+│   │   ├── Masuk
+│   │   │   └── page.tsx
+│   │   └── page.tsx
+│   ├── PaymentSimulation
+│   │   └── page.tsx
+│   ├── ProfilePage
+│   │   ├── PagePenerima
+│   │   │   ├── Tipe
+│   │   │   │   └── page.tsx
+│   │   │   └── page.tsx
+│   │   ├── UserPage
+│   │   │   └── page.tsx
+│   │   └── page.tsx
+│   ├── ProgramPage
+│   │   ├── EditProgram
+│   │   │   └── page.tsx
+│   │   └── page.tsx
+│   ├── ProgressPage
+│   │   └── page.tsx
+│   ├── PusatBantuan
+│   │   └── page.tsx
+│   ├── SyaratKetentuan
+│   │   └── page.tsx
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── I18nProvider.tsx
+│   ├── layout.tsx
+│   └── page.tsx
+├── hooks
+│   └── useAuth.ts
+├── lib
+│   ├── api.ts
+│   ├── auth.service.ts
+│   ├── firebase.ts
+│   └── i18n.ts
+├── public
+│   ├── apple.png
+│   ├── bandang.jpg
+│   ├── banjir.jpg
+│   ├── bencana.png
+│   ├── blockchain.jpg
+│   ├── crypto.jpg
+│   ├── donasi.jpg
+│   ├── donate.jpg
+│   ├── filantropi.png
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── google.png
+│   ├── kemas.png
+│   ├── logo.png
+│   ├── metamask.jpg
+│   ├── next.svg
+│   ├── profile.png
+│   ├── vercel.svg
+│   └── window.svg
+├── AGENTS.md
+├── CLAUDE.md
+├── eslint.config.mjs
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── README.md
+└── tsconfig.json
+```
