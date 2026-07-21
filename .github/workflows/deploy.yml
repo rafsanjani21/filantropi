@@ -18,6 +18,12 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            # 🔥 Memuat NVM dan konfigurasi path agar npm & pm2 terbaca
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            source ~/.bashrc
+
+            # Perintah deploy asli Anda
             pm2 delete "Filantropi LP" || true
             cd /home/devlanding/filantropi_lp/filantropi-main
             git pull
