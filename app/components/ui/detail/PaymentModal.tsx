@@ -23,7 +23,6 @@ export default function PaymentModal({
 }: PaymentModalProps) {
   if (!isOpen) return null;
 
-  // Sesuaikan dengan data bank yayasan Anda
   const bankName = "BCA (Bank Central Asia)";
   const accountNumber = "7001086972";
   const accountName = "KOLABORASI EKOSISTEM MASYARAKAT INDONESIA";
@@ -40,7 +39,6 @@ export default function PaymentModal({
         onClick={() => !isProcessing && onClose()}
       />
       
-      {/* Container utama diperkecil menggunakan max-w-sm (maksimal 384px) */}
       <div className="relative bg-white w-full max-w-sm rounded-2xl shadow-2xl flex flex-col transform transition-all animate-in zoom-in-95 duration-200">
         
         {/* Header Modal */}
@@ -75,7 +73,7 @@ export default function PaymentModal({
             Silakan transfer donasi Anda ke rekening di bawah ini.
           </p>
 
-          {/* Kartu Detail Bank - Dibuat rata kiri agar lebih rapi */}
+          {/* Kartu Detail Bank  */}
           <div className="w-full bg-gray-50 p-4 rounded-xl border border-gray-100 flex flex-col gap-3 text-left">
             <div>
               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
@@ -100,7 +98,7 @@ export default function PaymentModal({
                 Nomor Rekening
               </span>
               
-              {/* Box Nomor Rekening & Tombol Copy disatukan secara horizontal */}
+              {/* Box Nomor Rekening & Tombol Copy */}
               <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-2 mt-1.5 shadow-sm">
                 <span className="text-lg font-black text-purple-700 tracking-widest pl-2">
                   {accountNumber}
