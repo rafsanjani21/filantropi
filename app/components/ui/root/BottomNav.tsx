@@ -133,7 +133,7 @@ export default function BottomNav() {
                     menu.name === "Kampanye"
                       ? t(
                           "lock_donate_beneficiary",
-                          "Mohon maaf, fitur donasi hanya dapat diakses oleh akun Dermawan.",
+                          "Mohon maaf, fitur donasi hanya dapat diakses oleh akun Filantropis.",
                         )
                       : t(
                           "lock_galang_user",

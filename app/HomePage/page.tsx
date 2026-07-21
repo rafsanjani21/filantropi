@@ -106,7 +106,7 @@ export default function HomePage() {
     if (isCheckingAuth) {
       return <span className="inline-block w-32 h-6 bg-white/20 rounded-md animate-pulse"></span>;
     }
-    return userProfile?.name || userProfile?.full_name || (role === "guest" ? t("Dermawan") : t("good_person"));
+    return userProfile?.name || userProfile?.full_name || (role === "guest" ? t("Orang Baik") : t("good_person"));
   };
 
   return (
