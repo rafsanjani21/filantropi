@@ -18,14 +18,24 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            set -e # PENTING: Menghentikan proses jika ada error
+
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             export PATH=$PATH:/usr/local/bin:/usr/bin
 
-            pm2 delete "Filantropi LP" || true
             cd /home/devlanding/filantropi_lp/filantropi-main
-            git pull
+            
+            # 1. Ambil data terbaru dari GitHub tanpa mengubah file
+            git fetch origin
+            
+            # 2. Paksa sinkronisasi: Timpa semua file di VPS agar 100% sama dengan branch main di GitHub
+            git reset --hard origin/main
+            
+            # 3. Lanjut install dan build
             npm install
             npm run build
-            pm2 start npm --name "Filantropi LP" -- start -- --port 3005
+            
+            # 4. Restart aplikasi tanpa downtime
+            pm2 restart "Filantropi LP" --update-env || pm2 start npm --name "Filantropi LP" -- start -- --port 3005
             pm2 save
