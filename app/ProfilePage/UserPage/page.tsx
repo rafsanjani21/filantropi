@@ -196,7 +196,25 @@ export default function UserPage() {
     : null;
 
   return (
-    <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-gradient-to-b from-[#7C3996] to-[#b359d4] shadow-2xl relative overflow-x-hidden">
+    <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-gradient-to-b from-[#3E1854] via-[#6B2E88] to-[#8A45A8] shadow-2xl pb-32 overflow-hidden">
+      {/* Signature: motif kawung tipis, konsisten dengan seluruh app */}
+      <svg
+        className="absolute inset-0 w-full h-full opacity-[0.07] pointer-events-none"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <defs>
+          <pattern id="kawung-profile" width="56" height="56" patternUnits="userSpaceOnUse">
+            <g fill="none" stroke="#F3D48A" strokeWidth="1.1">
+              <ellipse cx="14" cy="14" rx="12" ry="8" transform="rotate(45 14 14)" />
+              <ellipse cx="42" cy="14" rx="12" ry="8" transform="rotate(-45 42 14)" />
+              <ellipse cx="14" cy="42" rx="12" ry="8" transform="rotate(-45 14 42)" />
+              <ellipse cx="42" cy="42" rx="12" ry="8" transform="rotate(45 42 42)" />
+            </g>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#kawung-profile)" />
+      </svg>
       
       {toast && (
         <div className={`fixed top-10 left-1/2 transform -translate-x-1/2 px-6 py-3.5 rounded-full shadow-2xl backdrop-blur-md flex items-center gap-3 z-50 animate-in fade-in slide-in-from-top-5 duration-300 border w-[90%] max-w-sm ${

@@ -1,17 +1,17 @@
 "use client";
 
-import "@/lib/i18n"; 
+import "@/lib/i18n";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { 
-  ArrowLeft, Plus, Clock, CheckCircle2, XCircle, 
-  AlertCircle, Share2, Edit3, Heart, Wallet, ShieldAlert 
+import {
+  ArrowLeft, Plus, Clock, CheckCircle2, XCircle,
+  AlertCircle, Share2, Edit3, Heart, Wallet, ShieldAlert
 } from "lucide-react";
 import { AuthService } from "@/lib/auth.service";
 import { apiFetch } from "@/lib/api";
-import { useAuth } from "@/hooks/useAuth"; 
-import { useTranslation } from "react-i18next"; 
+import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 
 const truncateWallet = (address: string) => {
   if (!address) return "Belum diatur";
@@ -19,16 +19,16 @@ const truncateWallet = (address: string) => {
 };
 
 export default function ProgramPage() {
-  const router = useRouter(); 
-  const { getProfile } = useAuth(); 
-  const { t } = useTranslation(); 
-  
+  const router = useRouter();
+  const { getProfile } = useAuth();
+  const { t } = useTranslation();
+
   const [campaigns, setCampaigns] = useState<any[]>([]);
-  const [userProfile, setUserProfile] = useState<any>(null); 
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  
+
   const [showLimitModal, setShowLimitModal] = useState(false);
-  const [showUnverifiedModal, setShowUnverifiedModal] = useState(false); 
+  const [showUnverifiedModal, setShowUnverifiedModal] = useState(false);
 
   const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
 
@@ -52,18 +52,18 @@ export default function ProgramPage() {
 
         const res = await AuthService.getMyCampaigns();
         const rawData = res.data || res;
-        
+
         if (Array.isArray(rawData)) {
           const campaignsWithTotalCollected = await Promise.all(
             rawData.map(async (campaign) => {
               const wallet = campaign.wallet_address || campaign.user?.wallet_address;
               // Default ke current_amount_idr dari DB jika API blockchain gagal
               let totalAmount = campaign.current_amount_idr || 0;
-              
+
               if (wallet) {
                 try {
                   const amountRes = await apiFetch(`/donations/amount/${wallet}`, { method: "GET" });
-                  
+
                   if (amountRes && amountRes.data && amountRes.data.total_amount !== undefined) {
                     totalAmount = parseFloat(amountRes.data.total_amount || "0");
                   }
@@ -74,7 +74,7 @@ export default function ProgramPage() {
               return { ...campaign, live_collected: totalAmount };
             })
           );
-          
+
           setCampaigns(campaignsWithTotalCollected);
         }
       } catch (error) {
@@ -90,9 +90,9 @@ export default function ProgramPage() {
 
   // --- LOGIKA PEMBATASAN KAMPANYE & VERIFIKASI ---
   const isVerified = userProfile?.is_verified === 1 || userProfile?.is_verified === true;
-  const isNotVerified = userProfile !== null && !isVerified; 
+  const isNotVerified = userProfile !== null && !isVerified;
 
-  const isIndividual = userProfile?.beneficiary_type?.toLowerCase() === "individu" || 
+  const isIndividual = userProfile?.beneficiary_type?.toLowerCase() === "individu" ||
                        userProfile?.beneficiary_type?.toLowerCase() === "individual";
   const cannotCreateMore = isIndividual && campaigns.length >= 1;
 
@@ -124,21 +124,21 @@ export default function ProgramPage() {
     switch (status?.toLowerCase()) {
       case "active":
         return (
-          <div className="flex items-center gap-1 bg-green-50 text-green-600 px-2.5 py-1 rounded-lg border border-green-100 shadow-sm">
+          <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm text-emerald-600 px-2.5 py-1 rounded-lg shadow-sm">
             <CheckCircle2 size={12} />
             <span className="text-[10px] font-black uppercase tracking-wider">{t("active_status")}</span>
           </div>
         );
       case "rejected":
         return (
-          <div className="flex items-center gap-1 bg-red-50 text-red-600 px-2.5 py-1 rounded-lg border border-red-100 shadow-sm">
+          <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm text-red-600 px-2.5 py-1 rounded-lg shadow-sm">
             <XCircle size={12} />
             <span className="text-[10px] font-black uppercase tracking-wider">{t("rejected_status")}</span>
           </div>
         );
       default:
         return (
-          <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2.5 py-1 rounded-lg border border-amber-100 shadow-sm">
+          <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm text-amber-600 px-2.5 py-1 rounded-lg shadow-sm">
             <Clock size={12} />
             <span className="text-[10px] font-black uppercase tracking-wider">{t("waiting_status")}</span>
           </div>
@@ -147,22 +147,22 @@ export default function ProgramPage() {
   };
 
   return (
-    <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-gray-50 pb-24 relative">
-      
+    <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-[#FBF8F3] pb-24 relative">
+
       {/* MODAL POPUP: BELUM DIVERIFIKASI */}
       {showUnverifiedModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2A1B33]/70 backdrop-blur-sm p-4 animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-sm rounded-3xl flex flex-col items-center p-6 text-center shadow-2xl animate-in zoom-in-95">
             <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-5 border-4 border-amber-100 shadow-inner">
               <Clock size={36} />
             </div>
-            <h2 className="text-xl font-black text-gray-800 mb-2">{t("unverified_account")}</h2>
+            <h2 className="text-xl font-black text-[#2A1B33] mb-2">{t("unverified_account")}</h2>
             <p className="text-sm text-gray-500 mb-6 leading-relaxed">
               {t("unverified_account_desc")}
             </p>
             <button
               onClick={() => setShowUnverifiedModal(false)}
-              className="w-full bg-purple-600 text-white font-bold py-3.5 rounded-2xl hover:bg-purple-700 active:scale-95 transition-all shadow-[0_10px_20px_-10px_rgba(124,57,150,0.5)]"
+              className="w-full bg-gradient-to-r from-[#7C3996] to-[#5B2A73] text-white font-bold py-3.5 rounded-2xl hover:brightness-110 active:scale-95 transition-all shadow-[0_10px_20px_-10px_rgba(124,57,150,0.5)]"
             >
               {t("i_understand")}
             </button>
@@ -172,18 +172,18 @@ export default function ProgramPage() {
 
       {/* MODAL POPUP: BATAS MAKSIMAL */}
       {showLimitModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2A1B33]/70 backdrop-blur-sm p-4 animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-sm rounded-3xl flex flex-col items-center p-6 text-center shadow-2xl animate-in zoom-in-95">
             <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-5 border-4 border-red-100 shadow-inner">
               <ShieldAlert size={36} />
             </div>
-            <h2 className="text-xl font-black text-gray-800 mb-2">{t("limit_reached")}</h2>
+            <h2 className="text-xl font-black text-[#2A1B33] mb-2">{t("limit_reached")}</h2>
             <p className="text-sm text-gray-500 mb-6 leading-relaxed">
               {t("limit_reached_desc")}
             </p>
             <button
               onClick={() => setShowLimitModal(false)}
-              className="w-full bg-purple-600 text-white font-bold py-3.5 rounded-2xl hover:bg-purple-700 active:scale-95 transition-all shadow-[0_10px_20px_-10px_rgba(124,57,150,0.5)]"
+              className="w-full bg-gradient-to-r from-[#7C3996] to-[#5B2A73] text-white font-bold py-3.5 rounded-2xl hover:brightness-110 active:scale-95 transition-all shadow-[0_10px_20px_-10px_rgba(124,57,150,0.5)]"
             >
               {t("i_understand")}
             </button>
@@ -192,26 +192,44 @@ export default function ProgramPage() {
       )}
 
       {/* HEADER */}
-      <div className="sticky top-0 z-40 bg-linear-to-r from-[#7C3996] to-[#b359d4] shadow-lg rounded-b-3xl">
-        <nav className="px-6 pt-8 pb-6 flex items-center justify-between text-white">
-          <button 
-            onClick={() => router.back()} 
-            className="w-10 h-10 flex items-center justify-center bg-white/20 backdrop-blur-md rounded-full hover:bg-white/30 transition-all cursor-pointer"
+      <div className="sticky top-0 z-40 bg-gradient-to-b from-[#3E1854] via-[#6B2E88] to-[#8A45A8] shadow-lg rounded-b-3xl overflow-hidden">
+        <svg
+          className="absolute inset-0 w-full h-full opacity-[0.08] pointer-events-none"
+          preserveAspectRatio="xMidYMid slice"
+          aria-hidden="true"
+        >
+          <defs>
+            <pattern id="kawung-myprograms" width="56" height="56" patternUnits="userSpaceOnUse">
+              <g fill="none" stroke="#F3D48A" strokeWidth="1.1">
+                <ellipse cx="14" cy="14" rx="12" ry="8" transform="rotate(45 14 14)" />
+                <ellipse cx="42" cy="14" rx="12" ry="8" transform="rotate(-45 42 14)" />
+                <ellipse cx="14" cy="42" rx="12" ry="8" transform="rotate(-45 14 42)" />
+                <ellipse cx="42" cy="42" rx="12" ry="8" transform="rotate(45 42 42)" />
+              </g>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#kawung-myprograms)" />
+        </svg>
+
+        <nav className="relative px-6 pt-8 pb-6 flex items-center justify-between text-white">
+          <button
+            onClick={() => router.back()}
+            className="w-10 h-10 flex items-center justify-center bg-white/10 border border-white/20 backdrop-blur-md rounded-full hover:bg-white/20 transition-all cursor-pointer"
           >
             <ArrowLeft size={20} />
           </button>
           <h1 className="text-lg font-bold tracking-tight">{t("my_programs")}</h1>
-          
-          <button 
+
+          <button
             onClick={handleCreateCampaignClick}
             className={`w-10 h-10 flex items-center justify-center rounded-full shadow-md transition-all cursor-pointer ${
-              isNotVerified || cannotCreateMore 
-                ? "bg-gray-300 text-gray-500" 
-                : "bg-white text-purple-600 active:scale-95"
+              isNotVerified || cannotCreateMore
+                ? "bg-white/20 text-white/50"
+                : "bg-white text-[#7C3996] active:scale-95"
             }`}
             title={
-              isNotVerified ? t("unverified_tooltip") : 
-              cannotCreateMore ? t("max_1_program_tooltip") : 
+              isNotVerified ? t("unverified_tooltip") :
+              cannotCreateMore ? t("max_1_program_tooltip") :
               t("create_new_program_tooltip")
             }
           >
@@ -223,29 +241,29 @@ export default function ProgramPage() {
       <div className="px-6 pt-6 flex flex-col gap-5">
         {loading ? (
           [1, 2].map((i) => (
-            <div key={i} className="h-64 bg-white rounded-3xl animate-pulse border border-gray-100 shadow-sm" />
+            <div key={i} className="h-64 bg-[#7C3996]/8 rounded-3xl animate-pulse border border-[#7C3996]/8" />
           ))
         ) : campaigns.length > 0 ? (
           campaigns.map((campaign) => {
-            
+
             // 🔥 LOGIKA UNLIMITED TARGET
             const isUnlimitedTarget = !campaign.target_amount || campaign.target_amount === 0;
             const target = isUnlimitedTarget ? 1 : Number(campaign.target_amount);
-            
+
             const collected = campaign.live_collected !== undefined ? campaign.live_collected : (campaign.current_amount_idr || 0);
-            
+
             let progress: number | string = 0;
             const percent = (collected / target) * 100;
             if (percent >= 100) {
               progress = 100;
             } else if (percent > 99) {
-              progress = percent.toFixed(1); 
+              progress = percent.toFixed(1);
             } else {
-              progress = Math.floor(percent); 
+              progress = Math.floor(percent);
             }
-            
-            const banner = Array.isArray(campaign.image_banner) 
-              ? campaign.image_banner[0] 
+
+            const banner = Array.isArray(campaign.image_banner)
+              ? campaign.image_banner[0]
               : campaign.image_banner;
 
             const imageUrl = typeof banner === "string" && banner.trim() !== ""
@@ -255,18 +273,18 @@ export default function ProgramPage() {
             const campaignIdentifier = campaign.slug || campaign.id;
 
             return (
-              <div key={campaign.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col group transition-shadow hover:shadow-md">
+              <div key={campaign.id} className="bg-white rounded-3xl shadow-[0_4px_20px_-4px_rgba(124,57,150,0.15)] border border-[#7C3996]/8 overflow-hidden flex flex-col group transition-shadow hover:shadow-[0_8px_28px_-6px_rgba(124,57,150,0.25)]">
                 <Link href={`/DetailPage?slug=${campaignIdentifier}`} className="block cursor-pointer">
                   <div className="relative h-40">
                     <img src={imageUrl} alt={campaign.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent group-hover:from-black/5 transition-colors"></div>
                     <div className="absolute top-3 left-3">
                       {renderStatusBadge(campaign.status)}
                     </div>
                   </div>
 
                   <div className="px-5 pt-5 pb-2">
-                    <h3 className="font-bold text-gray-800 text-base line-clamp-2 mb-3 leading-snug group-hover:text-purple-600 transition-colors">
+                    <h3 className="font-bold text-[#2A1B33] text-base line-clamp-2 mb-3 leading-snug group-hover:text-[#7C3996] transition-colors">
                       {campaign.title}
                     </h3>
 
@@ -276,8 +294,8 @@ export default function ProgramPage() {
                           <div className="flex flex-col">
                             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">{t("collected_label")}</span>
                             <div className="flex items-baseline gap-1">
-                              <span className="text-sm font-black text-purple-600">Rp {Number(collected).toLocaleString("id-ID")}</span>
-                              
+                              <span className="text-sm font-black text-[#5B2A73]">Rp {Number(collected).toLocaleString("id-ID")}</span>
+
                               {/* 🔥 Sembunyikan pembagi target dana jika Unlimited */}
                               {!isUnlimitedTarget && (
                                 <span className="text-[10px] text-gray-400 font-normal">
@@ -286,19 +304,22 @@ export default function ProgramPage() {
                               )}
                             </div>
                           </div>
-                          
+
                           {/* 🔥 Sembunyikan persentase jika Unlimited */}
                           {!isUnlimitedTarget && (
-                            <span className="text-xs font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100 shadow-sm">
+                            <span className="text-xs font-black text-[#5B2A73] bg-[#E8B94A]/15 border border-[#E8B94A]/30 px-2 py-0.5 rounded-md">
                               {progress}%
                             </span>
                           )}
                         </div>
-                        
+
                         {/* 🔥 Sembunyikan bar persentase jika Unlimited */}
                         {!isUnlimitedTarget && (
-                          <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
-                            <div className="bg-purple-600 h-full rounded-full transition-all duration-1000" style={{ width: `${progress}%` }} />
+                          <div className="w-full bg-[#7C3996]/10 h-2.5 rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-1000 bg-gradient-to-r from-[#7C3996] to-[#E8B94A]"
+                              style={{ width: `${progress}%` }}
+                            />
                           </div>
                         )}
                       </div>
@@ -323,19 +344,19 @@ export default function ProgramPage() {
 
                 <div className="px-5 pb-5">
                   <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-100">
-                    <button 
+                    <button
                       onClick={() => campaign.status === 'active' ? handleShare(campaign.title) : null}
                       disabled={campaign.status !== 'active'}
                       className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition ${
-                        campaign.status === 'active' 
-                          ? 'bg-purple-50 text-purple-600 hover:bg-purple-100 active:scale-95' 
+                        campaign.status === 'active'
+                          ? 'bg-[#7C3996]/8 text-[#7C3996] hover:bg-[#7C3996]/15 active:scale-95'
                           : 'bg-gray-50 text-gray-400 cursor-not-allowed'
                       }`}
                     >
                       <Share2 size={16} /> {t("share_button")}
                     </button>
-                    
-                    <Link 
+
+                    <Link
                       href={`/ProgramPage/EditProgram?id=${campaignIdentifier}`}
                       className="flex items-center justify-center gap-2 bg-gray-50 text-gray-600 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-100 transition active:scale-95"
                     >
@@ -349,16 +370,16 @@ export default function ProgramPage() {
           })
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center mb-4">
-              <Heart size={32} className="text-purple-300" />
+            <div className="w-20 h-20 bg-[#7C3996]/8 rounded-full flex items-center justify-center mb-4">
+              <Heart size={32} className="text-[#7C3996]/40" />
             </div>
-            <h3 className="text-gray-800 font-bold text-lg">{t("no_program_title")}</h3>
+            <h3 className="text-[#2A1B33] font-bold text-lg">{t("no_program_title")}</h3>
             <p className="text-gray-500 text-sm mt-2 px-10 leading-relaxed">
               {t("no_program_desc")}
             </p>
-            <button 
-              onClick={handleCreateCampaignClick} 
-              className="mt-6 bg-purple-600 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-purple-200 active:scale-95 transition-all cursor-pointer"
+            <button
+              onClick={handleCreateCampaignClick}
+              className="mt-6 bg-gradient-to-r from-[#7C3996] to-[#5B2A73] text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-[#7C3996]/20 active:scale-95 transition-all cursor-pointer"
             >
               {t("create_program_button")}
             </button>

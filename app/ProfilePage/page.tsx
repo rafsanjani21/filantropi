@@ -1,12 +1,12 @@
 "use client";
 
-import "@/lib/i18n"; 
+import "@/lib/i18n";
 import Link from "next/link";
-import Navbar from "@/app/components/ui/profile/navbar"; 
+import Navbar from "@/app/components/ui/profile/navbar";
 import BottomNav from "@/app/components/ui/root/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next"; 
+import { useTranslation } from "react-i18next";
 import {
   User,
   History,
@@ -20,9 +20,9 @@ import {
   MapPin,
   Mail,
   LayoutDashboard,
-  HelpCircle, 
-  Scale,       
-  Globe 
+  HelpCircle,
+  Scale,
+  Globe
 } from "lucide-react";
 
 export default function ProfilePagePenerima() {
@@ -36,12 +36,12 @@ export default function ProfilePagePenerima() {
   // FUNGSI GANTI BAHASA
   const toggleLanguage = () => {
     const newLang = i18n.language === "id" ? "en" : "id";
-    
+
     // 1. Ubah bahasa di layar saat ini
     i18n.changeLanguage(newLang);
-    
+
     // 2. Simpan ke memori browser
-    localStorage.setItem("app_lang", newLang); 
+    localStorage.setItem("app_lang", newLang);
   };
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export default function ProfilePagePenerima() {
       try {
         let data;
         try {
-          data = await getProfile(); 
+          data = await getProfile();
         } catch (err: any) {
           data = await getProfile("beneficiary");
         }
@@ -58,7 +58,7 @@ export default function ProfilePagePenerima() {
         console.error("Gagal mengambil data profil sama sekali:", err);
       }
     };
-    
+
     fetchProfileData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -84,23 +84,41 @@ export default function ProfilePagePenerima() {
   };
 
   return (
-    // 🔥 Tambahkan pb-32 agar konten tidak tertutup BottomNav
-    <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-b from-[#7C3996] to-[#b359d4] shadow-2xl pb-32">
+    <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-gradient-to-b from-[#3E1854] via-[#6B2E88] to-[#8A45A8] shadow-2xl pb-32 overflow-hidden">
+      {/* Signature: motif kawung tipis, konsisten dengan seluruh app */}
+      <svg
+        className="absolute inset-0 w-full h-full opacity-[0.07] pointer-events-none"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <defs>
+          <pattern id="kawung-profile" width="56" height="56" patternUnits="userSpaceOnUse">
+            <g fill="none" stroke="#F3D48A" strokeWidth="1.1">
+              <ellipse cx="14" cy="14" rx="12" ry="8" transform="rotate(45 14 14)" />
+              <ellipse cx="42" cy="14" rx="12" ry="8" transform="rotate(-45 42 14)" />
+              <ellipse cx="14" cy="42" rx="12" ry="8" transform="rotate(-45 14 42)" />
+              <ellipse cx="42" cy="42" rx="12" ry="8" transform="rotate(45 42 42)" />
+            </g>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#kawung-profile)" />
+      </svg>
+
       <Navbar />
 
       {/* Toast Notification */}
       {copied && (
-        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-900/90 backdrop-blur-sm text-white px-5 py-2.5 rounded-full shadow-2xl text-sm font-medium flex items-center gap-2 z-50 animate-in fade-in slide-in-from-top-5 duration-300">
-          <CheckCircle2 size={18} className="text-green-400" />
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-[#2A1B33]/90 backdrop-blur-sm text-white px-5 py-2.5 rounded-full shadow-2xl text-sm font-medium flex items-center gap-2 z-50 animate-in fade-in slide-in-from-top-5 duration-300">
+          <CheckCircle2 size={18} className="text-emerald-400" />
           {t("copied_wallet")}
         </div>
       )}
 
-      <main className="flex-1 flex flex-col items-center pt-10 px-6">
-        
+      <main className="relative flex-1 flex flex-col items-center pt-10 px-6">
+
         {/* Profile Header Section */}
         <div className="relative mb-6">
-          <div className="absolute -inset-1 bg-white/30 rounded-full blur-md"></div>
+          <div className="absolute -inset-1.5 bg-[#E8B94A]/40 rounded-full blur-md"></div>
           <div className="relative p-1 bg-white rounded-full shadow-lg">
             <img
               src={userPhoto}
@@ -110,13 +128,13 @@ export default function ProfilePagePenerima() {
               onError={(e) => (e.currentTarget.src = "/profile.png")}
             />
             {user?.role === "beneficiary" || user?.role === "penerima_manfaat" ? (
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full shadow-md border border-purple-100 flex items-center gap-1.5 whitespace-nowrap">
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full shadow-md border border-[#E8B94A]/40 flex items-center gap-1.5 whitespace-nowrap">
                 {user?.beneficiary_type === "organization" ? (
-                  <Building2 size={12} className="text-blue-600" />
+                  <Building2 size={12} className="text-[#7C3996]" />
                 ) : (
-                  <User size={12} className="text-purple-600" />
+                  <User size={12} className="text-[#7C3996]" />
                 )}
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-700">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#2A1B33]">
                   {user?.beneficiary_type === "organization" ? (i18n.language === 'id' ? "Organisasi" : "Organization") : (i18n.language === 'id' ? "Individu" : "Individual")}
                 </span>
               </div>
@@ -128,11 +146,11 @@ export default function ProfilePagePenerima() {
           <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center justify-center gap-2">
             {user?.name || user?.full_name || "User"}
             {user?.beneficiary_type === "organization" && user?.registration_number && (
-              <ShieldCheck size={20} className="text-blue-300" />
+              <ShieldCheck size={20} className="text-[#F3D48A]" />
             )}
           </h1>
-          
-          <div className="flex items-center gap-2 mt-1 text-purple-100 opacity-90 text-sm">
+
+          <div className="flex items-center gap-2 mt-1 text-purple-100/80 text-sm">
             {user?.role === "beneficiary" || user?.role === "penerima_manfaat" ? (
               <>
                 <MapPin size={14} />
@@ -148,16 +166,16 @@ export default function ProfilePagePenerima() {
         </div>
 
         {/* Menu Utama */}
-        <div className="w-full bg-white/95 backdrop-blur-sm rounded-[2.5rem] shadow-xl p-4 space-y-2 mb-8 border border-white/20">
-          
-          <Link 
+        <div className="w-full bg-white rounded-[2.5rem] shadow-xl p-4 space-y-2 mb-8 border border-white/20">
+
+          <Link
             href={
-              !user 
-                ? "#" 
-                : user.role === "beneficiary" || user.role === "penerima_manfaat" 
-                ? "/ProfilePage/PagePenerima" 
+              !user
+                ? "#"
+                : user.role === "beneficiary" || user.role === "penerima_manfaat"
+                ? "/ProfilePage/PagePenerima"
                 : "/ProfilePage/UserPage"
-            } 
+            }
             className="group"
             onClick={(e) => {
               if (!user) {
@@ -165,13 +183,13 @@ export default function ProfilePagePenerima() {
               }
             }}
           >
-            <div className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-purple-50">
+            <div className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-[#7C3996]/5">
               <div className="flex items-center gap-4">
-                <div className="bg-purple-100 p-2.5 rounded-xl text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                <div className="bg-[#7C3996]/10 p-2.5 rounded-xl text-[#7C3996] group-hover:bg-[#7C3996] group-hover:text-white transition-colors">
                   <User size={22} />
                 </div>
                 <div>
-                  <span className="font-bold text-gray-700 block text-sm">{t("profile_detail")}</span>
+                  <span className="font-bold text-[#2A1B33] block text-sm">{t("profile_detail")}</span>
                   <span className="text-[10px] text-gray-400 font-medium uppercase">
                     {!user ? "..." : user.role === "beneficiary" || user.role === "penerima_manfaat" ? t("beneficiary_data") : t("general_account")}
                   </span>
@@ -184,13 +202,13 @@ export default function ProfilePagePenerima() {
           {/* PROGRAM SAYA */}
           {(user?.role === "beneficiary" || user?.role === "penerima_manfaat") && (
             <Link href="/ProgramPage" className="group">
-              <div className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-emerald-50">
+              <div className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-[#E8B94A]/8">
                 <div className="flex items-center gap-4">
-                  <div className="bg-emerald-100 p-2.5 rounded-xl text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                  <div className="bg-[#E8B94A]/15 p-2.5 rounded-xl text-[#8A6413] group-hover:bg-[#E8B94A] group-hover:text-white transition-colors">
                     <LayoutDashboard size={22} />
                   </div>
                   <div>
-                    <span className="font-bold text-gray-700 block text-sm">{t("my_programs")}</span>
+                    <span className="font-bold text-[#2A1B33] block text-sm">{t("my_programs")}</span>
                     <span className="text-[10px] text-gray-400 font-medium uppercase">
                       {t("manage_campaigns")}
                     </span>
@@ -203,12 +221,12 @@ export default function ProfilePagePenerima() {
 
           {/* RIWAYAT DONASI */}
           <Link href="/HistoryPage" className="group">
-            <div className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-blue-50">
+            <div className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-[#7C3996]/5">
               <div className="flex items-center gap-4">
-                <div className="bg-blue-100 p-2.5 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <div className="bg-[#5B2A73]/10 p-2.5 rounded-xl text-[#5B2A73] group-hover:bg-[#5B2A73] group-hover:text-white transition-colors">
                   <History size={22} />
                 </div>
-                <span className="font-bold text-gray-700 text-sm">{t("donation_history")}</span>
+                <span className="font-bold text-[#2A1B33] text-sm">{t("donation_history")}</span>
               </div>
               <ChevronRight size={18} className="text-gray-300 group-hover:translate-x-1 transition-all" />
             </div>
@@ -218,12 +236,12 @@ export default function ProfilePagePenerima() {
 
           {/* PUSAT BANTUAN */}
           <Link href="/PusatBantuan" className="group">
-            <div className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-orange-50 cursor-pointer">
+            <div className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-gray-50 cursor-pointer">
               <div className="flex items-center gap-4">
-                <div className="bg-orange-100 p-2.5 rounded-xl text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors">
+                <div className="bg-gray-100 p-2.5 rounded-xl text-gray-500 group-hover:bg-gray-500 group-hover:text-white transition-colors">
                   <HelpCircle size={22} />
                 </div>
-                <span className="font-bold text-gray-700 text-sm">{t("help_center")}</span>
+                <span className="font-bold text-[#2A1B33] text-sm">{t("help_center")}</span>
               </div>
               <ChevronRight size={18} className="text-gray-300 group-hover:translate-x-1 transition-all" />
             </div>
@@ -231,12 +249,12 @@ export default function ProfilePagePenerima() {
 
           {/* SYARAT & KETENTUAN */}
           <Link href="/SyaratKetentuan" className="group">
-            <div className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-teal-50 cursor-pointer">
+            <div className="flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-gray-50 cursor-pointer">
               <div className="flex items-center gap-4">
-                <div className="bg-teal-100 p-2.5 rounded-xl text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                <div className="bg-gray-100 p-2.5 rounded-xl text-gray-500 group-hover:bg-gray-500 group-hover:text-white transition-colors">
                   <Scale size={22} />
                 </div>
-                <span className="font-bold text-gray-700 text-sm">{t("terms_conditions")}</span>
+                <span className="font-bold text-[#2A1B33] text-sm">{t("terms_conditions")}</span>
               </div>
               <ChevronRight size={18} className="text-gray-300 group-hover:translate-x-1 transition-all" />
             </div>
@@ -247,15 +265,15 @@ export default function ProfilePagePenerima() {
           {/* TOMBOL GANTI BAHASA */}
           <button
             onClick={toggleLanguage}
-            className="group w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-slate-50 cursor-pointer"
+            className="group w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-gray-50 cursor-pointer"
           >
             <div className="flex items-center gap-4">
-              <div className="bg-slate-100 p-2.5 rounded-xl text-slate-600 group-hover:bg-slate-600 group-hover:text-white transition-colors">
+              <div className="bg-gray-100 p-2.5 rounded-xl text-gray-500 group-hover:bg-gray-500 group-hover:text-white transition-colors">
                 <Globe size={22} />
               </div>
-              <span className="font-bold text-slate-700 text-sm">{t("change_language")}</span>
+              <span className="font-bold text-[#2A1B33] text-sm">{t("change_language")}</span>
             </div>
-            <span className="text-xs font-black text-slate-500 bg-slate-200 px-3 py-1 rounded-full uppercase">
+            <span className="text-xs font-black text-gray-500 bg-gray-100 px-3 py-1 rounded-full uppercase">
               {i18n.language === "id" ? "ID" : "EN"}
             </span>
           </button>

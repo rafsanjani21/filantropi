@@ -91,12 +91,13 @@ export default function BottomNav() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center">
       <div className="w-full max-w-lg px-3 pb-3">
-        <div className="relative h-[72px] rounded-[28px] bg-white shadow-[0_-8px_25px_rgba(0,0,0,0.12)]">
+        <div className="relative h-[72px] rounded-[28px] bg-white shadow-[0_-8px_25px_rgba(58,20,77,0.14)]">
           {/* Floating Active Button */}
           <div
             className="absolute z-30 flex h-14 w-14 items-center justify-center rounded-full border-4 border-white shadow-lg transition-all duration-500"
             style={{
-              background: themeColor,
+              background: `linear-gradient(160deg, #8A45A8, ${themeColor} 55%, #5B2A73)`,
+              boxShadow: "0 10px 20px -8px rgba(124,57,150,0.55)",
               left: `calc(${activeIndex * 25}% + 12.5%)`,
               transform: "translateX(-50%)",
               top: "-26px",
@@ -141,19 +142,19 @@ export default function BottomNav() {
                         );
 
                   toast.custom(
-                    (t) => (
+                    (tst) => (
                       <div
                         className={`${
-                          t.visible
+                          tst.visible
                             ? "animate-in slide-in-from-top-5 fade-in"
                             : "animate-out fade-out slide-out-to-top-5"
-                        } max-w-[90vw] sm:max-w-sm w-full bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl flex items-start border border-gray-100 p-4 gap-3 pointer-events-auto duration-300`}
+                        } max-w-[90vw] sm:max-w-sm w-full bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl flex items-start border-l-4 border-[#E8B94A] p-4 gap-3 pointer-events-auto duration-300`}
                       >
                         {/* Bagian Ikon */}
                         <div className="flex-shrink-0 pt-0.5">
-                          <div className="h-10 w-10 rounded-full bg-amber-50 flex items-center justify-center border border-amber-100">
+                          <div className="h-10 w-10 rounded-full bg-[#E8B94A]/15 flex items-center justify-center">
                             <Lock
-                              className="h-5 w-5 text-amber-500"
+                              className="h-5 w-5 text-[#C9971F]"
                               strokeWidth={2.5}
                             />
                           </div>
@@ -161,7 +162,7 @@ export default function BottomNav() {
 
                         {/* Bagian Teks */}
                         <div className="flex-1 w-0">
-                          <p className="text-[13px] font-bold text-gray-900 font-jakarta tracking-wide">
+                          <p className="text-[13px] font-bold text-[#2A1B33] font-jakarta tracking-wide">
                             Akses Dibatasi
                           </p>
                           <p className="mt-1 text-xs text-gray-500 leading-relaxed">
@@ -169,10 +170,10 @@ export default function BottomNav() {
                           </p>
                         </div>
 
-                        
+
                         <div className="ml-2 flex flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
                           <button
-                            onClick={() => toast.dismiss(t.id)}
+                            onClick={() => toast.dismiss(tst.id)}
                             className="p-1 rounded-full bg-gray-50 hover:bg-gray-100 focus:outline-none transition-colors"
                           >
                             <X className="h-4 w-4" />

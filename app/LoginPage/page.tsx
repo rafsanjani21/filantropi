@@ -1,13 +1,13 @@
 "use client";
 
 import "@/lib/i18n"; // 🔥 Pastikan i18n menyala lebih dulu
-import { ArrowRight, UserCircle, Users, Globe } from "lucide-react"; // Tambahkan icon Globe
+import { ArrowRight, ArrowLeft, UserCircle, Users, Globe } from "lucide-react"; // Tambahkan icon Globe
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next"; // 🔥 Import hook terjemahan
 
 export default function LoginPage() {
   const router = useRouter();
-  
+
   // Panggil fungsi translator (t) dan objek i18n
   const { t, i18n } = useTranslation();
 
@@ -21,18 +21,44 @@ export default function LoginPage() {
   // FUNGSI GANTI BAHASA
   const toggleLanguage = () => {
     const newLang = i18n.language === "id" ? "en" : "id";
-    
+
     // 1. Ubah bahasa di layar saat ini
     i18n.changeLanguage(newLang);
-    
+
     // 2. 🔥 INI YANG PALING PENTING: Simpan ke memori browser!
     // Jika baris ini tidak ada, maka I18nProvider tidak punya data untuk dibaca saat di-refresh
-    localStorage.setItem("app_lang", newLang); 
+    localStorage.setItem("app_lang", newLang);
   };
 
   return (
-    <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-t from-[#7C3996] to-[#b359d4] items-center overflow-x-hidden relative shadow-2xl">
-      
+    <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-gradient-to-b from-[#3E1854] via-[#6B2E88] to-[#8A45A8] shadow-2xl pb-32 overflow-hidden">
+      {/* Signature: motif kawung tipis, konsisten dengan seluruh app */}
+      <svg
+        className="absolute inset-0 w-full h-full opacity-[0.07] pointer-events-none"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <defs>
+          <pattern id="kawung-profile" width="56" height="56" patternUnits="userSpaceOnUse">
+            <g fill="none" stroke="#F3D48A" strokeWidth="1.1">
+              <ellipse cx="14" cy="14" rx="12" ry="8" transform="rotate(45 14 14)" />
+              <ellipse cx="42" cy="14" rx="12" ry="8" transform="rotate(-45 42 14)" />
+              <ellipse cx="14" cy="42" rx="12" ry="8" transform="rotate(-45 14 42)" />
+              <ellipse cx="42" cy="42" rx="12" ry="8" transform="rotate(45 42 42)" />
+            </g>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#kawung-profile)" />
+      </svg>
+
+      {/* TOMBOL KEMBALI DI POJOK KIRI ATAS */}
+      <button
+        onClick={() => router.push("/HomePage")}
+        className="absolute top-6 left-6 flex items-center justify-center w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full text-white transition-all cursor-pointer z-50 border border-white/30"
+      >
+        <ArrowLeft size={18} />
+      </button>
+
       {/* TOMBOL GANTI BAHASA DI POJOK KANAN ATAS */}
       <button 
         onClick={toggleLanguage}
