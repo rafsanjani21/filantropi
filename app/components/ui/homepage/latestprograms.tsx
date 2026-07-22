@@ -136,9 +136,11 @@ export default function LatestPrograms() {
             <Link
               href={`/DetailPage?slug=${campaign.slug || campaign.id}`}
               key={campaign.id}
-              className="min-w-[85%] sm:min-w-[320px] shrink-0 block snap-center bg-white rounded-3xl shadow-[0_4px_20px_-4px_rgba(124,57,150,0.15)] border border-[#7C3996]/8 overflow-hidden flex flex-col group transition-shadow hover:shadow-[0_8px_28px_-6px_rgba(124,57,150,0.25)] cursor-pointer"
+              // 🔥 Perbaikan 1: Menghapus class "block" karena bentrok dengan "flex"
+              className="min-w-[85%] sm:min-w-[320px] shrink-0 snap-center bg-white rounded-3xl shadow-[0_4px_20px_-4px_rgba(124,57,150,0.15)] border border-[#7C3996]/8 overflow-hidden flex flex-col group transition-shadow hover:shadow-[0_8px_28px_-6px_rgba(124,57,150,0.25)] cursor-pointer"
             >
-              <div className="relative h-40">
+              {/* 🔥 Perbaikan 2: Menambahkan w-full dan shrink-0 agar tinggi terkunci (saya ubah jadi h-44 agar lebih proporsional) */}
+              <div className="relative w-full h-44 shrink-0 overflow-hidden">
                 <img
                   src={imageUrl}
                   alt={campaign.title}
@@ -158,6 +160,7 @@ export default function LatestPrograms() {
                 </div>
               </div>
 
+              {/* Sisa kode bagian bawah card tetap sama */}
               <div className="p-5 flex flex-col flex-1">
                 <div className="flex items-center gap-1.5 text-gray-400 text-sm mb-2">
                   <span className="font-medium text-gray-600 truncate max-w-[200px]">
