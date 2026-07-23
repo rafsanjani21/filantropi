@@ -177,7 +177,7 @@ export default function PaymentModal({
                       Alamat Wallet Tujuan
                     </span>
                     <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-2 mt-2 shadow-sm">
-                      {/* 🔥 PERUBAHAN: Memanggil formatWallet() dan membesarkan teks menjadi text-sm */}
+              
                       <span className="text-sm font-black text-purple-700 tracking-wider pl-1">
                         {formatWallet(receiverWallet)}
                       </span>
