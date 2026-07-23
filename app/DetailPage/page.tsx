@@ -405,6 +405,7 @@ function DetailContent() {
           );
           router.push("/LoginPage");
         }}
+        receiverWallet={receiverWallet}
       />
 
       <DisbursementModal
