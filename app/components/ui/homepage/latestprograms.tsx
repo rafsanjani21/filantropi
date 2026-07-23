@@ -59,7 +59,10 @@ export default function LatestPrograms() {
             .filter((campaign) => {
               const daysLeft = calculateDaysLeft(campaign.end_date);
               const isUnlimitedTime = daysLeft === null;
-              return campaign.status === "active" && (isUnlimitedTime || (daysLeft !== null && daysLeft >= 6));
+              return (
+                campaign.status === "active" &&
+                (isUnlimitedTime || (daysLeft !== null && daysLeft >= 6))
+              );
             })
             .slice(0, 5); // Tampilkan 5 program saja agar tidak berat
 
@@ -106,7 +109,8 @@ export default function LatestPrograms() {
           href="/AllProgramsPage"
           className="text-sm font-bold text-[#7C3996] hover:text-[#5B2A73] flex items-center transition-colors"
         >
-          {t("see_all", "Lihat Semua")} <ChevronRight className="w-4 h-4 ml-0.5" />
+          {t("see_all", "Lihat Semua")}{" "}
+          <ChevronRight className="w-4 h-4 ml-0.5" />
         </Link>
       </div>
 
@@ -116,14 +120,17 @@ export default function LatestPrograms() {
           const collected = Number(campaign.current_amount_idr) || 0;
           const daysLeft = calculateDaysLeft(campaign.end_date);
 
-          const isUnlimitedTarget = !campaign.target_amount || campaign.target_amount === 0;
+          const isUnlimitedTarget =
+            !campaign.target_amount || campaign.target_amount === 0;
           const isUnlimitedTime = daysLeft === null;
 
           const target = isUnlimitedTarget ? 1 : Number(campaign.target_amount);
           const progressRaw = (collected / target) * 100;
           const progress = progressRaw > 100 ? 100 : Math.round(progressRaw);
 
-          const banner = Array.isArray(campaign.image_banner) ? campaign.image_banner[0] : campaign.image_banner;
+          const banner = Array.isArray(campaign.image_banner)
+            ? campaign.image_banner[0]
+            : campaign.image_banner;
 
           const imageUrl =
             typeof banner === "string" && banner.trim() !== ""
@@ -145,31 +152,33 @@ export default function LatestPrograms() {
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent group-hover:from-black/10 transition-colors z-10"></div>
-                <div className="absolute top-3 left-3 z-20">
-                  <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm text-emerald-600 px-2.5 py-1 rounded-lg shadow-sm">
-                    <CheckCircle2 size={12} />
-                    <span className="text-[10px] font-black uppercase tracking-wider">{t("active_status", "Aktif")}</span>
-                  </div>
-                </div>
-                <div className="absolute top-3 right-3 z-20">
-                  <span className="text-[9px] font-extrabold px-2 py-1 rounded-md bg-[#3E1854]/80 backdrop-blur-sm text-[#F3D48A] uppercase tracking-wider">
-                    {getCategoryName(campaign.category_id)}
-                  </span>
-                </div>
               </div>
 
               <div className="p-5 flex flex-col justify-between h-[240px] relative z-20 bg-white">
-                
                 {/* --- BLOK ATAS: Nama Kategori & Judul --- */}
                 <div>
                   <div className="flex items-center gap-1.5 text-gray-400 text-sm mb-2">
                     <span className="font-medium text-gray-600 truncate max-w-[180px]">
-                      {campaign.full_name || t("beneficiary", "Penerima Manfaat")}
+                      {campaign.full_name ||
+                        t("beneficiary", "Penerima Manfaat")}
                     </span>
                     <div className="w-3.5 h-3.5 rounded-full bg-[#7C3996] flex items-center justify-center text-white text-[8px] shrink-0">
                       ✓
                     </div>
                   </div>
+                  <div className="absolute top-3 right-3 z-20">
+                    <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm text-emerald-600 px-2.5 py-1 rounded-lg shadow-sm">
+                      <CheckCircle2 size={12} />
+                      <span className="text-[10px] font-black uppercase tracking-wider">
+                        {t("active_status", "Aktif")}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="absolute top-10 right-3 z-20">
+                  <span className="text-[9px] font-extrabold px-2 py-1 rounded-md bg-[#3E1854]/80 backdrop-blur-sm text-[#F3D48A] uppercase tracking-wider">
+                    {getCategoryName(campaign.category_id)}
+                  </span>
+                </div>
                   <h3 className="text-lg font-bold line-clamp-2 leading-snug text-[#2A1B33] group-hover:text-[#7C3996] transition-colors">
                     {campaign.title}
                   </h3>
@@ -178,9 +187,13 @@ export default function LatestPrograms() {
                 <div>
                   <div className="flex justify-between items-end mb-2">
                     <div className="flex flex-col">
-                      <span className="text-xs text-gray-400 font-medium mb-0.5">{t("collected_label", "Terkumpul")}</span>
+                      <span className="text-xs text-gray-400 font-medium mb-0.5">
+                        {t("collected_label", "Terkumpul")}
+                      </span>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-sm font-bold text-[#5B2A73]">Rp {collected.toLocaleString("id-ID")}</span>
+                        <span className="text-sm font-bold text-[#5B2A73]">
+                          Rp {collected.toLocaleString("id-ID")}
+                        </span>
                       </div>
                     </div>
 
@@ -202,15 +215,21 @@ export default function LatestPrograms() {
 
                   <div
                     className={`flex justify-between items-center ${
-                      isUnlimitedTarget ? "mt-2" : "mt-3 pt-3 border-t border-gray-50"
+                      isUnlimitedTarget
+                        ? "mt-2"
+                        : "mt-3 pt-3 border-t border-gray-50"
                     }`}
                   >
-                    <span className="text-xs text-gray-400 font-medium">{t("time_limit", "Batas Waktu")}</span>
+                    <span className="text-xs text-gray-400 font-medium">
+                      {t("time_limit", "Batas Waktu")}
+                    </span>
                     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-[#FBF8F3] text-gray-600 border border-gray-100">
                       {isUnlimitedTime ? (
                         <>
                           <Infinity size={14} className="text-[#7C3996]" />
-                          <span className="text-[#7C3996]">{t("unlimited_time", "Tanpa Batas")}</span>
+                          <span className="text-[#7C3996]">
+                            {t("unlimited_time", "Tanpa Batas")}
+                          </span>
                         </>
                       ) : (
                         <>
@@ -223,7 +242,6 @@ export default function LatestPrograms() {
                     </div>
                   </div>
                 </div>
-
               </div>
             </Link>
           );

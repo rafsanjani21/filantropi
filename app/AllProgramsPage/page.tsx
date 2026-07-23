@@ -16,7 +16,6 @@ import { AuthService } from "@/lib/auth.service";
 import { useTranslation } from "react-i18next";
 import BottomNav from "../components/ui/root/BottomNav";
 
-// 🔥 TAMBAHAN: Import komponen LiveDonationBlink dan apiFetch
 import LiveDonationBlink from "../components/ui/detail/LiveDonationBlink";
 import { apiFetch } from "@/lib/api"; 
 
@@ -38,17 +37,12 @@ export default function AllProgramsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 TAMBAHAN: State untuk menyimpan data donasi global
   const [recentDonations, setRecentDonations] = useState<any[]>([]);
-
   const [search, setSearch] = useState("");
-  // Optimasi: useDeferredValue mencegah UI nge-lag saat user mengetik cepat
   const deferredSearch = useDeferredValue(search);
-
   const [visibleCount, setVisibleCount] = useState(6);
   const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
 
-  // Caching Data dengan SessionStorage
   useEffect(() => {
     const fetchAllCampaigns = async () => {
       setLoading(true);
@@ -81,7 +75,6 @@ export default function AllProgramsPage() {
     fetchAllCampaigns();
   }, []);
 
-  // 🔥 TAMBAHAN: Mengambil data donasi terbaru dari API Backend
   useEffect(() => {
     const fetchGlobalRecentDonations = async () => {
       try {
@@ -109,10 +102,9 @@ export default function AllProgramsPage() {
     fetchGlobalRecentDonations();
   }, [t]);
 
-  // Optimasi: Pipeline Data yang Jauh Lebih Ringan (Filter -> Kalkulasi -> Sortir)
   const filteredCampaigns = useMemo(() => {
     const keyword = deferredSearch.toLowerCase();
-    const currentTime = Date.now(); // Hitung waktu 1x saja, jangan di dalam loop
+    const currentTime = Date.now(); 
     const ONE_DAY_MS = 1000 * 60 * 60 * 24;
 
     const getCategoryName = (id?: number) => {
@@ -127,7 +119,6 @@ export default function AllProgramsPage() {
     };
 
     return campaigns
-      // 1. Filter Data Dulu (Agar item yang disortir lebih sedikit)
       .filter((campaign) => {
         if (!keyword) return true;
         return (
@@ -136,7 +127,6 @@ export default function AllProgramsPage() {
           getCategoryName(campaign.category_id).toLowerCase().includes(keyword)
         );
       })
-      // 2. Kalkulasi Sisa Hari
       .map((campaign) => {
         let daysLeft: number | null = null;
         if (campaign.end_date) {
@@ -145,7 +135,6 @@ export default function AllProgramsPage() {
         }
         return { campaign, daysLeft };
       })
-      // 3. Sortir Data
       .sort((a, b) => {
         const aOngoing = a.campaign.status === "active" && (a.daysLeft === null || a.daysLeft > 0);
         const bOngoing = b.campaign.status === "active" && (b.daysLeft === null || b.daysLeft > 0);
@@ -161,37 +150,37 @@ export default function AllProgramsPage() {
         if (!aOngoing && bOngoing) return 1;
         return 0;
       })
-      // 4. Ekstrak kembali campaign-nya
       .map((item) => item.campaign);
   }, [campaigns, deferredSearch, t]);
 
   const displayedCampaigns = filteredCampaigns.slice(0, visibleCount);
 
+  // 🔥 PERUBAHAN: Desain badge disesuaikan karena sekarang berada di background putih
   const renderStatusBadge = (status?: string) => {
     switch (status?.toLowerCase()) {
       case "active":
         return (
-          <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm text-emerald-600 px-2.5 py-1 rounded-lg shadow-sm">
-            <CheckCircle2 size={12} />
-            <span className="text-[10px] font-black uppercase tracking-wider">
+          <div className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-md shrink-0">
+            <CheckCircle2 size={10} />
+            <span className="text-[9px] font-black uppercase tracking-wider">
               {t("active_status", "Aktif")}
             </span>
           </div>
         );
       case "rejected":
         return (
-          <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm text-red-600 px-2.5 py-1 rounded-lg shadow-sm">
-            <XCircle size={12} />
-            <span className="text-[10px] font-black uppercase tracking-wider">
+          <div className="flex items-center gap-1 bg-red-50 text-red-600 px-2 py-0.5 rounded-md shrink-0">
+            <XCircle size={10} />
+            <span className="text-[9px] font-black uppercase tracking-wider">
               {t("rejected_status", "Ditolak")}
             </span>
           </div>
         );
       default:
         return (
-          <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm text-amber-600 px-2.5 py-1 rounded-lg shadow-sm">
-            <Clock size={12} />
-            <span className="text-[10px] font-black uppercase tracking-wider">
+          <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2 py-0.5 rounded-md shrink-0">
+            <Clock size={10} />
+            <span className="text-[9px] font-black uppercase tracking-wider">
               {t("waiting_status", "Menunggu")}
             </span>
           </div>
@@ -213,12 +202,9 @@ export default function AllProgramsPage() {
   return (
     <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-[#FBF8F3] pb-32 relative">
       
-      {/* 🔥 TAMBAHAN: Komponen LiveDonationBlink dipanggil di paling atas dalam wripper utama */}
       <LiveDonationBlink history={recentDonations} />
 
-      {/* HEADER */}
       <div className="sticky top-0 z-40 bg-gradient-to-b from-[#3E1854] via-[#6B2E88] to-[#8A45A8] shadow-lg rounded-b-3xl overflow-hidden">
-        {/* Signature: motif kawung tipis, konsisten dengan beranda */}
         <svg
           className="absolute inset-0 w-full h-full opacity-[0.08] pointer-events-none"
           preserveAspectRatio="xMidYMid slice"
@@ -307,7 +293,6 @@ export default function AllProgramsPage() {
                 >
                   <Link href={`/DetailPage?slug=${campaignIdentifier}`} className="block cursor-pointer">
                     <div className="relative h-44">
-                      {/* Optimasi: lazy loading gambar agar browser tidak berat */}
                       <img
                         src={imageUrl}
                         alt={campaign.title}
@@ -316,9 +301,9 @@ export default function AllProgramsPage() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 bg-gray-100"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent group-hover:from-black/10 transition-colors"></div>
-                      <div className="absolute top-3 left-3">
-                        {renderStatusBadge(campaign.status)}
-                      </div>
+                      
+      
+                      
                       <div className="absolute top-3 right-3">
                         <span className="text-[9px] font-extrabold px-2 py-1 rounded-md bg-[#3E1854]/80 backdrop-blur-sm text-[#F3D48A] uppercase tracking-wider">
                           {getCategoryLabel(campaign.category_id)}
@@ -327,12 +312,17 @@ export default function AllProgramsPage() {
                     </div>
 
                     <div className="p-5 flex flex-col">
+                      
+                     
                       <div className="flex items-center gap-1.5 text-gray-400 text-sm mb-2">
-                        <span className="font-medium text-gray-600 truncate max-w-[200px]">
+                        <span className="font-medium text-gray-600 truncate max-w-[140px]">
                           {campaign.full_name || t("beneficiary", "Penerima Manfaat")}
                         </span>
                         <div className="w-3.5 h-3.5 rounded-full bg-[#7C3996] flex items-center justify-center text-white text-[8px] shrink-0">
                           ✓
+                        </div>
+                        <div className="ml-auto flex items-center gap-1.5">
+                        {renderStatusBadge(campaign.status)}
                         </div>
                       </div>
 

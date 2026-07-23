@@ -55,16 +55,13 @@ function DetailContent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
 
-  // STATE MODAL TIPE DONASI & WAKAF (Disimpan untuk dikirim ke backend, tetapi modal tidak ditampilkan lagi)
   const [donationType, setDonationType] = useState<string>("Donasi");
   const [wakafName, setWakafName] = useState("");
-
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const [milestone, setMilestone] = useState<any>(null);
   const [isFetchingMilestone, setIsFetchingMilestone] = useState(true);
 
-  // STATE MODAL CREATOR
   const [showDisburseConfirmModal, setShowDisburseConfirmModal] =
     useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -130,42 +127,28 @@ function DetailContent() {
 
   useEffect(() => {
     const fetchCampaignHistory = async () => {
-      // 1. Cek apakah wallet penerima berhasil ditarik 
-      if (!receiverWallet) {
-        return;
-      }
-
+      if (!receiverWallet) return;
       setLoadingHistory(true);
 
       try {
-        // 2. Jika apiFetch tidak otomatis menambahkan /api, tambahkan secara manual di sini:
-        // Misalnya: `/api/donations/in/${receiverWallet}`
         const res = await apiFetch(`/donations/in/${receiverWallet}`, {
           method: "GET",
         });
-        // 3. Tangani jika apiFetch me-return data langsung tanpa bungkus "data:"
-        const apiData = res?.data || res; 
+        const apiData = res?.data || res;
 
         if (apiData) {
           let apiHistory: any[] = [];
-          
           if (Array.isArray(apiData.history)) {
-            
             apiHistory = apiData.history.map((tx: any, index: number) => ({
-              tx_hash: tx.tx_hash || index.toString(), // Fallback jika tx_hash tidak ada
+              tx_hash: tx.tx_hash || index.toString(),
               date: tx.created_at,
               type: "In",
-              // Menggunakan ?? agar nilai 0 tetap terbaca sebagai 0
-              amount: String(tx.amount_idr ?? 0), 
+              amount: String(tx.amount_idr ?? 0),
               from_to: tx.donatur_name || "Anonim",
             }));
-          } else {
-             console.log("3. Array history TIDAK ditemukan di dalam response");
           }
 
-          
           setWalletHistory(apiHistory);
-          
           if (apiData.total_balance_idr !== undefined) {
             setTotalCollected(parseFloat(apiData.total_balance_idr));
           }
@@ -190,7 +173,6 @@ function DetailContent() {
         ),
       );
 
-  // FUNGSI BARU: Langsung eksekusi buka payment modal
   const handleDirectDonate = () => {
     setDonationType(campaign?.is_wakaf ? "Wakaf" : "Donasi");
     setIsModalOpen(true);
@@ -292,6 +274,7 @@ function DetailContent() {
         </div>
       </div>
     );
+
   if (error || !campaign)
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#FBF8F3] gap-3 px-6 text-center">
@@ -323,6 +306,7 @@ function DetailContent() {
     isUnlimitedTarget || target === 0
       ? 0
       : Math.min(100, Math.floor((collected / target) * 100));
+
   const isCampaignOwner = !!(
     currentUser &&
     (currentUser.id === campaign.user_id ||
@@ -345,7 +329,7 @@ function DetailContent() {
   function renderStatusBadge(status: any, daysLeft: number | null) {
     if (status === "active" && daysLeft !== null && daysLeft <= 0) {
       return (
-        <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 uppercase border border-gray-200 flex items-center gap-1">
+        <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 uppercase border border-gray-200 flex items-center gap-1 shrink-0">
           <Clock size={12} /> Berakhir
         </span>
       );
@@ -354,19 +338,19 @@ function DetailContent() {
     switch (status?.toLowerCase()) {
       case "active":
         return (
-          <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 uppercase border border-emerald-200 flex items-center gap-1 shadow-sm">
+          <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 uppercase border border-emerald-200 flex items-center gap-1 shadow-sm shrink-0">
             <CheckCircle2 size={12} /> Aktif
           </span>
         );
       case "rejected":
         return (
-          <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-red-50 text-red-700 uppercase border border-red-200 flex items-center gap-1 shadow-sm">
+          <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-red-50 text-red-700 uppercase border border-red-200 flex items-center gap-1 shadow-sm shrink-0">
             <XCircle size={12} /> Ditolak
           </span>
         );
       default:
         return (
-          <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 uppercase border border-amber-200 flex items-center gap-1 shadow-sm">
+          <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 uppercase border border-amber-200 flex items-center gap-1 shadow-sm shrink-0">
             <Clock size={12} /> Menunggu
           </span>
         );
@@ -389,7 +373,6 @@ function DetailContent() {
       <NavbarDetail />
       <LiveDonationBlink history={walletHistory} />
 
-      {/* PaymentModal dipanggil secara langsung */}
       <PaymentModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -415,6 +398,7 @@ function DetailContent() {
         isSubmitting={isSubmittingReport}
         currentPhase={milestone?.current_phase || 1}
       />
+
       <ReportModal
         isOpen={showReportModal}
         onClose={() => setShowReportModal(false)}
@@ -443,25 +427,15 @@ function DetailContent() {
             />
           ))}
         </div>
-
-        {/* Scrim untuk transisi halus ke kartu putih */}
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#2A1B33]/60 to-transparent pointer-events-none" />
-
         {campaignImages.length > 1 && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
             {campaignImages.map((_: string, i: number) => (
               <span
                 key={i}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === activeImage ? "w-5 bg-[#E8B94A]" : "w-1.5 bg-white/50"
-                }`}
+                className={`h-1.5 rounded-full transition-all ${i === activeImage ? "w-5 bg-[#E8B94A]" : "w-1.5 bg-white/50"}`}
               />
             ))}
-          </div>
-        )}
-        {campaignImages.length > 1 && (
-          <div className="absolute bottom-4 right-4 z-20 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-bold">
-            {activeImage + 1} / {campaignImages.length}
           </div>
         )}
       </div>
@@ -472,17 +446,16 @@ function DetailContent() {
         </div>
 
         <div className="p-6 border-b border-gray-100 mt-2">
-          <div className="flex items-center justify-between mb-3">
-            {/* Nama Penerima */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-semibold text-[#5B2A73]">
+          <div className="flex flex-wrap items-start justify-between gap-y-2 gap-x-3 mb-4">
+            <div className="flex-1 min-w-[130px] pr-2">
+              <span className="text-sm font-semibold text-[#5B2A73] leading-tight">
                 {foundation}
+                <CheckCircle2 className="inline-block w-4 h-4 text-[#7C3996] ml-1 mb-0.5 align-middle" />
               </span>
-              <CheckCircle2 className="w-4 h-4 text-[#7C3996]" />
             </div>
 
             {/* Status & Kategori */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5 shrink-0 justify-end">
               {renderStatusBadge(campaign?.status, daysLeft)}
               <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-[#E8B94A]/15 text-[#8A6413] uppercase border border-[#E8B94A]/30 shrink-0">
                 {getCategoryName(campaign.category_id)}
@@ -511,6 +484,7 @@ function DetailContent() {
               </span>
             )}
           </div>
+
           {!isUnlimitedTarget && (
             <div className="w-full h-2.5 bg-[#7C3996]/10 rounded-full overflow-hidden mt-2">
               <div
@@ -609,10 +583,11 @@ function DetailContent() {
           onClick={() =>
             navigator.share && navigator.share({ url: window.location.href })
           }
-          className="flex justify-center items-center p-3 border-2 border-[#7C3996]/15 text-[#7C3996] rounded-xl w-1/3 hover:bg-[#7C3996]/5 transition-colors"
+          className="flex justify-center items-center p-3 border-2 border-[#7C3996]/15 text-[#7C3996] rounded-xl w-14 shrink-0 hover:bg-[#7C3996]/5 transition-colors"
         >
           <Share2 size={20} />
         </button>
+
         {isCampaignOwner ? (
           <>
             <button
@@ -636,10 +611,12 @@ function DetailContent() {
                 campaign?.status !== "active" ||
                 (!isUnlimitedTime && (daysLeft as number) <= 0)
               }
-              className="w-full bg-gradient-to-r from-[#7C3996] to-[#5B2A73] text-white font-bold rounded-xl py-3 flex items-center justify-center gap-2 shadow-md shadow-[#7C3996]/25 hover:shadow-lg transition-shadow disabled:opacity-50 disabled:shadow-none"
+              className="w-full h-full bg-gradient-to-r from-[#7C3996] to-[#5B2A73] text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-md shadow-[#7C3996]/25 hover:shadow-lg transition-shadow disabled:opacity-50 disabled:shadow-none"
             >
               <Heart size={20} fill="currentColor" className="text-[#E8B94A]" />{" "}
-              {campaign?.status !== "active" ? "Belum Aktif" : "Donasi Sekarang"}
+              {campaign?.status !== "active"
+                ? "Belum Aktif"
+                : "Donasi Sekarang"}
             </button>
           </div>
         )}
