@@ -153,7 +153,7 @@ export default function AllProgramsPage() {
 
   const displayedCampaigns = filteredCampaigns.slice(0, visibleCount);
 
-  // Kategori fungsi tetap ada untuk mengambil teks kategori
+  
   const getCategoryLabel = (id?: number) => {
     const map: Record<number, string> = {
       1: t("cat_education", "Pendidikan"),
