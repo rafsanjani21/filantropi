@@ -50,7 +50,7 @@ export default function BottomNav() {
 
   if (!mounted) return null;
 
-  const isDonasiLocked = role === "beneficiary";
+  const isDonasiLocked = false;
   const isGalangLocked = role === "donor" || role === "guest";
 
   const themeColor = "#7C3996";

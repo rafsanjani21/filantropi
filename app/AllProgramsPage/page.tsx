@@ -6,8 +6,6 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Clock,
-  CheckCircle2,
-  XCircle,
   Heart,
   Infinity,
   Search,
@@ -155,39 +153,7 @@ export default function AllProgramsPage() {
 
   const displayedCampaigns = filteredCampaigns.slice(0, visibleCount);
 
-  // 🔥 PERUBAHAN: Desain badge disesuaikan karena sekarang berada di background putih
-  const renderStatusBadge = (status?: string) => {
-    switch (status?.toLowerCase()) {
-      case "active":
-        return (
-          <div className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-md shrink-0">
-            <CheckCircle2 size={10} />
-            <span className="text-[9px] font-black uppercase tracking-wider">
-              {t("active_status", "Aktif")}
-            </span>
-          </div>
-        );
-      case "rejected":
-        return (
-          <div className="flex items-center gap-1 bg-red-50 text-red-600 px-2 py-0.5 rounded-md shrink-0">
-            <XCircle size={10} />
-            <span className="text-[9px] font-black uppercase tracking-wider">
-              {t("rejected_status", "Ditolak")}
-            </span>
-          </div>
-        );
-      default:
-        return (
-          <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2 py-0.5 rounded-md shrink-0">
-            <Clock size={10} />
-            <span className="text-[9px] font-black uppercase tracking-wider">
-              {t("waiting_status", "Menunggu")}
-            </span>
-          </div>
-        );
-    }
-  };
-
+  // Kategori fungsi tetap ada untuk mengambil teks kategori
   const getCategoryLabel = (id?: number) => {
     const map: Record<number, string> = {
       1: t("cat_education", "Pendidikan"),
@@ -301,19 +267,11 @@ export default function AllProgramsPage() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 bg-gray-100"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent group-hover:from-black/10 transition-colors"></div>
-                      
-      
-                      
-                      <div className="absolute top-3 right-3">
-                        <span className="text-[9px] font-extrabold px-2 py-1 rounded-md bg-[#3E1854]/80 backdrop-blur-sm text-[#F3D48A] uppercase tracking-wider">
-                          {getCategoryLabel(campaign.category_id)}
-                        </span>
-                      </div>
                     </div>
 
                     <div className="p-5 flex flex-col">
                       
-                     
+                      {/* 🔥 PERUBAHAN: Status dihapus, Kategori dipindah ke sebelah nama */}
                       <div className="flex items-center gap-1.5 text-gray-400 text-sm mb-2">
                         <span className="font-medium text-gray-600 truncate max-w-[140px]">
                           {campaign.full_name || t("beneficiary", "Penerima Manfaat")}
@@ -321,8 +279,11 @@ export default function AllProgramsPage() {
                         <div className="w-3.5 h-3.5 rounded-full bg-[#7C3996] flex items-center justify-center text-white text-[8px] shrink-0">
                           ✓
                         </div>
-                        <div className="ml-auto flex items-center gap-1.5">
-                        {renderStatusBadge(campaign.status)}
+                        
+                        <div className="ml-auto flex items-center gap-1.5 shrink-0">
+                          <span className="text-[9px] font-extrabold px-2 py-1 rounded-md bg-[#3E1854] text-[#F3D48A] uppercase tracking-wider">
+                            {getCategoryLabel(campaign.category_id)}
+                          </span>
                         </div>
                       </div>
 

@@ -155,7 +155,6 @@ export default function LatestPrograms() {
               </div>
 
               <div className="p-5 flex flex-col justify-between h-[240px] relative z-20 bg-white">
-                {/* --- BLOK ATAS: Nama Kategori & Judul --- */}
                 <div>
                   <div className="flex items-center gap-1.5 text-gray-400 text-sm mb-2">
                     <span className="font-medium text-gray-600 truncate max-w-[180px]">
@@ -167,18 +166,11 @@ export default function LatestPrograms() {
                     </div>
                   </div>
                   <div className="absolute top-3 right-3 z-20">
-                    <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm text-emerald-600 px-2.5 py-1 rounded-lg shadow-sm">
-                      <CheckCircle2 size={12} />
-                      <span className="text-[10px] font-black uppercase tracking-wider">
-                        {t("active_status", "Aktif")}
-                      </span>
-                    </div>
+                    <span className="text-[9px] font-extrabold px-2 py-1 rounded-md bg-[#3E1854]/80 backdrop-blur-sm text-[#F3D48A] uppercase tracking-wider">
+                      {getCategoryName(campaign.category_id)}
+                    </span>
                   </div>
-                  <div className="absolute top-10 right-3 z-20">
-                  <span className="text-[9px] font-extrabold px-2 py-1 rounded-md bg-[#3E1854]/80 backdrop-blur-sm text-[#F3D48A] uppercase tracking-wider">
-                    {getCategoryName(campaign.category_id)}
-                  </span>
-                </div>
+
                   <h3 className="text-lg font-bold line-clamp-2 leading-snug text-[#2A1B33] group-hover:text-[#7C3996] transition-colors">
                     {campaign.title}
                   </h3>

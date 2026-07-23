@@ -327,6 +327,7 @@ function DetailContent() {
   if (campaignImages.length === 0) campaignImages.push("/bencana.png");
 
   function renderStatusBadge(status: any, daysLeft: number | null) {
+    
     if (status === "active" && daysLeft !== null && daysLeft <= 0) {
       return (
         <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 uppercase border border-gray-200 flex items-center gap-1 shrink-0">
@@ -337,11 +338,8 @@ function DetailContent() {
 
     switch (status?.toLowerCase()) {
       case "active":
-        return (
-          <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 uppercase border border-emerald-200 flex items-center gap-1 shadow-sm shrink-0">
-            <CheckCircle2 size={12} /> Aktif
-          </span>
-        );
+        
+        return null;
       case "rejected":
         return (
           <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-red-50 text-red-700 uppercase border border-red-200 flex items-center gap-1 shadow-sm shrink-0">
