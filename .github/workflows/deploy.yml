@@ -36,6 +36,6 @@ jobs:
             npm install
             npm run build
             
-            # 4. Restart aplikasi tanpa downtime
-            pm2 restart "Filantropi LP" --update-env || pm2 start npm --name "Filantropi LP" -- start -- --port 3005
+            # 4. Reload aplikasi dengan Zero Downtime
+            pm2 reload "Filantropi LP" --update-env || pm2 start node_modules/next/dist/bin/next --name "Filantropi LP" -i max -- start -p 3005
             pm2 save
