@@ -1,7 +1,7 @@
 "use client";
 
 import "@/lib/i18n";
-import { useState, useEffect, useMemo, useDeferredValue } from "react";
+import { useState, useEffect, useMemo, useDeferredValue, useRef } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -9,13 +9,14 @@ import {
   Heart,
   Infinity,
   Search,
+  SlidersHorizontal,
 } from "lucide-react";
 import { AuthService } from "@/lib/auth.service";
 import { useTranslation } from "react-i18next";
 import BottomNav from "../components/ui/root/BottomNav";
 
 import LiveDonationBlink from "../components/ui/detail/LiveDonationBlink";
-import { apiFetch } from "@/lib/api"; 
+import { apiFetch } from "@/lib/api";
 
 type Campaign = {
   id: string | number;
@@ -25,6 +26,7 @@ type Campaign = {
   target_amount?: number | null;
   current_amount_idr?: number | null;
   end_date?: string | null;
+  created_at?: string | null; // Untuk sorting terbaru/terlama
   image_banner?: string | string[];
   full_name?: string;
   category_id?: number;
@@ -39,8 +41,14 @@ export default function AllProgramsPage() {
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
   const [visibleCount, setVisibleCount] = useState(6);
+  
+  // State untuk fitur sortir
+  const [sortOption, setSortOption] = useState("terbanyak"); 
+
+  const observerTarget = useRef<HTMLDivElement>(null);
   const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
 
+  // Mengambil data awal
   useEffect(() => {
     const fetchAllCampaigns = async () => {
       setLoading(true);
@@ -100,6 +108,7 @@ export default function AllProgramsPage() {
     fetchGlobalRecentDonations();
   }, [t]);
 
+  // Logika Filter & Sortir
   const filteredCampaigns = useMemo(() => {
     const keyword = deferredSearch.toLowerCase();
     const currentTime = Date.now(); 
@@ -116,7 +125,7 @@ export default function AllProgramsPage() {
       return id && categoryMap[id] ? categoryMap[id] : t("cat_general", "Umum");
     };
 
-    return campaigns
+    let result = campaigns
       .filter((campaign) => {
         if (!keyword) return true;
         return (
@@ -132,28 +141,69 @@ export default function AllProgramsPage() {
           daysLeft = diff > 0 ? Math.ceil(diff / ONE_DAY_MS) : 0;
         }
         return { campaign, daysLeft };
-      })
-      .sort((a, b) => {
-        const aOngoing = a.campaign.status === "active" && (a.daysLeft === null || a.daysLeft > 0);
-        const bOngoing = b.campaign.status === "active" && (b.daysLeft === null || b.daysLeft > 0);
+      });
 
-        if (aOngoing && bOngoing) {
-          if (a.daysLeft === null && b.daysLeft === null) return 0;
-          if (a.daysLeft === null) return 1;
-          if (b.daysLeft === null) return -1;
-          return a.daysLeft - b.daysLeft;
-        }
+    // Proses Sortir
+    result.sort((a, b) => {
+      const campA = a.campaign;
+      const campB = b.campaign;
 
-        if (aOngoing && !bOngoing) return -1;
-        if (!aOngoing && bOngoing) return 1;
-        return 0;
-      })
-      .map((item) => item.campaign);
-  }, [campaigns, deferredSearch, t]);
+      // 1. Program Aktif selalu di atas yang sudah selesai/tinjau (Opsional, tapi bagus untuk UX)
+      const aOngoing = campA.status === "active" && (a.daysLeft === null || (a.daysLeft ?? 0) > 0);
+      const bOngoing = campB.status === "active" && (b.daysLeft === null || (b.daysLeft ?? 0) > 0);
+      
+      if (aOngoing && !bOngoing) return -1;
+      if (!aOngoing && bOngoing) return 1;
+
+      // 2. Berdasarkan pilihan Sort Option
+      const amountA = Number(campA.current_amount_idr) || 0;
+      const amountB = Number(campB.current_amount_idr) || 0;
+      
+      const timeA = campA.created_at ? new Date(campA.created_at).getTime() : Number(campA.id);
+      const timeB = campB.created_at ? new Date(campB.created_at).getTime() : Number(campB.id);
+
+      switch (sortOption) {
+        case "terbanyak":
+          return amountB - amountA; // Terbesar ke terkecil
+        case "tersedikit":
+          return amountA - amountB; // Terkecil ke terbesar
+        case "terbaru":
+          return timeB - timeA; // ID/Waktu terbesar (terbaru) di atas
+        case "terlama":
+          return timeA - timeB; // ID/Waktu terkecil (terlama) di atas
+        default:
+          return amountB - amountA;
+      }
+    });
+
+    return result.map((item) => item.campaign);
+  }, [campaigns, deferredSearch, sortOption, t]);
 
   const displayedCampaigns = filteredCampaigns.slice(0, visibleCount);
 
-  
+  // Infinite Scroll Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Jika elemen target terlihat di layar, tambah jumlah yang dirender
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => prev + 6);
+        }
+      },
+      { threshold: 0.1 } // Memicu ketika 10% elemen observer terlihat
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [observerTarget, displayedCampaigns.length]); // Dependensi diperbarui
+
   const getCategoryLabel = (id?: number) => {
     const map: Record<number, string> = {
       1: t("cat_education", "Pendidikan"),
@@ -201,7 +251,9 @@ export default function AllProgramsPage() {
           </h1>
           <div className="w-10 h-10"></div>
         </nav>
-        <div className="relative px-6 mb-5">
+
+        {/* Input Cari dan Dropdown Sortir */}
+        <div className="relative px-6 mb-5 flex flex-col gap-3">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input
@@ -210,10 +262,28 @@ export default function AllProgramsPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setVisibleCount(6);
+                setVisibleCount(6); // Reset render bila mulai mencari
               }}
-              className="w-full h-14 rounded-2xl bg-white border border-white/40 pl-12 pr-4 text-sm text-[#2A1B33] outline-none shadow-sm transition focus:border-[#7C3996] focus:ring-4 focus:ring-[#7C3996]/15"
+              className="w-full h-12 rounded-2xl bg-white border border-white/40 pl-11 pr-4 text-sm text-[#2A1B33] outline-none shadow-sm transition focus:border-[#7C3996] focus:ring-4 focus:ring-[#7C3996]/15"
             />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 text-white/90">
+            <SlidersHorizontal size={14} className="opacity-80"/>
+            <span className="text-xs font-medium">Urutkan:</span>
+            <select
+              value={sortOption}
+              onChange={(e) => {
+                setSortOption(e.target.value);
+                setVisibleCount(6); // Reset render ketika sortir diubah
+              }}
+              className="bg-white/20 backdrop-blur-sm border border-white/30 text-white rounded-lg px-2 py-1 text-xs outline-none cursor-pointer focus:bg-[#3E1854]"
+            >
+              <option value="terbanyak" className="text-black">Donasi Terbanyak</option>
+              <option value="terbaru" className="text-black">Terbaru</option>
+              <option value="terlama" className="text-black">Terlama</option>
+              <option value="tersedikit" className="text-black">Donasi Tersedikit</option>
+            </select>
           </div>
         </div>
       </div>
@@ -270,8 +340,6 @@ export default function AllProgramsPage() {
                     </div>
 
                     <div className="p-5 flex flex-col">
-                      
-                      {/* 🔥 PERUBAHAN: Status dihapus, Kategori dipindah ke sebelah nama */}
                       <div className="flex items-center gap-1.5 text-gray-400 text-sm mb-2">
                         <span className="font-medium text-gray-600 truncate max-w-[140px]">
                           {campaign.full_name || t("beneficiary", "Penerima Manfaat")}
@@ -369,13 +437,11 @@ export default function AllProgramsPage() {
               );
             })}
 
+            {/* Target untuk memicu Infinite Scroll */}
             {visibleCount < filteredCampaigns.length && (
-              <button
-                onClick={() => setVisibleCount((prev) => prev + 6)}
-                className="w-full py-4 bg-gradient-to-r from-[#7C3996] to-[#5B2A73] hover:brightness-110 text-white rounded-2xl font-bold text-sm shadow-md shadow-[#7C3996]/20 transition-all active:scale-[0.98] mt-2 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                Muat Lebih Banyak ({filteredCampaigns.length - visibleCount} program lainnya)
-              </button>
+              <div ref={observerTarget} className="w-full flex items-center justify-center py-6 pb-12">
+                <div className="w-6 h-6 border-2 border-[#7C3996]/20 border-t-[#7C3996] rounded-full animate-spin"></div>
+              </div>
             )}
           </>
         ) : (
