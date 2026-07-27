@@ -64,6 +64,13 @@ export default function LatestPrograms() {
                 (isUnlimitedTime || (daysLeft !== null && daysLeft >= 6))
               );
             })
+            // --- TAMBAHKAN LOGIKA SORTING DI SINI ---
+            .sort((a, b) => {
+              const amountA = Number(a.current_amount_idr) || 0;
+              const amountB = Number(b.current_amount_idr) || 0;
+              return amountB - amountA; // Nominal terbesar berada di paling awal
+            })
+            // ----------------------------------------
             .slice(0, 5); // Tampilkan 5 program saja agar tidak berat
 
           setCampaigns(activeData);
