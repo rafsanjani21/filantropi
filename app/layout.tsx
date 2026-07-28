@@ -4,6 +4,7 @@ import { Inter, Plus_Jakarta_Sans, Rubik } from "next/font/google";
 import "./globals.css";
 import I18nProvider from "./I18nProvider"; 
 import { Toaster } from "react-hot-toast";
+import AuthProvider from "./components/ui/root/AuthProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -41,9 +42,11 @@ export default function RootLayout({
     >
       <body className={`${rubik.className} min-h-full flex flex-col`}>
         <Toaster position="top-right" reverseOrder={false} />
+        <AuthProvider>
         <I18nProvider>
           {children}
         </I18nProvider>
+        </AuthProvider>
       </body>
     </html>
   );

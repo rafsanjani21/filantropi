@@ -7,46 +7,22 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
+import AuthProvider from "./AuthProvider";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { getProfile } = useAuth();
   const { t } = useTranslation();
 
-  const [role, setRole] = useState<"donor" | "beneficiary" | "guest" | null>(
-    null,
-  );
+  const { role, isInitialized } = useAuthStore();
 
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-
-    const checkUserRole = async () => {
-      const token =
-        localStorage.getItem("access_token") ||
-        sessionStorage.getItem("access_token");
-
-      if (!token) {
-        setRole("guest");
-        return;
-      }
-
-      try {
-        await getProfile();
-        setRole("donor");
-      } catch {
-        try {
-          await getProfile("beneficiary");
-          setRole("beneficiary");
-        } catch {
-          setRole("guest");
-        }
-      }
-    };
-
-    checkUserRole();
   }, []);
+    
 
   if (!mounted) return null;
 

@@ -1,18 +1,25 @@
 "use client";
 
-import "@/lib/i18n"; // 🔥 Pastikan i18n menyala
+import "@/lib/i18n"; 
 import { useState } from "react";
+import { useRouter } from "next/navigation"; // 🔥 1. Import useRouter
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "@/lib/firebase";
 import { useAuth } from "@/hooks/useAuth";
 import { AlertCircle, ShieldCheck } from "lucide-react";
 import NavbarLogin from "@/app/components/ui/login/navbar";
-import { useTranslation } from "react-i18next"; // 🔥 Import hook i18n
+import { useTranslation } from "react-i18next"; 
+import { useAuthStore } from "@/store/useAuthStore";
+import toast from "react-hot-toast"; // 🔥 Tambahkan toast untuk notifikasi
 
 export default function MasukPage() {
+  const router = useRouter(); // 🔥 Inisialisasi router
   const { smartAuth, loading } = useAuth();
   const [message, setMessage] = useState("");
-  const { t } = useTranslation(); // 🔥 Siapkan fungsi penerjemah
+  const { t } = useTranslation(); 
+  
+  // 🔥 2. Ambil fungsi checkAuth dari Zustand
+  const { checkAuth } = useAuthStore(); 
 
   const handleGoogleAuth = async () => {
     setMessage("");
@@ -25,7 +32,23 @@ export default function MasukPage() {
       const fallbackRole = sessionStorage.getItem("selected_role") || "user";
 
       try {
+        // Proses login ke backend Anda
         await smartAuth(id_token, name, fallbackRole);
+        
+        // 🔥 3. WAJIB: Beritahu Zustand bahwa user sudah berhasil login!
+        await checkAuth();
+
+        toast.success(t("login_success", "Berhasil masuk!"));
+
+        // 🔥 4. Arahkan kembali ke halaman sebelumnya (jika ada) atau ke Profile
+        const redirectUrl = sessionStorage.getItem("redirect_after_login");
+        if (redirectUrl) {
+          sessionStorage.removeItem("redirect_after_login");
+          router.push(redirectUrl);
+        } else {
+          router.push("/ProfilePage"); // Arahkan ke profil secara default
+        }
+
       } catch (err: any) {
         setMessage(err.message || t("auth_fail_process"));
       }

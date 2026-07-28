@@ -15,7 +15,7 @@ import { AuthService } from "@/lib/auth.service";
 import { useTranslation } from "react-i18next";
 import BottomNav from "../components/ui/root/BottomNav";
 
-import LiveDonationBlink from "../components/ui/detail/LiveDonationBlink";
+import LiveDonationBlink from "../DetailPage/components/LiveDonationBlink";
 import { apiFetch } from "@/lib/api";
 
 type Campaign = {
@@ -41,9 +41,9 @@ export default function AllProgramsPage() {
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
   const [visibleCount, setVisibleCount] = useState(6);
-  
+
   // State untuk fitur sortir
-  const [sortOption, setSortOption] = useState("terbanyak"); 
+  const [sortOption, setSortOption] = useState("terbanyak");
 
   const observerTarget = useRef<HTMLDivElement>(null);
   const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
@@ -89,10 +89,12 @@ export default function AllProgramsPage() {
         });
 
         if (res && res.data) {
-          const historyArray = Array.isArray(res.data.history) 
-            ? res.data.history 
-            : (Array.isArray(res.data) ? res.data : []);
-          
+          const historyArray = Array.isArray(res.data.history)
+            ? res.data.history
+            : Array.isArray(res.data)
+              ? res.data
+              : [];
+
           const apiHistory = historyArray.map((tx: any) => ({
             from_to: tx.donatur_name || t("anonymous", "Anonim"),
             amount: String(tx.amount_idr || 0),
@@ -104,14 +106,14 @@ export default function AllProgramsPage() {
         console.error("Gagal memuat donasi terbaru di AllProgramsPage:", err);
       }
     };
-    
+
     fetchGlobalRecentDonations();
   }, [t]);
 
   // Logika Filter & Sortir
   const filteredCampaigns = useMemo(() => {
     const keyword = deferredSearch.toLowerCase();
-    const currentTime = Date.now(); 
+    const currentTime = Date.now();
     const ONE_DAY_MS = 1000 * 60 * 60 * 24;
 
     const getCategoryName = (id?: number) => {
@@ -149,18 +151,26 @@ export default function AllProgramsPage() {
       const campB = b.campaign;
 
       // 1. Program Aktif selalu di atas yang sudah selesai/tinjau (Opsional, tapi bagus untuk UX)
-      const aOngoing = campA.status === "active" && (a.daysLeft === null || (a.daysLeft ?? 0) > 0);
-      const bOngoing = campB.status === "active" && (b.daysLeft === null || (b.daysLeft ?? 0) > 0);
-      
+      const aOngoing =
+        campA.status === "active" &&
+        (a.daysLeft === null || (a.daysLeft ?? 0) > 0);
+      const bOngoing =
+        campB.status === "active" &&
+        (b.daysLeft === null || (b.daysLeft ?? 0) > 0);
+
       if (aOngoing && !bOngoing) return -1;
       if (!aOngoing && bOngoing) return 1;
 
       // 2. Berdasarkan pilihan Sort Option
       const amountA = Number(campA.current_amount_idr) || 0;
       const amountB = Number(campB.current_amount_idr) || 0;
-      
-      const timeA = campA.created_at ? new Date(campA.created_at).getTime() : Number(campA.id);
-      const timeB = campB.created_at ? new Date(campB.created_at).getTime() : Number(campB.id);
+
+      const timeA = campA.created_at
+        ? new Date(campA.created_at).getTime()
+        : Number(campA.id);
+      const timeB = campB.created_at
+        ? new Date(campB.created_at).getTime()
+        : Number(campB.id);
 
       switch (sortOption) {
         case "terbanyak":
@@ -190,7 +200,7 @@ export default function AllProgramsPage() {
           setVisibleCount((prev) => prev + 6);
         }
       },
-      { threshold: 0.1 } // Memicu ketika 10% elemen observer terlihat
+      { threshold: 0.1 }, // Memicu ketika 10% elemen observer terlihat
     );
 
     if (observerTarget.current) {
@@ -217,7 +227,6 @@ export default function AllProgramsPage() {
 
   return (
     <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-[#FBF8F3] pb-32 relative">
-      
       <LiveDonationBlink history={recentDonations} />
 
       <div className="sticky top-0 z-40 bg-gradient-to-b from-[#3E1854] via-[#6B2E88] to-[#8A45A8] shadow-lg rounded-b-3xl overflow-hidden">
@@ -227,12 +236,41 @@ export default function AllProgramsPage() {
           aria-hidden="true"
         >
           <defs>
-            <pattern id="kawung-programs" width="56" height="56" patternUnits="userSpaceOnUse">
+            <pattern
+              id="kawung-programs"
+              width="56"
+              height="56"
+              patternUnits="userSpaceOnUse"
+            >
               <g fill="none" stroke="#F3D48A" strokeWidth="1.1">
-                <ellipse cx="14" cy="14" rx="12" ry="8" transform="rotate(45 14 14)" />
-                <ellipse cx="42" cy="14" rx="12" ry="8" transform="rotate(-45 42 14)" />
-                <ellipse cx="14" cy="42" rx="12" ry="8" transform="rotate(-45 14 42)" />
-                <ellipse cx="42" cy="42" rx="12" ry="8" transform="rotate(45 42 42)" />
+                <ellipse
+                  cx="14"
+                  cy="14"
+                  rx="12"
+                  ry="8"
+                  transform="rotate(45 14 14)"
+                />
+                <ellipse
+                  cx="42"
+                  cy="14"
+                  rx="12"
+                  ry="8"
+                  transform="rotate(-45 42 14)"
+                />
+                <ellipse
+                  cx="14"
+                  cy="42"
+                  rx="12"
+                  ry="8"
+                  transform="rotate(-45 14 42)"
+                />
+                <ellipse
+                  cx="42"
+                  cy="42"
+                  rx="12"
+                  ry="8"
+                  transform="rotate(45 42 42)"
+                />
               </g>
             </pattern>
           </defs>
@@ -255,7 +293,10 @@ export default function AllProgramsPage() {
         {/* Input Cari dan Dropdown Sortir */}
         <div className="relative px-6 mb-5 flex flex-col gap-3">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+              size={18}
+            />
             <input
               type="text"
               placeholder="Cari program..."
@@ -269,7 +310,7 @@ export default function AllProgramsPage() {
           </div>
 
           <div className="flex items-center justify-end gap-2 text-white/90">
-            <SlidersHorizontal size={14} className="opacity-80"/>
+            <SlidersHorizontal size={14} className="opacity-80" />
             <span className="text-xs font-medium">Urutkan:</span>
             <select
               value={sortOption}
@@ -279,10 +320,18 @@ export default function AllProgramsPage() {
               }}
               className="bg-white/20 backdrop-blur-sm border border-white/30 text-white rounded-lg px-2 py-1 text-xs outline-none cursor-pointer focus:bg-[#3E1854]"
             >
-              <option value="terbanyak" className="text-black">Donasi Terbanyak</option>
-              <option value="terbaru" className="text-black">Terbaru</option>
-              <option value="terlama" className="text-black">Terlama</option>
-              <option value="tersedikit" className="text-black">Donasi Tersedikit</option>
+              <option value="terbanyak" className="text-black">
+                Donasi Terbanyak
+              </option>
+              <option value="terbaru" className="text-black">
+                Terbaru
+              </option>
+              <option value="terlama" className="text-black">
+                Terlama
+              </option>
+              <option value="tersedikit" className="text-black">
+                Donasi Tersedikit
+              </option>
             </select>
           </div>
         </div>
@@ -291,22 +340,30 @@ export default function AllProgramsPage() {
       <div className="px-6 pt-6 flex flex-col gap-5">
         {loading ? (
           [1, 2, 3].map((i) => (
-            <div key={i} className="h-64 bg-[#7C3996]/8 rounded-3xl animate-pulse border border-[#7C3996]/8" />
+            <div
+              key={i}
+              className="h-64 bg-[#7C3996]/8 rounded-3xl animate-pulse border border-[#7C3996]/8"
+            />
           ))
         ) : displayedCampaigns.length > 0 ? (
           <>
             {displayedCampaigns.map((campaign) => {
-              const isUnlimitedTarget = !campaign.target_amount || campaign.target_amount === 0;
-              const target = isUnlimitedTarget ? 1 : Number(campaign.target_amount);
+              const isUnlimitedTarget =
+                !campaign.target_amount || campaign.target_amount === 0;
+              const target = isUnlimitedTarget
+                ? 1
+                : Number(campaign.target_amount);
               const collected = Number(campaign.current_amount_idr) || 0;
 
               const progressRaw = (collected / target) * 100;
-              const progress = progressRaw > 100 ? 100 : Math.round(progressRaw);
+              const progress =
+                progressRaw > 100 ? 100 : Math.round(progressRaw);
 
               let daysLeft: number | null = null;
               if (campaign.end_date) {
                 const diff = new Date(campaign.end_date).getTime() - Date.now();
-                daysLeft = diff > 0 ? Math.ceil(diff / (1000 * 60 * 60 * 24)) : 0;
+                daysLeft =
+                  diff > 0 ? Math.ceil(diff / (1000 * 60 * 60 * 24)) : 0;
               }
               const isUnlimitedTime = daysLeft === null;
 
@@ -314,11 +371,12 @@ export default function AllProgramsPage() {
                 ? campaign.image_banner[0]
                 : campaign.image_banner;
 
-              const imageUrl = typeof banner === "string" && banner.trim() !== ""
-                ? banner.startsWith("http")
-                  ? banner
-                  : `${IMAGE_BASE_URL}/${banner.replace(/^\/+/, "")}?t=${Date.now()}`
-                : "/placeholder.png";
+              const imageUrl =
+                typeof banner === "string" && banner.trim() !== ""
+                  ? banner.startsWith("http")
+                    ? banner
+                    : `${IMAGE_BASE_URL}/${banner.replace(/^\/+/, "")}?t=${Date.now()}`
+                  : "/placeholder.png";
 
               const campaignIdentifier = campaign.slug || campaign.id;
 
@@ -327,7 +385,10 @@ export default function AllProgramsPage() {
                   key={campaign.id}
                   className="bg-white rounded-2xl shadow-[0_4px_20px_-4px_rgba(124,57,150,0.15)] border border-[#7C3996]/8 overflow-hidden flex flex-col group transition-shadow hover:shadow-[0_8px_28px_-6px_rgba(124,57,150,0.25)]"
                 >
-                  <Link href={`/DetailPage?slug=${campaignIdentifier}`} className="block cursor-pointer">
+                  <Link
+                    href={`/DetailPage?slug=${campaignIdentifier}`}
+                    className="block cursor-pointer"
+                  >
                     <div className="relative h-44">
                       <img
                         src={imageUrl}
@@ -342,12 +403,13 @@ export default function AllProgramsPage() {
                     <div className="p-5 flex flex-col">
                       <div className="flex items-center gap-1.5 text-gray-400 text-sm mb-2">
                         <span className="font-medium text-gray-600 truncate max-w-[140px]">
-                          {campaign.full_name || t("beneficiary", "Penerima Manfaat")}
+                          {campaign.full_name ||
+                            t("beneficiary", "Penerima Manfaat")}
                         </span>
                         <div className="w-3.5 h-3.5 rounded-full bg-[#7C3996] flex items-center justify-center text-white text-[8px] shrink-0">
                           ✓
                         </div>
-                        
+
                         <div className="ml-auto flex items-center gap-1.5 shrink-0">
                           <span className="text-[9px] font-extrabold px-2 py-1 rounded-md bg-[#3E1854] text-[#F3D48A] uppercase tracking-wider">
                             {getCategoryLabel(campaign.category_id)}
@@ -372,7 +434,8 @@ export default function AllProgramsPage() {
                                 </span>
                                 {!isUnlimitedTarget && (
                                   <span className="text-[10px] text-gray-400 font-normal">
-                                    {t("from", "dari")} Rp {target.toLocaleString("id-ID")}
+                                    {t("from", "dari")} Rp{" "}
+                                    {target.toLocaleString("id-ID")}
                                   </span>
                                 )}
                               </div>
@@ -399,21 +462,33 @@ export default function AllProgramsPage() {
                             </span>
                             <div
                               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold ${
-                                !isUnlimitedTime && (daysLeft as number) <= 5 && (daysLeft as number) > 0
+                                !isUnlimitedTime &&
+                                (daysLeft as number) <= 5 &&
+                                (daysLeft as number) > 0
                                   ? "bg-red-50 text-red-600 border border-red-100"
                                   : "bg-[#FBF8F3] text-gray-600 border border-gray-100"
                               }`}
                             >
                               {isUnlimitedTime ? (
                                 <>
-                                  <Infinity size={14} className="text-[#7C3996]" />
-                                  <span className="text-[#7C3996]">{t("unlimited_time", "Tanpa Batas")}</span>
+                                  <Infinity
+                                    size={14}
+                                    className="text-[#7C3996]"
+                                  />
+                                  <span className="text-[#7C3996]">
+                                    {t("unlimited_time", "Tanpa Batas")}
+                                  </span>
                                 </>
                               ) : (
                                 <>
                                   <Clock
                                     size={12}
-                                    className={(daysLeft as number) <= 5 && (daysLeft as number) > 0 ? "text-red-500" : "text-gray-400"}
+                                    className={
+                                      (daysLeft as number) <= 5 &&
+                                      (daysLeft as number) > 0
+                                        ? "text-red-500"
+                                        : "text-gray-400"
+                                    }
                                   />
                                   {(daysLeft as number) > 0
                                     ? `${t("remaining", "Sisa")} ${daysLeft} ${t("days", "Hari")}`
@@ -427,7 +502,10 @@ export default function AllProgramsPage() {
                         <div className="mt-4 p-3 bg-amber-50 rounded-2xl border border-amber-100 flex items-center gap-2.5">
                           <Clock size={14} className="text-amber-500" />
                           <p className="text-xs text-amber-700 font-medium">
-                            {t("under_review_desc", "Program ini sedang ditinjau oleh Admin.")}
+                            {t(
+                              "under_review_desc",
+                              "Program ini sedang ditinjau oleh Admin.",
+                            )}
                           </p>
                         </div>
                       )}
@@ -439,7 +517,10 @@ export default function AllProgramsPage() {
 
             {/* Target untuk memicu Infinite Scroll */}
             {visibleCount < filteredCampaigns.length && (
-              <div ref={observerTarget} className="w-full flex items-center justify-center py-6 pb-12">
+              <div
+                ref={observerTarget}
+                className="w-full flex items-center justify-center py-6 pb-12"
+              >
                 <div className="w-6 h-6 border-2 border-[#7C3996]/20 border-t-[#7C3996] rounded-full animate-spin"></div>
               </div>
             )}
@@ -453,7 +534,10 @@ export default function AllProgramsPage() {
               {t("no_active_programs", "Belum Ada Program")}
             </h3>
             <p className="text-gray-500 text-sm mt-2 px-10 leading-relaxed">
-              {t("no_active_programs_desc", "Saat ini belum ada program yang berjalan.")}
+              {t(
+                "no_active_programs_desc",
+                "Saat ini belum ada program yang berjalan.",
+              )}
             </p>
           </div>
         )}

@@ -55,27 +55,37 @@ export default function ProgramPage() {
 
         if (Array.isArray(rawData)) {
           const campaignsWithTotalCollected = await Promise.all(
-            rawData.map(async (campaign) => {
-              const wallet = campaign.wallet_address || campaign.user?.wallet_address;
-              // Default ke current_amount_idr dari DB jika API blockchain gagal
-              let totalAmount = campaign.current_amount_idr || 0;
+  rawData.map(async (campaign) => {
+    // 1. Tangkap alamat wallet dengan lebih aman dari berbagai kemungkinan struktur data
+    const wallet = campaign.wallet_address || campaign.user?.wallet_address || campaign.beneficiary?.wallet_address;
+    
+    // 2. Angka bawaan (fallback) jika API gagal
+    let totalAmount = campaign.current_amount_idr || 0;
 
-              if (wallet) {
-                try {
-                  const amountRes = await apiFetch(`/donations/amount/${wallet}`, { method: "GET" });
+    if (wallet) {
+      try {
+        // 3. Gunakan endpoint yang sama persis dengan DetailPage agar hasilnya konsisten
+        const amountRes = await apiFetch(`/donations/in/${wallet}`, { method: "GET" });
+        const amountData = amountRes?.data || amountRes;
 
-                  if (amountRes && amountRes.data && amountRes.data.total_amount !== undefined) {
-                    totalAmount = parseFloat(amountRes.data.total_amount || "0");
-                  }
-                } catch (err) {
-                  console.warn("Gagal ambil total donasi untuk", wallet);
-                }
-              }
-              return { ...campaign, live_collected: totalAmount };
-            })
-          );
+        // 4. Ambil total donasi jika API berhasil
+        if (amountData) {
+          if (amountData.total_balance_idr !== undefined) {
+            totalAmount = parseFloat(amountData.total_balance_idr);
+          } else if (amountData.total_amount !== undefined) {
+            totalAmount = parseFloat(amountData.total_amount);
+          }
+        }
+      } catch (err) {
+        console.warn("Gagal ambil total donasi untuk wallet:", wallet);
+      }
+    }
+    
+    return { ...campaign, live_collected: totalAmount };
+  })
+);
 
-          setCampaigns(campaignsWithTotalCollected);
+setCampaigns(campaignsWithTotalCollected);
         }
       } catch (error) {
         console.error("Gagal mengambil data program saya:", error);

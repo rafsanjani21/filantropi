@@ -2,18 +2,16 @@
 
 import "@/lib/i18n";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
-import Navbar from "../components/ui/homepage/navbar";
+import Navbar from "./components/navbar";
 import BottomNav from "../components/ui/root/BottomNav";
-import Carousel from "../components/ui/homepage/carousel";
-import LiveDonationBlink from "../components/ui/detail/LiveDonationBlink";
+import Carousel from "./components/carousel";
+import LiveDonationBlink from "../DetailPage/components/LiveDonationBlink";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
-
-// 🔥 OPTIMASI: Lazy load komponen yang berada di bawah untuk mempercepat render layar pertama
-import UrgentDonation from "../components/ui/homepage/urgentdonation";
-import LatestPrograms from "../components/ui/homepage/latestprograms";
+import UrgentDonation from "./components/urgentdonation";
+import LatestPrograms from "./components/latestprograms";
 import { apiFetch } from "@/lib/api";
 
 export default function HomePage() {
@@ -21,7 +19,9 @@ export default function HomePage() {
   const { getProfile } = useAuth();
   const { t } = useTranslation();
 
-  const [role, setRole] = useState<"donor" | "beneficiary" | "guest" | null>(null);
+  const [role, setRole] = useState<"donor" | "beneficiary" | "guest" | null>(
+    null,
+  );
   const [userProfile, setUserProfile] = useState<any>(null);
   const [recentDonations, setRecentDonations] = useState<any[]>([]);
 
@@ -31,7 +31,10 @@ export default function HomePage() {
     type: "warning" | "error" | "success";
   } | null>(null);
 
-  const showToast = (message: string, type: "warning" | "error" | "success") => {
+  const showToast = (
+    message: string,
+    type: "warning" | "error" | "success",
+  ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
@@ -81,10 +84,12 @@ export default function HomePage() {
 
         if (res && res.data) {
           // Menyesuaikan penangkapan array (jika dibungkus dalam 'history' atau langsung array)
-          const historyArray = Array.isArray(res.data.history) 
-            ? res.data.history 
-            : (Array.isArray(res.data) ? res.data : []);
-          
+          const historyArray = Array.isArray(res.data.history)
+            ? res.data.history
+            : Array.isArray(res.data)
+              ? res.data
+              : [];
+
           // Mapping data sesuai yang dibutuhkan oleh komponen LiveDonationBlink
           const apiHistory = historyArray.map((tx: any) => ({
             from_to: tx.donatur_name || t("anonymous", "Anonim"),
@@ -97,16 +102,22 @@ export default function HomePage() {
         console.error("Gagal memuat semua donasi di Homepage:", err);
       }
     };
-    
+
     fetchGlobalRecentDonations();
   }, [t]);
 
   // Render teks sapaan dengan status loading yang rapi
   const renderGreetingName = () => {
     if (isCheckingAuth) {
-      return <span className="inline-block w-32 h-6 bg-white/20 rounded-md animate-pulse"></span>;
+      return (
+        <span className="inline-block w-32 h-6 bg-white/20 rounded-md animate-pulse"></span>
+      );
     }
-    return userProfile?.name || userProfile?.full_name || (role === "guest" ? t("Orang Baik") : t("good_person"));
+    return (
+      userProfile?.name ||
+      userProfile?.full_name ||
+      (role === "guest" ? t("Orang Baik") : t("good_person"))
+    );
   };
 
   return (
@@ -114,7 +125,6 @@ export default function HomePage() {
       <LiveDonationBlink history={recentDonations} />
 
       <div className="flex flex-col w-full min-h-screen relative bg-[#FBF8F3] pb-28">
-        
         {toast && (
           <div
             role="status"
@@ -127,9 +137,15 @@ export default function HomePage() {
             }`}
           >
             {toast.type === "success" ? (
-              <CheckCircle2 size={20} className="shrink-0 mt-0.5 text-emerald-500" />
+              <CheckCircle2
+                size={20}
+                className="shrink-0 mt-0.5 text-emerald-500"
+              />
             ) : (
-              <AlertCircle size={20} className={`shrink-0 mt-0.5 ${toast.type === "warning" ? "text-[#C9971F]" : "text-red-500"}`} />
+              <AlertCircle
+                size={20}
+                className={`shrink-0 mt-0.5 ${toast.type === "warning" ? "text-[#C9971F]" : "text-red-500"}`}
+              />
             )}
             <span className="text-sm font-medium leading-snug text-[#2A1B33]">
               {toast.message}
@@ -145,19 +161,48 @@ export default function HomePage() {
             aria-hidden="true"
           >
             <defs>
-              <pattern id="kawung" width="56" height="56" patternUnits="userSpaceOnUse">
+              <pattern
+                id="kawung"
+                width="56"
+                height="56"
+                patternUnits="userSpaceOnUse"
+              >
                 <g fill="none" stroke="#F3D48A" strokeWidth="1.1">
-                  <ellipse cx="14" cy="14" rx="12" ry="8" transform="rotate(45 14 14)" />
-                  <ellipse cx="42" cy="14" rx="12" ry="8" transform="rotate(-45 42 14)" />
-                  <ellipse cx="14" cy="42" rx="12" ry="8" transform="rotate(-45 14 42)" />
-                  <ellipse cx="42" cy="42" rx="12" ry="8" transform="rotate(45 42 42)" />
+                  <ellipse
+                    cx="14"
+                    cy="14"
+                    rx="12"
+                    ry="8"
+                    transform="rotate(45 14 14)"
+                  />
+                  <ellipse
+                    cx="42"
+                    cy="14"
+                    rx="12"
+                    ry="8"
+                    transform="rotate(-45 42 14)"
+                  />
+                  <ellipse
+                    cx="14"
+                    cy="42"
+                    rx="12"
+                    ry="8"
+                    transform="rotate(-45 14 42)"
+                  />
+                  <ellipse
+                    cx="42"
+                    cy="42"
+                    rx="12"
+                    ry="8"
+                    transform="rotate(45 42 42)"
+                  />
                 </g>
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#kawung)" />
           </svg>
 
-          <Navbar isLoggedIn={role !== "guest"} />
+          <Navbar />
 
           <div className="relative px-6 mt-4">
             <h1 className="font-jakarta text-[1.75rem] leading-snug font-extrabold text-white drop-shadow-sm">

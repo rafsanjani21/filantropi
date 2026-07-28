@@ -11,8 +11,11 @@ export async function apiFetch(endpoint: string, options: RequestInit) {
     "/auth/logout",
   ];
 
-  const isPublicCampaignRead = options.method === "GET" && (endpoint === "/campaigns/" || (/^\/campaigns\/[^/]+$/.test(endpoint) && endpoint !== "/campaigns/me"));
-  const isPublicDonationRead = options.method === "GET" && (endpoint.startsWith("/donations/in/") || endpoint.startsWith("/donations/amount/"));
+  const isPublicCampaignRead = options.method === "GET" && endpoint.startsWith("/campaigns/") && !endpoint.includes("/campaigns/me");
+  
+  // Izinkan semua GET request ke /donations/ (termasuk riwayat dan jumlah)
+  const isPublicDonationRead = options.method === "GET" && endpoint.startsWith("/donations/");
+
   const isNoAuth = isPublicCampaignRead || isPublicDonationRead || noAuthEndpoints.some((url) => endpoint.includes(url));
   const isFormData = options.body instanceof FormData;
 
