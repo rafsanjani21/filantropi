@@ -430,7 +430,7 @@ export default function GalangPage() {
                 <option value="2">{t("cat_health", "Kesehatan")}</option>
                 <option value="3">{t("cat_disaster", "Bencana Alam")}</option>
                 <option value="4">{t("cat_mosque", "Ekonomi")}</option>
-                <option value="5">{t("cat_general", "Umum")}</option>
+                <option value="5">{t("cat_social", "Sosial")}</option>
                 <option value="6">{t("cat_environment", "Lingkungan")}</option>
               </select>
             </div>
