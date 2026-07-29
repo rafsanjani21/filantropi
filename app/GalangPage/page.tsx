@@ -478,7 +478,8 @@ export default function GalangPage() {
               <textarea
                 value={form.description} onChange={(e) => handleChange("description", e.target.value)}
                 placeholder={t("short_desc_placeholder", "Ceritakan ringkasan tujuan penggalangan dana ini...")}
-                rows={3} className="ml-3 w-full bg-transparent outline-none text-gray-800 font-medium placeholder:text-gray-300 placeholder:font-normal resize-none leading-relaxed"
+                rows={5}
+                className="ml-3 w-full bg-transparent outline-none text-gray-800 font-medium placeholder:text-gray-300 placeholder:font-normal resize-y min-h-[100px] leading-relaxed" 
                 required
               />
             </div>
@@ -493,7 +494,8 @@ export default function GalangPage() {
               <textarea
                 value={form.story} onChange={(e) => handleChange("story", e.target.value)}
                 placeholder={t("story_placeholder", "Tuliskan cerita detail mengapa orang harus membantu...")}
-                rows={8} className="ml-3 w-full bg-transparent outline-none text-gray-800 font-medium placeholder:text-gray-300 placeholder:font-normal resize-none leading-relaxed"
+                rows={12} 
+                className="ml-3 w-full bg-transparent outline-none text-gray-800 font-medium placeholder:text-gray-300 placeholder:font-normal resize-y min-h-[200px] leading-relaxed"
                 required
               />
             </div>

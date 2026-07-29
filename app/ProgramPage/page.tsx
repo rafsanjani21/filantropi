@@ -223,7 +223,7 @@ setCampaigns(campaignsWithTotalCollected);
 
         <nav className="relative px-6 pt-8 pb-6 flex items-center justify-between text-white">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push("/ProfilePage")}
             className="w-10 h-10 flex items-center justify-center bg-white/10 border border-white/20 backdrop-blur-md rounded-full hover:bg-white/20 transition-all cursor-pointer"
           >
             <ArrowLeft size={20} />

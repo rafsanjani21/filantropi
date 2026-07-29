@@ -515,8 +515,9 @@ function KelolaProgramContent() {
                   "short_desc_placeholder",
                   "Tuliskan rangkuman singkat kampanye ini...",
                 )}
-                rows={3}
-                className="ml-3 w-full bg-transparent outline-none text-gray-800 font-medium placeholder:text-gray-300 placeholder:font-normal resize-none leading-relaxed"
+                rows={5} 
+                className="ml-3 w-full bg-transparent outline-none text-gray-800 font-medium placeholder:text-gray-300 placeholder:font-normal resize-y min-h-[100px] leading-relaxed" 
+                
                 required
               />
             </div>
@@ -537,8 +538,9 @@ function KelolaProgramContent() {
                   "story_placeholder",
                   "Ceritakan latar belakang, kondisi saat ini, dan rincian penggunaan dana secara lengkap...",
                 )}
-                rows={8}
-                className="ml-3 w-full bg-transparent outline-none text-gray-800 font-medium placeholder:text-gray-300 placeholder:font-normal resize-none leading-relaxed"
+                rows={12} 
+                className="ml-3 w-full bg-transparent outline-none text-gray-800 font-medium placeholder:text-gray-300 placeholder:font-normal resize-y min-h-[200px] leading-relaxed"
+                
                 required
               />
             </div>
