@@ -1,11 +1,11 @@
 "use client";
 
-import "@/lib/i18n"; // 🔥 Proteksi i18n
+import "@/lib/i18n"; // Proteksi i18n
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/app/components/ui/user/navbar";
-import { useTranslation } from "react-i18next"; // 🔥 Import Hook
+import { useTranslation } from "react-i18next"; // Import Hook
 import { 
   User, Wallet, Save, Phone, MapPin, 
   FileText, CreditCard, Calendar, Briefcase, Building, Camera, Edit3, X,
@@ -103,6 +103,14 @@ export default function PagePenerima() {
 
   const fetchExistingProfile = async () => {
     try {
+      // PENAMBAHAN: Cek token sebelum memanggil API
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        console.warn("Token tidak ditemukan, mengarahkan ke halaman login.");
+        router.replace("/masuk"); 
+        return;
+      }
+
       const response = await getProfile("beneficiary");
       const data = response.data || response; 
       
@@ -149,8 +157,14 @@ export default function PagePenerima() {
       setPreviewKtp(ktpUrl);
       setOriginalKtpPreview(ktpUrl);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gagal sinkronisasi data profil:", error);
+      
+      // PENAMBAHAN: Redirect ke login jika error 401 Unauthorized
+      if (error?.message?.includes("401") || error?.status === 401) {
+        showToast("Sesi telah habis, silakan login kembali.", "error");
+        setTimeout(() => router.replace("/masuk"), 1500);
+      }
     }
   };
 
@@ -264,7 +278,6 @@ export default function PagePenerima() {
       return;
     }
 
-    // Validasi tambahan jika perorangan, wallet wajib diisi
     if (tipePenerima === "perorangan" && !form.wallet.trim()) {
       showToast(t("name_wallet_required", "Nama dan Wallet wajib diisi!"), "error");
       return;
@@ -277,10 +290,7 @@ export default function PagePenerima() {
 
       const formData = new FormData();
       formData.append("full_name", form.name);
-      
-      // 🔥 LOGIKA BARU: Jika individu, kirim wallet dari inputan form. Jika organisasi, kirim kosong.
       formData.append("wallet_address", tipePenerima === "organisasi" ? "" : form.wallet.trim());
-      
       formData.append("role", "beneficiary");
       formData.append("beneficiary_type", typeStr);
       formData.append("phone_number", form.phone_number);
@@ -352,7 +362,6 @@ export default function PagePenerima() {
 
   return (
     <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-gradient-to-b from-[#3E1854] via-[#6B2E88] to-[#8A45A8] shadow-2xl pb-32 overflow-hidden">
-      {/* Signature: motif kawung tipis, konsisten dengan seluruh app */}
       <svg
         className="absolute inset-0 w-full h-full opacity-[0.07] pointer-events-none"
         preserveAspectRatio="xMidYMid slice"
@@ -380,7 +389,6 @@ export default function PagePenerima() {
         </div>
       )}
 
-      {/* POPUP (MODAL) SYARAT & KETENTUAN */}
       {showTnC && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-0 sm:zoom-in-95">
@@ -449,8 +457,6 @@ export default function PagePenerima() {
         <div className="w-full bg-white/95 backdrop-blur-md rounded-[2.5rem] p-8 shadow-xl border border-white/40">
           
           <div className="space-y-5">
-
-            {/* FOTO PROFIL */}
             <div className="flex flex-col items-center justify-center mb-8">
               <label htmlFor="photo-upload" className={`relative group ${isEditing ? "cursor-pointer" : ""}`}>
                 {isEditing && (
@@ -490,7 +496,6 @@ export default function PagePenerima() {
               error={errors.phone_number} 
             />
 
-            {/* 🔥 LOGIKA BARU: Tampilkan input Wallet untuk Individu & BISA DIEDIT SAAT IS-EDITING AKTIF */}
             {tipePenerima === "perorangan" && (
               <InputField 
                 label={t("wallet_address_polygon_label")} 
@@ -498,7 +503,7 @@ export default function PagePenerima() {
                 onChange={(e: any) => handleChange("wallet", e.target.value)} 
                 icon={<Wallet size={18} />} 
                 placeholder="0x..." 
-                disabled={!isEditing} // Bisa diedit saat daftar/edit
+                disabled={!isEditing} 
               />
             )}
 
@@ -516,7 +521,6 @@ export default function PagePenerima() {
               disabled={!isEditing}
             />
 
-            {/* SEKSI IDENTITAS */}
             <div className="h-px bg-gray-200 my-6"></div>
             <h3 className={`font-bold mb-2 transition-colors ${isEditing ? "text-purple-800" : "text-gray-500"}`}>
               {tipePenerima === "perorangan" ? t("personal_data") : t("pic_identity")}
@@ -537,7 +541,6 @@ export default function PagePenerima() {
               error={errors.nik} 
             />
 
-            {/* FOTO KTP DENGAN PANDUAN UKURAN */}
             <div className="flex flex-col gap-1 w-full mt-2">
               <div className="flex justify-between items-center ml-1">
                 <label className={`text-sm font-bold transition-colors ${!isEditing ? "text-gray-500" : "text-gray-700"}`}>
@@ -634,7 +637,6 @@ export default function PagePenerima() {
             )}
           </div>
 
-          {/* CHECKBOX SYARAT & KETENTUAN */}
           {isEditing && isNewUser && (
             <div className="mt-8 flex items-start gap-3 p-4 bg-purple-50/50 rounded-2xl border border-purple-100">
               <input 
@@ -650,7 +652,6 @@ export default function PagePenerima() {
             </div>
           )}
 
-          {/* AREA TOMBOL */}
           {isNewUser ? (
             <button
               onClick={handleSubmit}
