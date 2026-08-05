@@ -33,16 +33,7 @@ export default function ProfilePagePenerima() {
   // PANGGIL FUNGSI TRANSLATOR DAN I18N OBJECT
   const { t, i18n } = useTranslation();
 
-  // FUNGSI GANTI BAHASA
-  const toggleLanguage = () => {
-    const newLang = i18n.language === "id" ? "en" : "id";
-
-    // 1. Ubah bahasa di layar saat ini
-    i18n.changeLanguage(newLang);
-
-    // 2. Simpan ke memori browser
-    localStorage.setItem("app_lang", newLang);
-  };
+  
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -261,22 +252,6 @@ export default function ProfilePagePenerima() {
           </Link>
 
           <div className="h-px bg-gray-100 mx-4 my-2"></div>
-
-          {/* TOMBOL GANTI BAHASA */}
-          <button
-            onClick={toggleLanguage}
-            className="group w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-200 hover:bg-gray-50 cursor-pointer"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-gray-100 p-2.5 rounded-xl text-gray-500 group-hover:bg-gray-500 group-hover:text-white transition-colors">
-                <Globe size={22} />
-              </div>
-              <span className="font-bold text-[#2A1B33] text-sm">{t("change_language")}</span>
-            </div>
-            <span className="text-xs font-black text-gray-500 bg-gray-100 px-3 py-1 rounded-full uppercase">
-              {i18n.language === "id" ? "ID" : "EN"}
-            </span>
-          </button>
 
           {/* LOGOUT */}
           <button

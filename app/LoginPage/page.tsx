@@ -18,17 +18,6 @@ export default function LoginPage() {
     router.push("/LoginPage/Masuk");
   };
 
-  // FUNGSI GANTI BAHASA
-  const toggleLanguage = () => {
-    const newLang = i18n.language === "id" ? "en" : "id";
-
-    // 1. Ubah bahasa di layar saat ini
-    i18n.changeLanguage(newLang);
-
-    // 2. 🔥 INI YANG PALING PENTING: Simpan ke memori browser!
-    // Jika baris ini tidak ada, maka I18nProvider tidak punya data untuk dibaca saat di-refresh
-    localStorage.setItem("app_lang", newLang);
-  };
 
   return (
     <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-gradient-to-b from-[#3E1854] via-[#6B2E88] to-[#8A45A8] shadow-2xl pb-32 overflow-hidden">
@@ -59,14 +48,7 @@ export default function LoginPage() {
         <ArrowLeft size={18} />
       </button>
 
-      {/* TOMBOL GANTI BAHASA DI POJOK KANAN ATAS */}
-      <button 
-        onClick={toggleLanguage}
-        className="absolute top-6 right-6 flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-full text-white transition-all cursor-pointer z-50 border border-white/30"
-      >
-        <Globe size={16} />
-        <span className="font-bold text-xs">{i18n.language === "id" ? "ID" : "EN"}</span>
-      </button>
+      
 
       <div className="w-full max-w-md flex flex-col mt-20 mx-auto px-6">
         <h1 className="text-3xl text-white font-bold mb-8 text-center drop-shadow-md">
