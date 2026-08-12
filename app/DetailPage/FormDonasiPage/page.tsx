@@ -60,14 +60,11 @@ export default function FormDonasiPage() {
         const dataKampanye = res.data || res;
         setCampaign(dataKampanye);
 
-        // ========================================================
-        // 🔍 AREA DEBUGGING: LIHAT HASILNYA DI CONSOLE BROWSER ANDA
-        // ========================================================
         console.log("🔍 CEK DATA DARI GOLANG:", dataKampanye);
         console.log("💳 Apakah ada wallet_address?", dataKampanye.wallet_address);
         console.log("👤 Apakah ada di dalam user?", dataKampanye.user?.wallet_address);
         console.log("🏢 Apakah ada di dalam beneficiary?", dataKampanye.beneficiary?.wallet_address);
-        // ========================================================
+        
 
       } catch (err) {
         console.error("Gagal mengambil data kampanye", err);

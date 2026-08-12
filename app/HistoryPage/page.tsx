@@ -76,7 +76,7 @@ export default function HistoryPage() {
         
         let allTransactions: WalletHistory[] = [];
 
-        // 🔥 TEMBAK ENDPOINT IN (Donasi Masuk)
+        // TEMBAK ENDPOINT IN (Donasi Masuk)
         try {
           const resIn = await apiFetch(`/donations/in/${activeWallet}`, { method: "GET" });
           if (resIn && resIn.data && Array.isArray(resIn.data.history)) {
@@ -93,7 +93,7 @@ export default function HistoryPage() {
           console.warn("Tidak ada data IN untuk wallet ini", errIn);
         }
 
-        // 🔥 TEMBAK ENDPOINT OUT (Donasi Keluar)
+        // TEMBAK ENDPOINT OUT (Donasi Keluar)
         try {
           const resOut = await apiFetch(`/donations/out/${activeWallet}`, { method: "GET" });
           if (resOut && Array.isArray(resOut.data)) {

@@ -13,7 +13,7 @@ export default function DonasiPage() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // 🔥 TAMBAHAN PAGINATION (LAZY RENDERING)
+  // TAMBAHAN PAGINATION (LAZY RENDERING)
   const [visibleCount, setVisibleCount] = useState(6);
   const { t } = useTranslation();
 
@@ -43,7 +43,7 @@ export default function DonasiPage() {
     return categoryMap[campaign.category_id] || t("cat_general");
   };
 
-  // 🔥 IMPLEMENTASI CACHING & FETCH EROSI BEBAN SERVER
+  // IMPLEMENTASI CACHING & FETCH EROSI BEBAN SERVER
   useEffect(() => {
     const fetchAllCampaigns = async () => {
       setLoading(true);
@@ -87,7 +87,7 @@ export default function DonasiPage() {
     setVisibleCount(6);
   }, [search]);
 
-  // 🔥 OPTIMASI PERFORMA MENGGUNAKAN useMemo
+  // OPTIMASI PERFORMA MENGGUNAKAN useMemo
   const processedCampaigns = useMemo(() => {
     return campaigns
       .filter((c) => (c.title || "").toLowerCase().includes(search.toLowerCase()))

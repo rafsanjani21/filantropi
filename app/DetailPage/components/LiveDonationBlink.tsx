@@ -15,7 +15,7 @@ type LiveDonationBlinkProps = {
 export default function LiveDonationBlink({
   history,
 }: LiveDonationBlinkProps) {
-  // 🔥 FILTER: Hanya ambil donasi yang nominalnya lebih dari 0
+  // FILTER: Hanya ambil donasi yang nominalnya lebih dari 0
   const validHistory = history?.filter((tx) => Number(tx.amount) > 0) || [];
 
   const [currentIndex, setCurrentIndex] = useState(0);

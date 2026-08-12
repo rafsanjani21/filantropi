@@ -235,7 +235,7 @@ const resources = {
         // Halaman Login
       choose_role: "Pilih Peran Akun",
       beneficiary: "Penerima Manfaat",
-      general_user: "Filantropis",
+      general_user: "Donatur/Wakif",
       
       // Halaman Awalan
       welcome_headline: "Kebaikan Tanpa Batas",
@@ -278,7 +278,7 @@ const resources = {
       invalid_contract: "Kontrak token tidak valid. Hubungi admin.",
       fail_fetch_balance: "Gagal mengambil saldo dari blockchain. Periksa koneksi internet Anda.",
       lock_donate_beneficiary: "Akun Penerima Manfaat tidak dapat berdonasi. Silakan pakai akun Pengguna Umum.",
-      lock_galang_user: "Fitur khusus Penerima Manfaat. Pengguna Umum tidak dapat menggalang dana.",
+      lock_galang_user: "Fitur khusus Penerima Manfaat.",
       search_placeholder_home: "Cari program filantropi...",
       philanthropy_program: "Program Filantropi",
       donate: "Donasi",
@@ -605,7 +605,7 @@ no_progress_yet: "No Progress Yet",
         // Login Page
       choose_role: "Select Account Role",
       beneficiary: "Beneficiary",
-      general_user: "Philanthropist",
+      general_user: "Donor/Waqif",
 
       // Onboarding Page
       welcome_headline: "Limitless Kindness",

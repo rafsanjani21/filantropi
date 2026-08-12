@@ -84,6 +84,25 @@ export function useAuth() {
     }
   };
 
+  const getInvestorProfile = async () => {
+    try {
+      const res = await AuthService.getInvestorProfile();
+      return res.data; 
+    } catch (err) {
+      return null;
+    }
+  };
+
+  const getInvestments = async () => {
+    try {
+      const res = await AuthService.getInvestments();
+      return res.data;
+    } catch (err: any) {
+      console.error("Gagal mengambil data investasi:", err);
+      throw err;
+    }
+  };
+
   const updateProfile = async (formData: FormData, role: string) => {
     try {
       setLoading(true);
@@ -109,5 +128,7 @@ export function useAuth() {
     getProfile,
     updateProfile,
     createCampaign,
+    getInvestorProfile,
+    getInvestments,
   };
 }

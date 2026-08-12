@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image"; // 🔥 Impor komponen Image dari Next.js
+import Image from "next/image"; 
 
 const items = [
   {

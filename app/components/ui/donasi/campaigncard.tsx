@@ -6,7 +6,7 @@ import { Clock, Infinity } from "lucide-react"; // 🔥 Tambahkan Infinity
 import { useState } from "react";
 import { useTranslation } from "react-i18next"; 
 
-// 🔥 1. PERBAIKAN PROPS: Izinkan target dan daysLeft menerima null
+
 type CampaignCardProps = {
   id: string | number;
   image: string;
@@ -26,7 +26,7 @@ export default function CampaignCard({
   const { t } = useTranslation(); 
   const [totalCollectedAmount] = useState<number | null>(null);
 
-  // 🔥 2. LOGIKA UNLIMITED
+  // LOGIKA UNLIMITED
   const isUnlimitedTarget = target === null || target === 0 || target === "";
   const isUnlimitedTime = daysLeft === null;
 

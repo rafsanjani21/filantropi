@@ -1,9 +1,9 @@
-"use client"; // Tambahkan use client karena butuh hook i18n
+"use client"; 
 
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import "@/lib/i18n"; // Pastikan i18n menyala
+import "@/lib/i18n";
 
 export default function NavbarLogin() {
   const { t } = useTranslation();

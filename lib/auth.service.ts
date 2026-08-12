@@ -120,6 +120,16 @@ export const AuthService = {
     });
   },
 
+  async getInvestorProfile() {
+    return apiFetch("/gwi/investor", { method: "GET" });
+  },
+
+  async getInvestments() {
+    return apiFetch("/gwi/investments", {
+      method: "GET",
+    });
+  },
+
   // 1. GET ALL
   async getCampaigns() {
     return apiFetch("/campaigns/", { 
@@ -152,7 +162,7 @@ export const AuthService = {
   // 5. UPDATE CAMPAIGN (FUNGSI BARU UNTUK EDIT)
   async updateCampaign(identifier: string, formData: FormData) {
     return apiFetch(`/campaigns/${identifier}`, {
-      method: "PUT", // Atau PATCH, sesuaikan dengan backend Anda
+      method: "PUT", 
       body: formData,
     });
   },

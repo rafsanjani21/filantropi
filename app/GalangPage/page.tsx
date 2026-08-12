@@ -20,7 +20,7 @@ export default function GalangPage() {
   const { createCampaign, getProfile, loading: authLoading } = useAuth();
   const { t } = useTranslation();
 
-  const MAX_FILE_SIZE = 1048576; // Batas 1 MB
+  const MAX_FILE_SIZE = 1048576; 
 
   const [isCheckingAccess, setIsCheckingAccess] = useState(true);
   const [isBlocked, setIsBlocked] = useState(false);
@@ -145,7 +145,7 @@ export default function GalangPage() {
       formData.append("description", form.description);
       formData.append("story", form.story);
 
-      // 🔥 Masukkan nilai is_donasi dan is_wakaf berdasarkan pilihan user
+      // Masukkan nilai is_donasi dan is_wakaf berdasarkan pilihan user
       const isWakaf = form.donation_type === "wakaf";
       const isDonasi = form.donation_type === "donasi";
 

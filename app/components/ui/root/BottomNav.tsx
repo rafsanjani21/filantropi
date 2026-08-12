@@ -10,12 +10,12 @@ import toast from "react-hot-toast";
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const { getProfile } = useAuth();
+  // Tambahkan getInvestorProfile
+  const { getProfile, getInvestorProfile } = useAuth();
   const { t } = useTranslation();
 
-  const [role, setRole] = useState<"donor" | "beneficiary" | "guest" | null>(
-    null,
-  );
+  // Tambahkan "investor" pada state role
+  const [role, setRole] = useState<"donor" | "beneficiary" | "investor" | "guest" | null>(null);
 
   const [mounted, setMounted] = useState(false);
 
@@ -32,26 +32,49 @@ export default function BottomNav() {
         return;
       }
 
+      let assignedRole: "donor" | "beneficiary" | "investor" | "guest" = "guest";
+
+      // 1. CEK DONOR
       try {
-        await getProfile();
-        setRole("donor");
-      } catch {
+        await getProfile("donor");
+        assignedRole = "donor";
+      } catch (err) {
+        // Abaikan error 404
+      }
+
+      // 2. CEK BENEFICIARY
+      if (assignedRole === "guest") {
         try {
           await getProfile("beneficiary");
-          setRole("beneficiary");
-        } catch {
-          setRole("guest");
+          assignedRole = "beneficiary";
+        } catch (err) {
+          // Abaikan error 404
         }
       }
+
+      // 3. CEK INVESTOR
+      if (assignedRole === "guest" && getInvestorProfile) {
+        try {
+          const investorData = await getInvestorProfile();
+          if (investorData) {
+            assignedRole = "investor";
+          }
+        } catch (err) {
+          // Abaikan error 404
+        }
+      }
+
+      setRole(assignedRole);
     };
 
     checkUserRole();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!mounted) return null;
 
   const isDonasiLocked = false;
-  const isGalangLocked = role === "donor" || role === "guest";
+  const isGalangLocked = role !== "beneficiary";
 
   const themeColor = "#7C3996";
 
@@ -129,12 +152,11 @@ export default function BottomNav() {
                 if (menu.isLocked) {
                   e.preventDefault();
 
-                  // 1. Tentukan pesan berdasarkan menu (Tetap menggunakan bahasa yang sopan & profesional)
                   const message =
                     menu.name === "Kampanye"
                       ? t(
                           "lock_donate_beneficiary",
-                          "Mohon maaf, fitur donasi hanya dapat diakses oleh akun Filantropis.",
+                          "Mohon maaf, fitur donasi hanya dapat diakses oleh akun Donatur/Wakif.",
                         )
                       : t(
                           "lock_galang_user",
@@ -150,7 +172,6 @@ export default function BottomNav() {
                             : "animate-out fade-out slide-out-to-top-5"
                         } max-w-[90vw] sm:max-w-sm w-full bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl flex items-start border-l-4 border-[#E8B94A] p-4 gap-3 pointer-events-auto duration-300`}
                       >
-                        {/* Bagian Ikon */}
                         <div className="flex-shrink-0 pt-0.5">
                           <div className="h-10 w-10 rounded-full bg-[#E8B94A]/15 flex items-center justify-center">
                             <Lock
@@ -160,7 +181,6 @@ export default function BottomNav() {
                           </div>
                         </div>
 
-                        {/* Bagian Teks */}
                         <div className="flex-1 w-0">
                           <p className="text-[13px] font-bold text-[#2A1B33] font-jakarta tracking-wide">
                             Akses Dibatasi
@@ -169,7 +189,6 @@ export default function BottomNav() {
                             {message}
                           </p>
                         </div>
-
 
                         <div className="ml-2 flex flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
                           <button
@@ -182,8 +201,8 @@ export default function BottomNav() {
                       </div>
                     ),
                     {
-                      duration: 4000, // Hilang otomatis dalam 4 detik
-                      position: "top-center", // Muncul dari atas
+                      duration: 4000, 
+                      position: "top-center", 
                     },
                   );
                 }
@@ -196,7 +215,6 @@ export default function BottomNav() {
                   onClick={handleClick}
                   className="relative flex flex-col items-center justify-center"
                 >
-                  {/* Icon biasa */}
                   <div
                     className={`relative transition-all duration-300 ${
                       isActive
@@ -211,7 +229,6 @@ export default function BottomNav() {
                     )}
                   </div>
 
-                  {/* Label */}
                   <span
                     className={`mt-2 text-[11px] transition-all duration-300 ${
                       isActive

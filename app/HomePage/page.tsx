@@ -16,12 +16,12 @@ import { apiFetch } from "@/lib/api";
 
 export default function HomePage() {
   const router = useRouter();
-  const { getProfile } = useAuth();
+  // Panggil juga getInvestorProfile dari useAuth
+  const { getProfile, getInvestorProfile } = useAuth(); 
   const { t } = useTranslation();
 
-  const [role, setRole] = useState<"donor" | "beneficiary" | "guest" | null>(
-    null,
-  );
+  // Tambahkan "investor" ke dalam tipe state role
+  const [role, setRole] = useState<"donor" | "beneficiary" | "investor" | "guest" | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [recentDonations, setRecentDonations] = useState<any[]>([]);
 
@@ -51,46 +51,80 @@ export default function HomePage() {
         return;
       }
 
+      let assignedRole: "donor" | "beneficiary" | "investor" | "guest" = "guest";
+      let userData = null;
+
+      // ==========================================
+      // 1. CEK DONOR SECARA INDEPENDEN
+      // ==========================================
       try {
-        const data = await getProfile();
-        setRole("donor");
-        setUserProfile(data);
+        userData = await getProfile("donor");
+        assignedRole = "donor";
       } catch (err) {
-        try {
-          const data = await getProfile("beneficiary");
-          setRole("beneficiary");
-          setUserProfile(data);
-        } catch (err) {
-          localStorage.removeItem("access_token");
-          router.replace("/LoginPage");
-        }
-      } finally {
-        setIsCheckingAuth(false);
+        // Abaikan error 404
       }
+
+      // ==========================================
+      // 2. CEK BENEFICIARY (Jika bukan donor)
+      // ==========================================
+      if (assignedRole === "guest") {
+        try {
+          userData = await getProfile("beneficiary");
+          assignedRole = "beneficiary";
+        } catch (err) {
+          // Abaikan error 404
+        }
+      }
+
+      // ==========================================
+      // 3. CEK INVESTOR (Jika bukan donor & beneficiary)
+      // ==========================================
+      if (assignedRole === "guest" && getInvestorProfile) {
+        try {
+          const investorData = await getInvestorProfile();
+          if (investorData) {
+            assignedRole = "investor";
+            userData = investorData;
+          }
+        } catch (err) {
+          // Abaikan error 404
+        }
+      }
+
+      // ==========================================
+      // KESIMPULAN
+      // ==========================================
+      if (assignedRole === "guest") {
+        // Jika ketiga pengecekan di atas gagal (token rusak/expired)
+        localStorage.removeItem("access_token");
+        router.replace("/LoginPage");
+      } else {
+        setRole(assignedRole);
+        setUserProfile(userData);
+      }
+
+      setIsCheckingAuth(false);
     };
 
     checkUserRole();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 🔥 MENGGUNAKAN API BACKEND ASLI UNTUK DONASI GLOBAL
+  // MENGGUNAKAN API BACKEND ASLI UNTUK DONASI GLOBAL
   useEffect(() => {
     const fetchGlobalRecentDonations = async () => {
       try {
-        // Memanggil endpoint /api/donations/all
         const res = await apiFetch(`/donations/all`, {
           method: "GET",
         });
 
         if (res && res.data) {
-          // Menyesuaikan penangkapan array (jika dibungkus dalam 'history' atau langsung array)
           const historyArray = Array.isArray(res.data.history)
             ? res.data.history
             : Array.isArray(res.data)
               ? res.data
               : [];
 
-          // Mapping data sesuai yang dibutuhkan oleh komponen LiveDonationBlink
           const apiHistory = historyArray.map((tx: any) => ({
             from_to: tx.donatur_name || t("anonymous", "Anonim"),
             amount: String(tx.amount_idr || 0),
@@ -106,7 +140,6 @@ export default function HomePage() {
     fetchGlobalRecentDonations();
   }, [t]);
 
-  // Render teks sapaan dengan status loading yang rapi
   const renderGreetingName = () => {
     if (isCheckingAuth) {
       return (
