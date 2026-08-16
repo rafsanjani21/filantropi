@@ -337,18 +337,7 @@ function ProgramsContent() {
                       <img src={imageUrl} alt={campaign.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 bg-gray-100" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
                       
-                      {/* 🔥 Label Badge di atas gambar */}
-                      <div className="absolute top-3 left-3">
-                        {campaign.is_wakaf ? (
-                          <div className="bg-emerald-500/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm border border-emerald-400">
-                            <BookOpen size={12} /> Wakaf
-                          </div>
-                        ) : (
-                          <div className="bg-[#E8B94A]/90 backdrop-blur-sm text-[#2A1B33] text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm border border-[#D99A1C]">
-                            <Gift size={12} /> Donasi Sosial
-                          </div>
-                        )}
-                      </div>
+                      
                     </div>
 
                     <div className="p-5 flex flex-col">
