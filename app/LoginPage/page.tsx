@@ -1,27 +1,21 @@
 "use client";
 
-import "@/lib/i18n"; // 🔥 Pastikan i18n menyala lebih dulu
-import { ArrowRight, ArrowLeft, UserCircle, Users, Globe } from "lucide-react"; // Tambahkan icon Globe
+import "@/lib/i18n";
+import { ArrowLeft, UserCircle, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useTranslation } from "react-i18next"; // 🔥 Import hook terjemahan
+import { useTranslation } from "react-i18next";
 
 export default function LoginPage() {
   const router = useRouter();
-
-  // Panggil fungsi translator (t) dan objek i18n
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const handleSelectRole = (role: string) => {
-    // Simpan pilihan ke browser secara sementara
     sessionStorage.setItem("selected_role", role);
-    // Arahkan ke halaman tombol Google
-    router.push("/LoginPage/Masuk");
+    router.push(`/LoginPage/Masuk?role=${role}`);
   };
-
 
   return (
     <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-gradient-to-b from-[#3E1854] via-[#6B2E88] to-[#8A45A8] shadow-2xl pb-32 overflow-hidden">
-      {/* Signature: motif kawung tipis, konsisten dengan seluruh app */}
       <svg
         className="absolute inset-0 w-full h-full opacity-[0.07] pointer-events-none"
         preserveAspectRatio="xMidYMid slice"
@@ -40,7 +34,6 @@ export default function LoginPage() {
         <rect width="100%" height="100%" fill="url(#kawung-profile)" />
       </svg>
 
-      {/* TOMBOL KEMBALI DI POJOK KIRI ATAS */}
       <button
         onClick={() => router.push("/HomePage")}
         className="absolute top-6 left-6 flex items-center justify-center w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full text-white transition-all cursor-pointer z-50 border border-white/30"
@@ -48,19 +41,13 @@ export default function LoginPage() {
         <ArrowLeft size={18} />
       </button>
 
-      
-
       <div className="w-full max-w-md flex flex-col mt-20 mx-auto px-6">
         <h1 className="text-3xl text-white font-bold mb-8 text-center drop-shadow-md">
-          {t("choose_role")} {/* Teks dinamis */}
+          {t("choose_role")}
         </h1>
 
-        {/* LOGO DENGAN MODIFIKASI EFEK */}
         <div className="relative flex justify-center items-center mb-12 mx-auto w-full group">
-          {/* Efek Cahaya (Glow) Berdenyut di Belakang */}
           <div className="absolute w-36 h-36 bg-white rounded-full blur-xl animate-pulse"></div>
-          
-          {/* Gambar Logo Utama */}
           <img
             src="/logo.png"
             alt="Logo Filantropi"
@@ -78,10 +65,9 @@ export default function LoginPage() {
               <UserCircle className="w-7 h-7 text-purple-600" />
             </div>
             <span className="font-bold text-lg text-purple-700">
-              {t("beneficiary")} {/* Teks dinamis */}
+              {t("beneficiary")}
             </span>
           </div>
-          <ArrowRight className="w-6 h-6 text-purple-400 pointer-events-none group-hover:translate-x-1 transition-transform" />
         </button>
 
         {/* Tombol Pengguna Umum */}
@@ -94,12 +80,10 @@ export default function LoginPage() {
               <Users className="w-7 h-7 text-purple-600" />
             </div>
             <span className="font-bold text-lg text-purple-700">
-              {t("general_user")} {/* Teks dinamis */}
+              {t("general_user")}
             </span>
           </div>
-          <ArrowRight className="w-6 h-6 text-purple-400 pointer-events-none group-hover:translate-x-1 transition-transform" />
         </button>
-        
       </div>
     </div>
   );

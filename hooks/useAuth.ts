@@ -6,47 +6,31 @@ export function useAuth() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // FUNGSI PINTAR: Mengatur alur Login & Pendaftaran User Baru
-  const smartAuth = async (id_token: string, name: string, fallbackRole: string) => {
+    const smartAuth = async (id_token: string, name: string, fallbackRole: string) => {
     try {
       setLoading(true);
 
-      try {
-        // ==========================================
-        // 1. COBA LOGIN (UNTUK USER YANG SUDAH ADA)
-        // ==========================================
-        const res = await AuthService.login(id_token);
-        
-        localStorage.setItem("access_token", res.data.access_token);
-        localStorage.setItem("refresh_token", res.data.refresh_token);
-        sessionStorage.removeItem("selected_role");
-
-        router.replace("/"); 
-
-      } catch (err: any) {
-        // ==========================================
-        // 2. JIKA GAGAL (USER BARU / BELUM TERDAFTAR)
-        // ==========================================
-        if (err.message.includes("user not found") || err.message.includes("belum terdaftar")) {
-          
-          // Tahan pendaftaran! Simpan id_token sementara
-          sessionStorage.setItem("id_token", id_token); 
-          sessionStorage.setItem("temp_name", name); // Simpan nama dari Google
-          
-          if (fallbackRole === "penerima_manfaat") {
-             // ---> PENERIMA MANFAAT BARU <---
-             router.replace("/ProfilePage/PagePenerima/Tipe"); 
-          } else {
-             // ---> PENGGUNA UMUM BARU <---
-             // Arahkan ke form profil agar dia melengkapi Wallet dulu
-             router.replace("/ProfilePage/UserPage");
-          }
-
-        } else {
-          throw err;
-        }
+      const res = await AuthService.login(id_token);
+      
+      if (res && (res.error === true || res.message?.includes("not found") || res.message?.includes("tidak ditemukan"))) {
+        throw new Error("User belum terdaftar");
       }
 
+      localStorage.setItem("access_token", res.data.access_token || res.access_token);
+      localStorage.setItem("refresh_token", res.data.refresh_token || res.refresh_token);
+      sessionStorage.removeItem("selected_role");
+
+      router.replace("/"); 
+
+    } catch (err: any) {
+      sessionStorage.setItem("id_token", id_token); 
+      sessionStorage.setItem("temp_name", name); 
+      
+      if (fallbackRole && fallbackRole.toLowerCase().includes("penerima")) {
+         router.replace("/ProfilePage/PagePenerima/Tipe"); 
+      } else {
+         router.replace("/ProfilePage/UserPage");
+      }
     } finally {
       setLoading(false);
     }

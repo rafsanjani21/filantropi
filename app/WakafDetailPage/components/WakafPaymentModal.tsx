@@ -20,7 +20,7 @@ export default function WakafPaymentModal({
 
   const bankName = "BSI (Bank Syariah Indonesia)";
   const accountNumber = "7001234567";
-  const accountName = "WAKAF KOLABORASI UMAT";
+  const accountName = "GERAKAN WAKAF INDONESIA";
 
   const handleCopyBank = () => {
     navigator.clipboard.writeText(accountNumber);

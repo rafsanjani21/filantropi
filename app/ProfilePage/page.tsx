@@ -25,12 +25,6 @@ import {
   Infinity as InfinityIcon,
 } from "lucide-react";
 
-/* -------------------------------------------------------------------------
- * Small signature marker: a single kawung "petal" that echoes the batik
- * pattern behind the page. Used as an eyebrow mark ahead of section labels
- * instead of a generic bullet, so the micro detail ties back to the macro
- * motif rather than decorating for its own sake.
- * ---------------------------------------------------------------------- */
 function SectionMark() {
   return (
     <svg width="10" height="10" viewBox="0 0 10 10" className="shrink-0" aria-hidden="true">
@@ -48,8 +42,6 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* Reusable row so every list item shares identical spacing, radius and
- * hover behaviour instead of hand-tuned one-offs per section. */
 function MenuRow({
   href,
   icon,
@@ -183,7 +175,6 @@ export default function ProfilePagePenerima() {
 
   return (
     <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-gradient-to-b from-[#2D1240] via-[#5B2A73] to-[#7C3996] shadow-2xl pb-32 overflow-hidden">
-      {/* Ambient batik texture */}
       <svg
         className="absolute inset-0 w-full h-full opacity-[0.06] pointer-events-none"
         preserveAspectRatio="xMidYMid slice"
@@ -202,7 +193,6 @@ export default function ProfilePagePenerima() {
         <rect width="100%" height="100%" fill="url(#kawung-profile)" />
       </svg>
 
-      {/* Soft radial glow behind the header for depth without extra chrome */}
       <div
         className="absolute top-0 left-1/2 -translate-x-1/2 w-[420px] h-[420px] rounded-full pointer-events-none"
         style={{
@@ -287,7 +277,7 @@ export default function ProfilePagePenerima() {
           </div>
         </div>
 
-        {/* GROUP 1 — ACCOUNT */}
+        {/*  ACCOUNT */}
         <div className="w-full mb-5">
           <SectionLabel>Pengaturan Akun</SectionLabel>
           <div className="bg-white/[0.97] backdrop-blur-sm rounded-lg shadow-xl shadow-black/10 p-2 border border-white/40">
@@ -319,7 +309,7 @@ export default function ProfilePagePenerima() {
           </div>
         </div>
 
-        {/* GROUP 2 — PORTFOLIO & WAKAF (INVESTORS ONLY) */}
+        {/*  PORTFOLIO & WAKAF (INVESTORS ONLY) */}
         {hasInvestments && (
           <div className="w-full mb-5">
             <SectionLabel>Portofolio &amp; Wakaf</SectionLabel>
@@ -374,7 +364,7 @@ export default function ProfilePagePenerima() {
           </div>
         )}
 
-        {/* GROUP 3 — ACTIVITY */}
+        {/*  ACTIVITY */}
         <div className="w-full mb-5">
           <SectionLabel>Aktivitas Anda</SectionLabel>
           <div className="bg-white/[0.97] backdrop-blur-sm rounded-lg shadow-xl shadow-black/10 p-2 border border-white/40 flex flex-col">
@@ -405,7 +395,7 @@ export default function ProfilePagePenerima() {
           </div>
         </div>
 
-        {/* GROUP 4 — HELP & INFO */}
+        {/*  HELP & INFO */}
         <div className="w-full mb-6">
           <SectionLabel>Bantuan &amp; Informasi</SectionLabel>
           <div className="bg-white/[0.97] backdrop-blur-sm rounded-lg shadow-xl shadow-black/10 p-2 border border-white/40 flex flex-col">
@@ -429,7 +419,7 @@ export default function ProfilePagePenerima() {
           </div>
         </div>
 
-        {/* GROUP 5 — LOGOUT */}
+        {/* LOGOUT */}
         <div className="w-full mb-8">
           <div className="bg-white/[0.97] backdrop-blur-sm rounded-lg shadow-xl shadow-black/10 p-2 border border-white/40">
             <button

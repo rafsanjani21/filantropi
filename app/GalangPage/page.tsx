@@ -45,7 +45,7 @@ export default function GalangPage() {
     description: "",
     story: "",
     wallet_address: "",
-    donation_type: "donasi",
+    donation_type: "donasi", // Default ke Donasi
   });
 
   useEffect(() => {
@@ -145,12 +145,12 @@ export default function GalangPage() {
       formData.append("description", form.description);
       formData.append("story", form.story);
 
-      // Masukkan nilai is_donasi dan is_wakaf berdasarkan pilihan user
+      // 🔥 SESUAI GAMBAR DB: Mengirimkan Text "1" atau "0" ke backend
       const isWakaf = form.donation_type === "wakaf";
       const isDonasi = form.donation_type === "donasi";
 
-      formData.append("is_wakaf", isWakaf ? "true" : "false");
-      formData.append("is_donasi", isDonasi ? "true" : "false");
+      formData.append("is_wakaf", isWakaf ? "1" : "0");
+      formData.append("is_donasi", isDonasi ? "1" : "0");
 
       if (form.target_amount.trim() !== "") {
         formData.append("target_amount", form.target_amount);
@@ -283,7 +283,7 @@ export default function GalangPage() {
         </div>
       )}
 
-      {/* Signature: motif kawung tipis, konsisten dengan seluruh app */}
+      {/* Signature: motif kawung tipis */}
       <svg
         className="absolute inset-x-0 top-0 h-64 w-full opacity-[0.08] pointer-events-none"
         preserveAspectRatio="xMidYMid slice"
@@ -329,6 +329,7 @@ export default function GalangPage() {
           <span className="w-10 h-1 rounded-full bg-[#7C3996]/15" />
         </div>
         <form onSubmit={handleSubmit} className="space-y-6 p-8 pt-3">
+          
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center ml-1">
               <label className="text-sm font-bold text-gray-700">{t("campaign_banner_label", "Foto/Banner Kampanye")}</label>
@@ -392,28 +393,45 @@ export default function GalangPage() {
             required
           />
 
-          {beneficiaryType === "individual" && (
-            <div className="flex flex-col gap-1.5 w-full">
-              <label className="text-sm font-bold text-gray-700 ml-1">{t("wallet_address_label", "Alamat Pencairan (Wallet / Rekening)")}</label>
-              <div className="flex items-center bg-gray-100 border-2 border-gray-200 rounded-2xl px-4 py-3.5 opacity-80 cursor-not-allowed">
-                <div className="text-gray-400">
-                  <Wallet size={18} />
-                </div>
-                <input
-                  type="text"
-                  value={form.wallet_address}
-                  readOnly
-                  placeholder="Memuat dari profil..."
-                  className="ml-3 w-full bg-transparent outline-none text-gray-600 font-mono text-sm cursor-not-allowed"
-                />
-                <Lock size={16} className="text-gray-400 ml-2 shrink-0" />
-              </div>
-              <p className="text-[10px] text-gray-500 font-medium ml-1 flex items-center gap-1 mt-1">
-                <AlertCircle size={12} className="shrink-0" />
-                {t("wallet_address_locked", "Alamat ini otomatis terhubung dari profil Anda dan tidak dapat diubah di sini.")}
-              </p>
+          {/* 🔥 UI BARU: PILIHAN DONASI ATAU WAKAF 🔥 */}
+          <div className="flex flex-col gap-1.5 w-full">
+            <label className="text-sm font-bold text-gray-700 ml-1">Jenis Kampanye</label>
+            <div className="grid grid-cols-2 gap-3 mt-1">
+              
+              {/* Option Donasi */}
+              <button
+                type="button"
+                onClick={() => handleChange("donation_type", "donasi")}
+                className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-300 active:scale-95 ${
+                  form.donation_type === "donasi"
+                    ? "border-[#7C3996] bg-[#7C3996]/5 shadow-[0_0_15px_rgba(124,57,150,0.15)]"
+                    : "border-gray-100 bg-gray-50 hover:bg-gray-100 hover:border-gray-200 text-gray-400"
+                }`}
+              >
+                <Gift size={26} className={form.donation_type === "donasi" ? "text-[#7C3996]" : ""} />
+                <span className={`mt-2.5 text-[13px] font-bold tracking-wide ${form.donation_type === "donasi" ? "text-[#7C3996]" : "text-gray-500"}`}>
+                  Donasi Sosial
+                </span>
+              </button>
+
+              {/* Option Wakaf */}
+              <button
+                type="button"
+                onClick={() => handleChange("donation_type", "wakaf")}
+                className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-300 active:scale-95 ${
+                  form.donation_type === "wakaf"
+                    ? "border-emerald-500 bg-emerald-50 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                    : "border-gray-100 bg-gray-50 hover:bg-gray-100 hover:border-gray-200 text-gray-400"
+                }`}
+              >
+                <BookOpen size={26} className={form.donation_type === "wakaf" ? "text-emerald-500" : ""} />
+                <span className={`mt-2.5 text-[13px] font-bold tracking-wide ${form.donation_type === "wakaf" ? "text-emerald-500" : "text-gray-500"}`}>
+                  Program Wakaf
+                </span>
+              </button>
+              
             </div>
-          )}
+          </div>
 
           <div className="flex flex-col gap-1.5 w-full">
             <label className="text-sm font-bold text-gray-700 ml-1">{t("category_label", "Kategori")}</label>
@@ -445,14 +463,14 @@ export default function GalangPage() {
                   type="number"
                   value={form.target_amount}
                   onChange={(e) => handleChange("target_amount", e.target.value)}
-                  placeholder="Kosongkan untuk Unlimited"
+                  placeholder="Unlimited"
                   className="w-full bg-transparent outline-none text-gray-800 font-medium placeholder:text-gray-300"
                   min="1000"
                   step="1"
                 />
               </div>
               <p className="text-[10px] text-gray-400 font-medium ml-1 leading-tight">
-                *Kosongkan jika tidak ada target dana
+                *Kosongkan jika tak ada target
               </p>
             </div>
 
@@ -465,7 +483,7 @@ export default function GalangPage() {
                 icon={<Calendar size={18} />}
               />
               <p className="text-[10px] text-gray-400 font-medium ml-1 leading-tight">
-                *Kosongkan jika berjalan tanpa batas waktu
+                *Kosongkan jika tanpa batas
               </p>
             </div>
           </div>
@@ -501,6 +519,29 @@ export default function GalangPage() {
               />
             </div>
           </div>
+
+          {beneficiaryType === "individual" && (
+            <div className="flex flex-col gap-1.5 w-full pt-2 border-t border-gray-100">
+              <label className="text-sm font-bold text-gray-700 ml-1">{t("wallet_address_label", "Alamat Pencairan (Wallet / Rekening)")}</label>
+              <div className="flex items-center bg-gray-100 border-2 border-gray-200 rounded-2xl px-4 py-3.5 opacity-80 cursor-not-allowed">
+                <div className="text-gray-400">
+                  <Wallet size={18} />
+                </div>
+                <input
+                  type="text"
+                  value={form.wallet_address}
+                  readOnly
+                  placeholder="Memuat dari profil..."
+                  className="ml-3 w-full bg-transparent outline-none text-gray-600 font-mono text-sm cursor-not-allowed"
+                />
+                <Lock size={16} className="text-gray-400 ml-2 shrink-0" />
+              </div>
+              <p className="text-[10px] text-gray-500 font-medium ml-1 flex items-center gap-1 mt-1">
+                <AlertCircle size={12} className="shrink-0" />
+                {t("wallet_address_locked", "Alamat ini otomatis terhubung dari profil Anda dan tidak dapat diubah di sini.")}
+              </p>
+            </div>
+          )}
 
           <button
             type="submit"

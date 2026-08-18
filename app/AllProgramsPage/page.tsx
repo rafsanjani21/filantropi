@@ -33,13 +33,13 @@ type Campaign = {
   image_banner?: string | string[];
   full_name?: string;
   category_id?: number;
-  is_wakaf?: boolean; // 🔥 Tambahkan tipe is_wakaf
+  is_wakaf?: string | number | boolean; 
 };
 
 function ProgramsContent() {
   const { t } = useTranslation();
   
-  // 🔥 Tangkap parameter URL
+  // Tangkap parameter URL
   const searchParams = useSearchParams();
   const typeFilter = searchParams.get("type"); 
   const isWakafTheme = typeFilter === "wakaf";
@@ -58,7 +58,7 @@ function ProgramsContent() {
   const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
 
   // ==========================================
-  // 🔥 VARIABEL TEMA DINAMIS (HIJAU VS UNGU)
+  // VARIABEL TEMA DINAMIS (HIJAU VS UNGU)
   // ==========================================
   const theme = {
     bgGradient: isWakafTheme 
@@ -89,6 +89,7 @@ function ProgramsContent() {
           return;
         }
 
+        // Memanggil API secara aman menggunakan AuthService
         const res = await AuthService.getCampaigns();
         const data = res.data || res;
 
@@ -126,6 +127,9 @@ function ProgramsContent() {
     fetchGlobalRecentDonations();
   }, [t]);
 
+  // ==========================================
+  // LOGIKA FILTER & SORTING
+  // ==========================================
   const filteredCampaigns = useMemo(() => {
     const keyword = deferredSearch.toLowerCase();
     const currentTime = Date.now();
@@ -144,9 +148,16 @@ function ProgramsContent() {
 
     let result = campaigns
       .filter((campaign) => {
-        // 🔥 Filter Tipe (Wakaf / Donasi)
-        if (isWakafTheme && !campaign.is_wakaf) return false;
-        if (typeFilter === "donasi" && campaign.is_wakaf) return false;
+        // 🔥 Cek Aman Tipe Wakaf (Support boolean true, string "true", angka 1, string "1")
+        const isWakafProgram = 
+          campaign.is_wakaf === true || 
+          campaign.is_wakaf === 1 || 
+          String(campaign.is_wakaf).toLowerCase() === "true" || 
+          String(campaign.is_wakaf) === "1";
+
+        // Filter berdasarkan tab URL (Donasi vs Wakaf)
+        if (isWakafTheme && !isWakafProgram) return false;
+        if (typeFilter === "donasi" && isWakafProgram) return false;
         return true;
       })
       .filter((campaign) => {
@@ -225,6 +236,9 @@ function ProgramsContent() {
     <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-[#FBF8F3] pb-32 relative">
       <LiveDonationBlink history={recentDonations} />
 
+      {/* ==========================================
+          HEADER STICKY
+      ========================================== */}
       <div className={`sticky top-0 z-40 bg-gradient-to-b ${theme.bgGradient} shadow-lg rounded-b-[2rem] overflow-hidden transition-colors duration-500`}>
         <svg
           className="absolute inset-0 w-full h-full opacity-[0.08] pointer-events-none"
@@ -297,6 +311,9 @@ function ProgramsContent() {
         </div>
       </div>
 
+      {/* ==========================================
+          LIST KAMPANYE
+      ========================================== */}
       <div className="px-6 pt-6 flex flex-col gap-5">
         {loading ? (
           [1, 2, 3].map((i) => (
@@ -305,6 +322,13 @@ function ProgramsContent() {
         ) : displayedCampaigns.length > 0 ? (
           <>
             {displayedCampaigns.map((campaign) => {
+              // 🔥 Pengecekan Aman untuk Wakaf
+              const isWakafProgram = 
+                campaign.is_wakaf === true || 
+                campaign.is_wakaf === 1 || 
+                String(campaign.is_wakaf).toLowerCase() === "true" || 
+                String(campaign.is_wakaf) === "1";
+
               const isUnlimitedTarget = !campaign.target_amount || campaign.target_amount === 0;
               const target = isUnlimitedTarget ? 1 : Number(campaign.target_amount);
               const collected = Number(campaign.current_amount_idr) || 0;
@@ -324,8 +348,8 @@ function ProgramsContent() {
 
               const campaignIdentifier = campaign.slug || campaign.id;
               
-              // 🔥 Arahkan ke Detail Page yang Tepat Berdasarkan Tipe Program
-              const targetUrl = campaign.is_wakaf ? `/WakafDetailPage?slug=${campaignIdentifier}` : `/DetailPage?slug=${campaignIdentifier}`;
+              // Arahkan ke Detail Page yang Tepat
+              const targetUrl = isWakafProgram ? `/WakafDetailPage?slug=${campaignIdentifier}` : `/DetailPage?slug=${campaignIdentifier}`;
 
               return (
                 <div
@@ -333,32 +357,47 @@ function ProgramsContent() {
                   className={`bg-white rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] border border-gray-100 overflow-hidden flex flex-col group transition-all duration-300 ${theme.cardHover}`}
                 >
                   <Link href={targetUrl} className="block cursor-pointer">
+                    
+                    {/* 🔥 1. FOTO KAMPANYE (BERSIH DARI BADGE) */}
                     <div className="relative h-44">
                       <img src={imageUrl} alt={campaign.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 bg-gray-100" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
-                      
-                      
                     </div>
 
                     <div className="p-5 flex flex-col">
-                      <div className="flex items-center gap-1.5 text-gray-400 text-sm mb-2">
-                        <span className="font-medium text-gray-600 truncate max-w-[140px]">
+                      
+                      {/* 🔥 2. BARIS BADGE & KATEGORI (DI BAWAH FOTO) */}
+                      <div className="flex items-center gap-2 mb-3">
+                        {isWakafProgram ? (
+                          <div className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                            <BookOpen size={12} /> Wakaf
+                          </div>
+                        ) : (
+                          <div className="bg-purple-50 text-purple-700 border border-purple-200 text-[9px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                            <Gift size={12} /> Donasi
+                          </div>
+                        )}
+                        
+                        <div className="bg-gray-50 text-gray-500 border border-gray-200 text-[9px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider shadow-sm">
+                          {getCategoryLabel(campaign.category_id)}
+                        </div>
+                      </div>
+
+                      {/* Judul & Pembuat */}
+                      <h3 className={`text-lg font-bold line-clamp-2 leading-snug text-[#2A1B33] transition-colors ${isWakafTheme ? 'group-hover:text-emerald-600' : 'group-hover:text-[#7C3996]'}`}>
+                        {campaign.title}
+                      </h3>
+
+                      <div className="flex items-center gap-1.5 text-gray-400 text-sm mt-2 mb-1">
+                        <span className="font-medium text-gray-500 truncate max-w-[200px]">
                           {campaign.full_name || t("beneficiary", "Penerima Manfaat")}
                         </span>
                         <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-white text-[8px] shrink-0 ${theme.primaryBg}`}>
                           ✓
                         </div>
-                        <div className="ml-auto flex items-center gap-1.5 shrink-0">
-                          <span className={`text-[9px] font-extrabold px-2 py-1 rounded-md uppercase tracking-wider ${theme.tagBg} ${theme.tagText}`}>
-                            {getCategoryLabel(campaign.category_id)}
-                          </span>
-                        </div>
                       </div>
 
-                      <h3 className={`text-lg font-bold line-clamp-2 leading-snug text-[#2A1B33] transition-colors ${isWakafTheme ? 'group-hover:text-emerald-600' : 'group-hover:text-[#7C3996]'}`}>
-                        {campaign.title}
-                      </h3>
-
+                      {/* Info Dana Terkumpul */}
                       {campaign.status === "active" ? (
                         <div className="mt-4">
                           <div className="flex justify-between items-end mb-2">
@@ -443,7 +482,7 @@ function ProgramsContent() {
   );
 }
 
-// 🔥 Wajib bungkus dengan Suspense karena menggunakan useSearchParams()
+// Wajib bungkus dengan Suspense karena menggunakan useSearchParams()
 export default function AllProgramsPage() {
   return (
     <Suspense fallback={

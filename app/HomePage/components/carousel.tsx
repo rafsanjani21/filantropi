@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image"; 
+import Image from "next/image";
 
 const items = [
   {
@@ -28,6 +28,12 @@ const items = [
     title: "Filantropi Indonesia",
     subtitle: "Mari berbagi bersama",
   },
+  {
+    id: 5,
+    src: "/gwi.png",
+    title: "Gerakan Wakaf Indonesia",
+    subtitle: "Wakaf untuk pahala abadi",
+  },
 ];
 
 export default function Carousel() {
@@ -36,13 +42,18 @@ export default function Carousel() {
   const [active, setActive] = useState(0);
   const [hover, setHover] = useState(false);
 
-  const scrollToIndex = (index: number) => {
+    const scrollToIndex = (index: number) => {
     if (!scrollRef.current) return;
     const container = scrollRef.current;
-    const width = container.clientWidth * 0.86;
+    const child = container.children[index] as HTMLElement;
+    
+    if (!child) return;
+
+    // Kalkulasi agar elemen selalu berada tepat di tengah layar
+    const scrollLeft = child.offsetLeft - container.clientWidth / 2 + child.clientWidth / 2;
 
     container.scrollTo({
-      left: index * width,
+      left: scrollLeft,
       behavior: "smooth",
     });
     setActive(index);
@@ -56,13 +67,37 @@ export default function Carousel() {
     }, 4500);
 
     return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, hover]);
 
+  // 🔥 PERBAIKAN 2: Membaca elemen mana yang paling dekat dengan titik tengah layar
   const handleScroll = () => {
     if (!scrollRef.current) return;
     const container = scrollRef.current;
-    const width = container.clientWidth * 0.86;
-    setActive(Math.round(container.scrollLeft / width));
+    
+    // Titik tengah layar carousel saat ini
+    const scrollCenter = container.scrollLeft + container.clientWidth / 2;
+
+    let closestIndex = 0;
+    let minDiff = Infinity;
+
+    // Cek setiap item, mana yang titik tengahnya paling dekat dengan tengah layar
+    Array.from(container.children).forEach((child, index) => {
+      // Abaikan elemen spacer transparan di akhir jika ada
+      if ((child as HTMLElement).getAttribute("aria-hidden") === "true") return;
+
+      const childCenter = (child as HTMLElement).offsetLeft + child.clientWidth / 2;
+      const diff = Math.abs(scrollCenter - childCenter);
+      
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestIndex = index;
+      }
+    });
+
+    if (active !== closestIndex) {
+      setActive(closestIndex);
+    }
   };
 
   return (
@@ -85,13 +120,12 @@ export default function Carousel() {
                 isActive ? "scale-100 opacity-100" : "scale-90 opacity-60"
               }`}
             >
-              {/* 🔥 MENGGANTI <img> DENGAN <Image /> */}
               <Image
                 src={item.src}
                 alt={item.title}
-                fill // Menggantikan absolute inset-0 w-full h-full
-                sizes="(max-width: 512px) 100vw, 512px" // Membantu browser memilih resolusi terkecil yang cocok
-                priority={index === 0} // 🔥 SANGAT PENTING: Hanya gambar PERTAMA yang dimuat duluan (bypass lazy load)
+                fill 
+                sizes="(max-width: 512px) 100vw, 512px" 
+                priority={index === 0} 
                 className={`object-cover transition-transform duration-700 ${
                   isActive ? "scale-105" : "scale-100"
                 }`}
@@ -108,6 +142,8 @@ export default function Carousel() {
             </div>
           );
         })}
+        
+        <div className="shrink-0 w-[4vw]" aria-hidden="true" />
       </div>
 
       <div className="flex justify-center gap-2 mt-5">

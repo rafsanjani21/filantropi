@@ -1,18 +1,20 @@
 "use client";
 
-import "@/lib/i18n"; // 🔥 Pastikan i18n menyala
-import { useState } from "react";
+import "@/lib/i18n";
+import { useState, Suspense } from "react";
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "@/lib/firebase";
 import { useAuth } from "@/hooks/useAuth";
 import { AlertCircle, ShieldCheck } from "lucide-react";
 import NavbarLogin from "@/app/components/ui/login/navbar";
-import { useTranslation } from "react-i18next"; // 🔥 Import hook i18n
+import { useTranslation } from "react-i18next";
+import { useSearchParams } from "next/navigation";
 
-export default function MasukPage() {
+function MasukContent() {
   const { smartAuth, loading } = useAuth();
   const [message, setMessage] = useState("");
-  const { t } = useTranslation(); // 🔥 Siapkan fungsi penerjemah
+  const { t } = useTranslation();
+  const searchParams = useSearchParams();
 
   const handleGoogleAuth = async () => {
     setMessage("");
@@ -22,16 +24,13 @@ export default function MasukPage() {
       const id_token = await result.user.getIdToken();
       const name = result.user.displayName || "User";
       
-      const fallbackRole = sessionStorage.getItem("selected_role") || "user";
+      const roleFromQuery = searchParams.get("role");
+      const roleFromSession = sessionStorage.getItem("selected_role");
+      const fallbackRole = roleFromQuery || roleFromSession || "user";
 
-      try {
-        await smartAuth(id_token, name, fallbackRole);
-      } catch (err: any) {
-        setMessage(err.message || t("auth_fail_process"));
-      }
-    } catch (error) {
-      console.error(error);
-      setMessage(t("auth_fail_google"));
+      await smartAuth(id_token, name, fallbackRole);
+    } catch (err: any) {
+      setMessage(err.message || t("auth_fail_process"));
     }
   };
 
@@ -41,7 +40,6 @@ export default function MasukPage() {
 
       <main className="flex-1 flex flex-col items-center justify-center px-8 pb-12 mt-10">
         <div className="w-full bg-white/90 backdrop-blur-md rounded-[2.5rem] shadow-xl p-10 flex flex-col items-center border border-white/20">
-          
           <div className="relative mb-8 group">
             <img src="/logo.png" alt="Logo" className="relative w-32 h-auto drop-shadow-md" />
           </div>
@@ -79,5 +77,13 @@ export default function MasukPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function MasukPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#7C3996]" />}>
+      <MasukContent />
+    </Suspense>
   );
 }
