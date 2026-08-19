@@ -22,6 +22,7 @@ export default function WakafPaymentModal({
   const accountNumber = "7001234567";
   const accountName = "GERAKAN WAKAF INDONESIA";
 
+
   const handleCopyBank = () => {
     navigator.clipboard.writeText(accountNumber);
     toast.success("Nomor rekening wakaf berhasil disalin!");
