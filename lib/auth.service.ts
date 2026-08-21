@@ -120,16 +120,6 @@ export const AuthService = {
     });
   },
 
-  async getInvestorProfile() {
-    return apiFetch("/gwi/investor", { method: "GET" });
-  },
-
-  async getInvestments() {
-    return apiFetch("/gwi/investments", {
-      method: "GET",
-    });
-  },
-
   // 1. GET ALL
   async getCampaigns() {
     return apiFetch("/campaigns/", { 

@@ -23,11 +23,11 @@ import { apiFetch } from "@/lib/api";
 
 export default function HomePage() {
   const router = useRouter();
-  const { getProfile, getInvestorProfile } = useAuth();
+  const { getProfile } = useAuth();
   const { t } = useTranslation();
 
   const [role, setRole] = useState<
-    "donor" | "beneficiary" | "investor" | "guest" | null
+    "donor" | "beneficiary" | "guest" | null
   >(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [recentDonations, setRecentDonations] = useState<any[]>([]);
@@ -58,7 +58,7 @@ export default function HomePage() {
         return;
       }
 
-      let assignedRole: "donor" | "beneficiary" | "investor" | "guest" =
+      let assignedRole: "donor" | "beneficiary" | "guest" =
         "guest";
       let userData = null;
 
@@ -71,16 +71,6 @@ export default function HomePage() {
         try {
           userData = await getProfile("beneficiary");
           assignedRole = "beneficiary";
-        } catch (err) {}
-      }
-
-      if (assignedRole === "guest" && getInvestorProfile) {
-        try {
-          const investorData = await getInvestorProfile();
-          if (investorData) {
-            assignedRole = "investor";
-            userData = investorData;
-          }
         } catch (err) {}
       }
 

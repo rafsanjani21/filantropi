@@ -25,7 +25,10 @@ function WakafDetailContent() {
   const router = useRouter();
   const slug = searchParams.get("slug");
 
-  const { campaign, loading, error, walletHistory, totalCollected, user } = useCampaignDetail(slug);
+  const { campaign, loading, error, walletHistory, totalCollected, user } =
+    useCampaignDetail(slug);
+
+    console.log("Isi dari variabel campaign:", campaign);
 
   // 2. Tambahkan state untuk Modal Ikrar dan Nama Wakaf
   const [isPledgeModalOpen, setIsPledgeModalOpen] = useState(false);
@@ -34,15 +37,20 @@ function WakafDetailContent() {
 
   // LOGIKA PROTEKSI LOGIN: Wajib Login untuk Wakaf
   const handleWakafClick = () => {
-    const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-    
+    const token =
+      localStorage.getItem("access_token") ||
+      sessionStorage.getItem("access_token");
+
     if (!token || !user) {
       toast.error("Anda harus login terlebih dahulu untuk menunaikan wakaf.", {
-        icon: '🔒',
-        style: { borderRadius: '10px', background: '#333', color: '#fff' },
+        icon: "🔒",
+        style: { borderRadius: "10px", background: "#333", color: "#fff" },
       });
-      
-      sessionStorage.setItem("redirect_after_login", window.location.pathname + window.location.search);
+
+      sessionStorage.setItem(
+        "redirect_after_login",
+        window.location.pathname + window.location.search,
+      );
       router.push("/LoginPage");
       return;
     }
@@ -54,9 +62,10 @@ function WakafDetailContent() {
   // 4. Fungsi transisi dari Ikrar ke Pembayaran
   const handlePledgeSubmit = (nameFromPledge: any) => {
     // Simpan nama dari modal ikrar (jika ada inputnya nanti), atau gunakan nama user
-    const finalName = nameFromPledge || user?.name || user?.full_name || "Hamba Allah";
+    const finalName =
+      nameFromPledge || user?.name || user?.full_name || "Hamba Allah";
     setWakafName(finalName);
-    
+
     // Tutup ikrar, buka pembayaran
     setIsPledgeModalOpen(false);
     setIsPaymentModalOpen(true);
@@ -81,7 +90,10 @@ function WakafDetailContent() {
         </div>
         <h2 className="text-xl font-bold text-gray-800">Terjadi Kesalahan</h2>
         <p className="text-sm text-gray-500">{error}</p>
-        <Link href="/" className="mt-2 px-6 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-full shadow-sm hover:bg-emerald-700 transition-colors">
+        <Link
+          href="/"
+          className="mt-2 px-6 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-full shadow-sm hover:bg-emerald-700 transition-colors"
+        >
           Kembali
         </Link>
       </div>
@@ -91,11 +103,11 @@ function WakafDetailContent() {
   return (
     <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-[#F4FBF7] overflow-x-hidden">
       <NavbarDetail />
-      
+
       <LiveDonationBlink history={walletHistory} />
 
       {/* 5. Render Modal Ikrar */}
-      <WakafPledgeModal 
+      <WakafPledgeModal
         isOpen={isPledgeModalOpen}
         onClose={() => setIsPledgeModalOpen(false)}
         onSubmit={handlePledgeSubmit}
@@ -106,23 +118,21 @@ function WakafDetailContent() {
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
         wakafName={wakafName || user?.name || user?.full_name || "Hamba Allah"}
+        campaignCode={campaign?.campaign_code}
       />
 
       <CampaignBanner images={campaign.image_banner} />
-      
+
       <div className="relative -mt-6 w-full bg-white flex flex-col z-10 pb-28 shadow-xl rounded-t-[1.75rem]">
         <div className="flex justify-center pt-3 pb-1">
           <span className="w-10 h-1 rounded-full bg-emerald-600/15" />
         </div>
-        
+
         <CampaignHeader campaign={campaign} totalCollected={totalCollected} />
         <CampaignStory story={campaign.story || campaign.description} />
       </div>
 
-      <WakafBottomBar 
-        campaign={campaign}
-        onWakafClick={handleWakafClick}
-      />
+      <WakafBottomBar campaign={campaign} onWakafClick={handleWakafClick} />
     </div>
   );
 }

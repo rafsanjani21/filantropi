@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronRight, Clock, CheckCircle2, Infinity } from "lucide-react";
+import { ChevronRight, Clock, CheckCircle2, Infinity, BookOpen, Gift } from "lucide-react";
 import { AuthService } from "@/lib/auth.service";
 import { useTranslation } from "react-i18next";
 
@@ -17,6 +17,8 @@ type Campaign = {
   end_date?: string | null;
   status?: string;
   image_banner?: string | string[];
+  // Tambahkan field is_wakaf
+  is_wakaf?: string | number | boolean;
 };
 
 export default function LatestPrograms() {
@@ -64,13 +66,13 @@ export default function LatestPrograms() {
                 (isUnlimitedTime || (daysLeft !== null && daysLeft >= 6))
               );
             })
-            // --- TAMBAHKAN LOGIKA SORTING DI SINI ---
+            // --- LOGIKA SORTING ---
             .sort((a, b) => {
               const amountA = Number(a.current_amount_idr) || 0;
               const amountB = Number(b.current_amount_idr) || 0;
               return amountB - amountA; // Nominal terbesar berada di paling awal
             })
-            // ----------------------------------------
+            // ----------------------
             .slice(0, 5); // Tampilkan 5 program saja agar tidak berat
 
           setCampaigns(activeData);
@@ -146,11 +148,24 @@ export default function LatestPrograms() {
                 : `${IMAGE_BASE_URL}/${banner.replace(/^\/+/, "")}?t=${Date.now()}`
               : "/placeholder.png";
 
+          // Logika Pengecekan Wakaf atau Donasi
+          const isWakafProgram = 
+            campaign.is_wakaf === true || 
+            campaign.is_wakaf === 1 || 
+            String(campaign.is_wakaf).toLowerCase() === "true" || 
+            String(campaign.is_wakaf) === "1";
+
+          // Logika Rute Dinamis
+          const campaignIdentifier = campaign.slug || campaign.id;
+          const targetUrl = isWakafProgram 
+            ? `/WakafDetailPage?slug=${campaignIdentifier}` 
+            : `/DetailPage?slug=${campaignIdentifier}`;
+
           return (
             <Link
-              href={`/DetailPage?slug=${campaign.slug || campaign.id}`}
+              href={targetUrl}
               key={campaign.id}
-              className="w-[85vw] max-w-[320px] h-[400px] shrink-0 snap-center bg-white rounded-3xl shadow-[0_4px_20px_-4px_rgba(124,57,150,0.15)] border border-[#7C3996]/8 overflow-hidden flex flex-col group transition-shadow hover:shadow-[0_8px_28px_-6px_rgba(124,57,150,0.25)] cursor-pointer"
+              className="w-[85vw] max-w-[320px] h-auto min-h-[410px] shrink-0 snap-center bg-white rounded-3xl shadow-[0_4px_20px_-4px_rgba(124,57,150,0.15)] border border-[#7C3996]/8 overflow-hidden flex flex-col group transition-shadow hover:shadow-[0_8px_28px_-6px_rgba(124,57,150,0.25)] cursor-pointer"
             >
               <div className="relative w-full h-[160px] shrink-0 overflow-hidden bg-gray-100">
                 <img
@@ -161,9 +176,28 @@ export default function LatestPrograms() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent group-hover:from-black/10 transition-colors z-10"></div>
               </div>
 
-              <div className="p-5 flex flex-col justify-between h-[240px] relative z-20 bg-white">
+              <div className="p-5 flex flex-col justify-between flex-1 relative z-20 bg-white">
                 <div>
-                  <div className="flex items-center gap-1.5 text-gray-400 text-sm mb-2">
+                  <div className="absolute top-3 right-3 z-20">
+                    <span className="text-[9px] font-extrabold px-2 py-1 rounded-md bg-[#3E1854]/80 backdrop-blur-sm text-[#F3D48A] uppercase tracking-wider">
+                      {getCategoryName(campaign.category_id)}
+                    </span>
+                  </div>
+
+                  {/* Badge Wakaf / Donasi */}
+                  <div className="flex items-center gap-2 mb-2.5">
+                    {isWakafProgram ? (
+                      <div className="w-max bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                        <BookOpen size={12} /> Wakaf
+                      </div>
+                    ) : (
+                      <div className="w-max bg-purple-50 text-purple-700 border border-purple-200 text-[9px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                        <Gift size={12} /> Donasi
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-gray-400 text-sm mb-1.5">
                     <span className="font-medium text-gray-600 truncate max-w-[180px]">
                       {campaign.full_name ||
                         t("beneficiary", "Penerima Manfaat")}
@@ -172,18 +206,13 @@ export default function LatestPrograms() {
                       ✓
                     </div>
                   </div>
-                  <div className="absolute top-3 right-3 z-20">
-                    <span className="text-[9px] font-extrabold px-2 py-1 rounded-md bg-[#3E1854]/80 backdrop-blur-sm text-[#F3D48A] uppercase tracking-wider">
-                      {getCategoryName(campaign.category_id)}
-                    </span>
-                  </div>
 
                   <h3 className="text-lg font-bold line-clamp-2 leading-snug text-[#2A1B33] group-hover:text-[#7C3996] transition-colors">
                     {campaign.title}
                   </h3>
                 </div>
 
-                <div>
+                <div className="mt-4">
                   <div className="flex justify-between items-end mb-2">
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-400 font-medium mb-0.5">

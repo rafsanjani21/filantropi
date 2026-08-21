@@ -21,9 +21,9 @@ export default function WakafPledgeModal({ isOpen, onClose, onSubmit }: WakafPle
       return toast("Silakan centang persetujuan ikrar terlebih dahulu.", {
         icon: '📝',
         style: {
-          background: '#FFFBEB', // amber-50
-          color: '#92400E', // amber-800
-          border: '1px solid #FDE68A', // amber-200
+          background: '#FFFBEB', 
+          color: '#92400E', 
+          border: '1px solid #FDE68A', 
           borderRadius: '16px',
           fontSize: '13px',
           fontWeight: '600',

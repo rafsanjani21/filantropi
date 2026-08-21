@@ -14,15 +14,11 @@ import {
   ChevronRight,
   CheckCircle2,
   Building2,
-  ShieldCheck,
   MapPin,
   Mail,
   LayoutDashboard,
   HelpCircle,
   Scale,
-  TrendingUp,
-  Timer,
-  Infinity as InfinityIcon,
 } from "lucide-react";
 
 function SectionMark() {
@@ -95,13 +91,9 @@ export default function ProfilePagePenerima() {
     handleLogout,
     loading,
     getProfile,
-    getInvestorProfile,
-    getInvestments,
   } = useAuth();
 
   const [user, setUser] = useState<any>(null);
-  const [investor, setInvestor] = useState<any>(null);
-  const [investments, setInvestments] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
 
   const { t, i18n } = useTranslation();
@@ -120,17 +112,6 @@ export default function ProfilePagePenerima() {
           }
         }
         if (userData) setUser(userData);
-
-        const investorData = await getInvestorProfile();
-
-        if (investorData) {
-          setInvestor(investorData);
-
-          const invData = await getInvestments();
-          if (invData && Array.isArray(invData)) {
-            setInvestments(invData);
-          }
-        }
       } catch (err) {
         console.error("Gagal memuat data:", err);
       }
@@ -142,15 +123,15 @@ export default function ProfilePagePenerima() {
 
   const BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
 
-  const photoUrl = investor?.profile_image_url || user?.photo_profile;
+  const photoUrl = user?.profile_image_url || user?.photo_profile;
   const userPhoto = photoUrl
     ? `${BASE_URL}/${photoUrl}?t=${Date.now()}`
     : "/profile.png";
 
   const displayName =
-    investor?.full_name || user?.name || user?.full_name || "User";
-  const displayAddress = investor?.address || user?.alamat;
-  const displayEmail = investor?.email || user?.email;
+    user?.name || user?.full_name || "User";
+  const displayAddress = user?.alamat;
+  const displayEmail = user?.email;
 
   const handleCopyWallet = () => {
     if (user?.wallet_address) {
@@ -159,16 +140,6 @@ export default function ProfilePagePenerima() {
       setTimeout(() => setCopied(false), 2000);
     }
   };
-
-  const investmentTypes = Array.from(
-    new Set(investments.map((inv) => inv.type)),
-  );
-
-  const hasInvestments =
-    investor &&
-    (investmentTypes.includes("investasi_murni") ||
-      investmentTypes.includes("wakaf_berjangka") ||
-      investmentTypes.includes("wakaf_abadi"));
 
   const isBeneficiary =
     user?.role === "beneficiary" || user?.role === "penerima_manfaat";
@@ -243,13 +214,6 @@ export default function ProfilePagePenerima() {
                       : "Individual"}
                 </span>
               </div>
-            ) : investor ? (
-              <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 bg-[#241432] px-3 py-1 rounded-full shadow-md border border-[#E8B94A]/40 flex items-center gap-1.5 whitespace-nowrap">
-                <TrendingUp size={11} className="text-[#F3D48A]" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#F3D48A]">
-                  Investor
-                </span>
-              </div>
             ) : null}
           </div>
         </div>
@@ -257,9 +221,6 @@ export default function ProfilePagePenerima() {
         <div className="text-center mb-9 flex flex-col items-center w-full">
           <h1 className="text-[22px] font-bold text-white tracking-tight flex items-center justify-center gap-1.5">
             {displayName}
-            {investor?.is_verified && (
-              <ShieldCheck size={18} className="text-[#F3D48A]" />
-            )}
           </h1>
 
           <div className="flex items-center gap-1.5 mt-1.5 text-purple-100/70 text-[13px]">
@@ -283,10 +244,8 @@ export default function ProfilePagePenerima() {
           <div className="bg-white/[0.97] backdrop-blur-sm rounded-lg shadow-xl shadow-black/10 p-2 border border-white/40">
             <MenuRow
               href={
-                !user && !investor
+                !user
                   ? "#"
-                  : investor // 🔥 Jika ada data investor, arahkan ke halaman khusus investor
-                    ? "/ProfilePage/InvestorPage"
                     : isBeneficiary
                       ? "/ProfilePage/PagePenerima"
                       : "/ProfilePage/UserPage"
@@ -297,72 +256,15 @@ export default function ProfilePagePenerima() {
               hoverBg="hover:bg-[#7C3996]/[0.04]"
               title={t("profile_detail")}
               subtitle={
-                !user && !investor
+                !user
                   ? "..."
-                  : investor // 🔥 Ubah juga subtitle-nya agar sesuai
-                    ? "Data Investor" 
-                    : isBeneficiary
-                      ? t("beneficiary_data")
-                      : t("general_account")
+                  : isBeneficiary
+                    ? t("beneficiary_data")
+                    : t("general_account")
               }
             />
           </div>
         </div>
-
-        {/*  PORTFOLIO & WAKAF (INVESTORS ONLY) */}
-        {hasInvestments && (
-          <div className="w-full mb-5">
-            <SectionLabel>Portofolio &amp; Wakaf</SectionLabel>
-            <div className="bg-white/[0.97] backdrop-blur-sm rounded-lg shadow-xl shadow-black/10 p-2 border border-white/40 flex flex-col">
-              {investmentTypes.includes("investasi_murni") && (
-                <MenuRow
-                  href="/InvestasiMurniPage"
-                  icon={<TrendingUp size={20} />}
-                  iconBg="bg-emerald-50 group-hover:bg-emerald-600"
-                  iconColor="text-emerald-600"
-                  hoverBg="hover:bg-emerald-50/70"
-                  title="Investasi Murni"
-                  subtitle="Portofolio Anda"
-                />
-              )}
-
-              {investmentTypes.includes("investasi_murni") &&
-                (investmentTypes.includes("wakaf_berjangka") ||
-                  investmentTypes.includes("wakaf_abadi")) && (
-                  <div className="h-px bg-gray-100 mx-4 my-0.5" />
-                )}
-
-              {investmentTypes.includes("wakaf_berjangka") && (
-                <MenuRow
-                  href="/WakafBerjangkaPage"
-                  icon={<Timer size={20} />}
-                  iconBg="bg-blue-50 group-hover:bg-blue-600"
-                  iconColor="text-blue-600"
-                  hoverBg="hover:bg-blue-50/70"
-                  title="Wakaf Berjangka"
-                  subtitle="Wakaf Waktu Tertentu"
-                />
-              )}
-
-              {investmentTypes.includes("wakaf_berjangka") &&
-                investmentTypes.includes("wakaf_abadi") && (
-                  <div className="h-px bg-gray-100 mx-4 my-0.5" />
-                )}
-
-              {investmentTypes.includes("wakaf_abadi") && (
-                <MenuRow
-                  href="/WakafAbadiPage"
-                  icon={<InfinityIcon size={20} />}
-                  iconBg="bg-indigo-50 group-hover:bg-indigo-600"
-                  iconColor="text-indigo-600"
-                  hoverBg="hover:bg-indigo-50/70"
-                  title="Wakaf Abadi"
-                  subtitle="Wakaf Selamanya"
-                />
-              )}
-            </div>
-          </div>
-        )}
 
         {/*  ACTIVITY */}
         <div className="w-full mb-5">
