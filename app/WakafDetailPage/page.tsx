@@ -28,7 +28,6 @@ function WakafDetailContent() {
   const { campaign, loading, error, walletHistory, totalCollected, user } =
     useCampaignDetail(slug);
 
-    console.log("Isi dari variabel campaign:", campaign);
 
   // 2. Tambahkan state untuk Modal Ikrar dan Nama Wakaf
   const [isPledgeModalOpen, setIsPledgeModalOpen] = useState(false);

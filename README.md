@@ -16,7 +16,7 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Project Structure
+# Project Structure
 
 ```
 filantropi/
@@ -25,26 +25,8 @@ filantropi/
 │   │   └── page.tsx
 │   ├── components
 │   │   └── ui
-│   │       ├── detail
-│   │       │   ├── DisbursementModal.tsx
-│   │       │   ├── DonationTypeModal.tsx
-│   │       │   ├── LiveDonationBlink.tsx
-│   │       │   ├── navbar.tsx
-│   │       │   ├── PaymentModal.tsx
-│   │       │   ├── ReportModal.tsx
-│   │       │   └── WakafPledgeModal.tsx
 │   │       ├── donasi
 │   │       │   └── campaigncard.tsx
-│   │       ├── homepage
-│   │       │   ├── balancecard.tsx
-│   │       │   ├── carousel.tsx
-│   │       │   ├── homeheader.tsx
-│   │       │   ├── latestprograms.tsx
-│   │       │   ├── navbar.tsx
-│   │       │   ├── tentangcard.tsx
-│   │       │   ├── tentanglist.tsx
-│   │       │   ├── urgentcard.tsx
-│   │       │   └── urgentdonation.tsx
 │   │       ├── login
 │   │       │   └── navbar.tsx
 │   │       ├── profile
@@ -52,12 +34,27 @@ filantropi/
 │   │       ├── register
 │   │       │   └── navbar.tsx
 │   │       ├── root
+│   │       │   ├── AuthProvider.tsx
 │   │       │   └── BottomNav.tsx
 │   │       └── user
 │   │           └── navbar.tsx
 │   ├── DetailPage
+│   │   ├── components
+│   │   │   ├── BottomActionBar.tsx
+│   │   │   ├── CampaignBanner.tsx
+│   │   │   ├── CampaignHeader.tsx
+│   │   │   ├── CampaignStory.tsx
+│   │   │   ├── DisbursementModal.tsx
+│   │   │   ├── DonationHistory.tsx
+│   │   │   ├── DonationTypeModal.tsx
+│   │   │   ├── LiveDonationBlink.tsx
+│   │   │   ├── navbar.tsx
+│   │   │   ├── PaymentModal.tsx
+│   │   │   └── ReportModal.tsx
 │   │   ├── FormDonasiPage
 │   │   │   └── page.tsx
+│   │   ├── hooks
+│   │   │   └── useCampaignDetail.ts
 │   │   └── page.tsx
 │   ├── DonasiPage
 │   │   └── page.tsx
@@ -66,12 +63,17 @@ filantropi/
 │   ├── HistoryPage
 │   │   └── page.tsx
 │   ├── HomePage
+│   │   ├── components
+│   │   │   ├── carousel.tsx
+│   │   │   ├── homeheader.tsx
+│   │   │   ├── latestprograms.tsx
+│   │   │   ├── navbar.tsx
+│   │   │   ├── urgentcard.tsx
+│   │   │   └── urgentdonation.tsx
 │   │   └── page.tsx
 │   ├── LoginPage
 │   │   ├── Masuk
 │   │   │   └── page.tsx
-│   │   └── page.tsx
-│   ├── PaymentSimulation
 │   │   └── page.tsx
 │   ├── ProfilePage
 │   │   ├── PagePenerima
@@ -91,6 +93,12 @@ filantropi/
 │   │   └── page.tsx
 │   ├── SyaratKetentuan
 │   │   └── page.tsx
+│   ├── WakafDetailPage
+│   │   ├── components
+│   │   │   ├── WakafBottomBar.tsx
+│   │   │   ├── WakafPaymentModal.tsx
+│   │   │   └── WakafPledgeModal.tsx
+│   │   └── page.tsx
 │   ├── favicon.ico
 │   ├── globals.css
 │   ├── I18nProvider.tsx
@@ -104,25 +112,20 @@ filantropi/
 │   ├── firebase.ts
 │   └── i18n.ts
 ├── public
-│   ├── apple.png
 │   ├── bandang.jpg
 │   ├── banjir.jpg
 │   ├── bencana.png
-│   ├── blockchain.jpg
-│   ├── crypto.jpg
 │   ├── donasi.jpg
 │   ├── donate.jpg
 │   ├── filantropi.png
-│   ├── file.svg
-│   ├── globe.svg
 │   ├── google.png
+│   ├── gwi.png
 │   ├── kemas.png
+│   ├── loaderio-975d61de836d43278f261dffbc5be8a4.txt
 │   ├── logo.png
-│   ├── metamask.jpg
-│   ├── next.svg
-│   ├── profile.png
-│   ├── vercel.svg
-│   └── window.svg
+│   └── profile.png
+├── store
+│   └── useAuthStore.ts
 ├── AGENTS.md
 ├── CLAUDE.md
 ├── eslint.config.mjs
