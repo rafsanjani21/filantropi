@@ -145,7 +145,7 @@ function DetailContent() {
         onSubmit={handleSimulatePayment}
         isProcessing={isProcessingPayment}
         onLoginRedirect={() => {
-          sessionStorage.setItem("redirect_after_login", window.location.pathname);
+          sessionStorage.setItem("redirect_after_login", window.location.pathname + window.location.search);
           router.push("/LoginPage/Masuk");
         }}
         receiverWallet={receiverWallet}

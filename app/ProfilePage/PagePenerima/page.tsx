@@ -140,8 +140,8 @@ export default function PagePenerima() {
       setOriginalForm(loadedForm);
 
       let imgUrl = "";
-      if (data.photo_profile) {
-        imgUrl = formatImageUrl(data.photo_profile);
+      if (data.profile_image_url) {
+        imgUrl = formatImageUrl(data.profile_image_url);
       } else if (data.avatar_url) {
         imgUrl = data.avatar_url;
       }

@@ -18,27 +18,44 @@ import CampaignStory from "../DetailPage/components/CampaignStory";
 // Komponen Wakaf
 import WakafPaymentModal from "./components/WakafPaymentModal";
 import WakafBottomBar from "./components/WakafBottomBar";
-import WakafPledgeModal from "./components/WakafPledgeModal"; // 1. Import Modal Ikrar
+import WakafPledgeModal from "./components/WakafPledgeModal";
+import WakafFormModal from "./components/WakafFormModal"; // 1. Import Modal Form
 
 function WakafDetailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const slug = searchParams.get("slug");
 
-  const { campaign, loading, error, walletHistory, totalCollected, user } =
-    useCampaignDetail(slug);
+  const {
+    campaign,
+    loading,
+    error,
+    walletHistory,
+    totalCollected,
+    user,
+    role,
+    isInitialized,
+  } = useCampaignDetail(slug);
 
-
-  // 2. Tambahkan state untuk Modal Ikrar dan Nama Wakaf
+  // 2. Tambahkan state untuk urutan Modal dan Data
   const [isPledgeModalOpen, setIsPledgeModalOpen] = useState(false);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  
   const [wakafName, setWakafName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [transactionData, setTransactionData] = useState<any>(null); // State penyimpan respons API
 
   // LOGIKA PROTEKSI LOGIN: Wajib Login untuk Wakaf
   const handleWakafClick = () => {
     const token =
       localStorage.getItem("access_token") ||
       sessionStorage.getItem("access_token");
+
+    if (token && !isInitialized) {
+      toast.loading("Memeriksa sesi login...", { id: "checking-auth" });
+      return;
+    }
 
     if (!token || !user) {
       toast.error("Anda harus login terlebih dahulu untuk menunaikan wakaf.", {
@@ -54,20 +71,76 @@ function WakafDetailContent() {
       return;
     }
 
-    // 3. Ubah: Buka Modal Ikrar terlebih dahulu
+    if (role === "beneficiary") {
+      toast.error("Akun Penerima Manfaat tidak dapat menunaikan wakaf. Silakan pakai akun Pengguna Umum.", {
+        style: { borderRadius: "10px", background: "#333", color: "#fff" },
+      });
+      return;
+    }
+
+    toast.dismiss("checking-auth");
+
+    // 3. Buka Modal Ikrar terlebih dahulu
     setIsPledgeModalOpen(true);
   };
 
-  // 4. Fungsi transisi dari Ikrar ke Pembayaran
+  // 4. Submit Ikrar (Tutup Ikrar -> Buka Form Input)
   const handlePledgeSubmit = (nameFromPledge: any) => {
-    // Simpan nama dari modal ikrar (jika ada inputnya nanti), atau gunakan nama user
     const finalName =
       nameFromPledge || user?.name || user?.full_name || "Hamba Allah";
     setWakafName(finalName);
 
-    // Tutup ikrar, buka pembayaran
+    // Tutup ikrar, buka form input nominal
     setIsPledgeModalOpen(false);
-    setIsPaymentModalOpen(true);
+    setIsFormModalOpen(true);
+  };
+
+  // 5. Submit Form & Tembak API Backend
+  const handleFormSubmit = async (formData: any) => {
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      
+      const payload = {
+        campaignCode: campaign?.campaign_code || "",
+        bankAccountId: "BANK-BSI-01", // Bisa disesuaikan dengan ID Bank di backend Anda
+        amount: formData.amount,
+        senderName: formData.senderName,
+        senderBank: formData.senderBank,
+        senderAccountNumber: formData.senderAccountNumber
+      };
+
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const response = await fetch(`${API_BASE}/campaigns/transaction/wakaf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || result.error) {
+        throw new Error(result.message || "Gagal membuat transaksi");
+      }
+
+      // Simpan data transaksi (kode unik, total, expired) ke state
+      setTransactionData(result.data);
+
+      // Tutup form, buka modal pembayaran (Instruksi Transfer)
+      setIsFormModalOpen(false);
+      setIsPaymentModalOpen(true);
+      
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Terjadi kesalahan sistem saat memproses transaksi", {
+         style: { borderRadius: "16px", fontSize: "13px", fontWeight: "600" },
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -105,19 +178,28 @@ function WakafDetailContent() {
 
       <LiveDonationBlink history={walletHistory} />
 
-      {/* 5. Render Modal Ikrar */}
+      {/* 1. Modal Ikrar */}
       <WakafPledgeModal
         isOpen={isPledgeModalOpen}
         onClose={() => setIsPledgeModalOpen(false)}
         onSubmit={handlePledgeSubmit}
       />
 
-      {/* Modal Pembayaran Bank */}
+      {/* 2. Modal Form Input */}
+      <WakafFormModal
+        isOpen={isFormModalOpen}
+        onClose={() => setIsFormModalOpen(false)}
+        onSubmit={handleFormSubmit}
+        isSubmitting={isSubmitting}
+      />
+
+      {/* 3. Modal Pembayaran Bank */}
       <WakafPaymentModal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
         wakafName={wakafName || user?.name || user?.full_name || "Hamba Allah"}
         campaignCode={campaign?.campaign_code}
+        transactionData={transactionData}
       />
 
       <CampaignBanner images={campaign.image_banner} />

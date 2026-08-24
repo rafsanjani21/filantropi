@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthService } from "@/lib/auth.service";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export function useAuth() {
   const [loading, setLoading] = useState(false);
@@ -20,7 +21,14 @@ export function useAuth() {
       localStorage.setItem("refresh_token", res.data.refresh_token || res.refresh_token);
       sessionStorage.removeItem("selected_role");
 
-      router.replace("/"); 
+      const redirectPath = sessionStorage.getItem("redirect_after_login") || "/";
+      if (sessionStorage.getItem("redirect_after_login")) {
+        sessionStorage.setItem("auto_open_donate", "true");
+        sessionStorage.removeItem("redirect_after_login");
+      }
+      await useAuthStore.getState().checkAuth();
+      router.replace(redirectPath);
+      router.refresh();
 
     } catch (err: any) {
       sessionStorage.setItem("id_token", id_token); 

@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 
 export function useCampaignDetail(slug: string | null) {
   const { t } = useTranslation();
-  const { user } = useAuthStore();
+  const { user, role, isInitialized } = useAuthStore();
   
   const [campaign, setCampaign] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -85,6 +85,8 @@ export function useCampaignDetail(slug: string | null) {
     milestone,
     receiverWallet,
     user,
+    role,
+    isInitialized,
     fetchMilestoneStatus
   };
 }

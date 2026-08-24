@@ -121,12 +121,29 @@ export default function ProfilePagePenerima() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
+  const BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || "";
 
-  const photoUrl = user?.profile_image_url || user?.photo_profile;
-  const userPhoto = photoUrl
-    ? `${BASE_URL}/${photoUrl}?t=${Date.now()}`
-    : "/profile.png";
+  const photoUrl = user?.profile_image_url;
+  let userPhoto = "/profile.png"; // Default image
+
+  if (photoUrl) {
+    if (photoUrl.startsWith("http")) {
+      // Jika login pakai Google (URL utuh)
+      userPhoto = `${photoUrl}?t=${Date.now()}`;
+    } else {
+      // Menghilangkan garis miring ganda
+      const cleanBaseUrl = BASE_URL.replace(/\/+$/, "");
+      let cleanPhotoUrl = photoUrl.replace(/^\/+/, "");
+      
+      // 🔥 LOGIKA BARU: Tambahkan "public/" otomatis jika belum ada
+      if (!cleanPhotoUrl.startsWith("public/")) {
+        cleanPhotoUrl = `public/${cleanPhotoUrl}`;
+      }
+
+      // Hasil akhir: http://192.168.110.29:8081/public/uploads/profile/...
+      userPhoto = `${cleanBaseUrl}/${cleanPhotoUrl}?t=${Date.now()}`;
+    }
+  }
 
   const displayName =
     user?.name || user?.full_name || "User";
