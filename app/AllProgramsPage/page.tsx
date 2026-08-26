@@ -18,9 +18,6 @@ import { AuthService } from "@/lib/auth.service";
 import { useTranslation } from "react-i18next";
 import BottomNav from "../components/ui/root/BottomNav";
 
-import LiveDonationBlink from "../DetailPage/components/LiveDonationBlink";
-import { apiFetch } from "@/lib/api";
-
 type Campaign = {
   id: string | number;
   slug?: string;
@@ -47,7 +44,6 @@ function ProgramsContent() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [recentDonations, setRecentDonations] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
   const [visibleCount, setVisibleCount] = useState(6);
@@ -89,7 +85,6 @@ function ProgramsContent() {
           return;
         }
 
-        // Memanggil API secara aman menggunakan AuthService
         const res = await AuthService.getCampaigns();
         const data = res.data || res;
 
@@ -107,25 +102,6 @@ function ProgramsContent() {
 
     fetchAllCampaigns();
   }, []);
-
-  useEffect(() => {
-    const fetchGlobalRecentDonations = async () => {
-      try {
-        const res = await apiFetch(`/donations/all`, { method: "GET" });
-        if (res && res.data) {
-          const historyArray = Array.isArray(res.data.history) ? res.data.history : Array.isArray(res.data) ? res.data : [];
-          const apiHistory = historyArray.map((tx: any) => ({
-            from_to: tx.donatur_name || t("anonymous", "Anonim"),
-            amount: String(tx.amount_idr || 0),
-          }));
-          setRecentDonations(apiHistory);
-        }
-      } catch (err) {
-        console.error("Gagal memuat donasi terbaru di AllProgramsPage:", err);
-      }
-    };
-    fetchGlobalRecentDonations();
-  }, [t]);
 
   // ==========================================
   // LOGIKA FILTER & SORTING
@@ -148,14 +124,12 @@ function ProgramsContent() {
 
     let result = campaigns
       .filter((campaign) => {
-        // 🔥 Cek Aman Tipe Wakaf (Support boolean true, string "true", angka 1, string "1")
         const isWakafProgram = 
           campaign.is_wakaf === true || 
           campaign.is_wakaf === 1 || 
           String(campaign.is_wakaf).toLowerCase() === "true" || 
           String(campaign.is_wakaf) === "1";
 
-        // Filter berdasarkan tab URL (Donasi vs Wakaf)
         if (isWakafTheme && !isWakafProgram) return false;
         if (typeFilter === "donasi" && isWakafProgram) return false;
         return true;
@@ -234,8 +208,6 @@ function ProgramsContent() {
 
   return (
     <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-[#FBF8F3] pb-32 relative">
-      <LiveDonationBlink history={recentDonations} />
-
       {/* ==========================================
           HEADER STICKY
       ========================================== */}
@@ -322,7 +294,6 @@ function ProgramsContent() {
         ) : displayedCampaigns.length > 0 ? (
           <>
             {displayedCampaigns.map((campaign) => {
-              // 🔥 Pengecekan Aman untuk Wakaf
               const isWakafProgram = 
                 campaign.is_wakaf === true || 
                 campaign.is_wakaf === 1 || 
@@ -348,7 +319,6 @@ function ProgramsContent() {
 
               const campaignIdentifier = campaign.slug || campaign.id;
               
-              // Arahkan ke Detail Page yang Tepat
               const targetUrl = isWakafProgram ? `/WakafDetailPage?slug=${campaignIdentifier}` : `/DetailPage?slug=${campaignIdentifier}`;
 
               return (
@@ -358,15 +328,11 @@ function ProgramsContent() {
                 >
                   <Link href={targetUrl} className="block cursor-pointer">
                     
-                    {/* 🔥 1. FOTO KAMPANYE (BERSIH DARI BADGE) */}
                     <div className="relative h-44">
                       <img src={imageUrl} alt={campaign.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 bg-gray-100" />
-                      
                     </div>
 
                     <div className="p-5 flex flex-col">
-                      
-                      {/* 🔥 2. BARIS BADGE & KATEGORI (DI BAWAH FOTO) */}
                       <div className="flex items-center gap-2 mb-3">
                         {isWakafProgram ? (
                           <div className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
@@ -383,7 +349,6 @@ function ProgramsContent() {
                         </div>
                       </div>
 
-                      {/* Judul & Pembuat */}
                       <h3 className={`text-lg font-bold line-clamp-2 leading-snug text-[#2A1B33] transition-colors ${isWakafTheme ? 'group-hover:text-emerald-600' : 'group-hover:text-[#7C3996]'}`}>
                         {campaign.title}
                       </h3>
@@ -397,7 +362,6 @@ function ProgramsContent() {
                         </div>
                       </div>
 
-                      {/* Info Dana Terkumpul */}
                       {campaign.status === "active" ? (
                         <div className="mt-4">
                           <div className="flex justify-between items-end mb-2">
