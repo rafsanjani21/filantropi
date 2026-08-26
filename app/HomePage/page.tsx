@@ -12,14 +12,12 @@ import Link from "next/link";
 import Navbar from "./components/navbar";
 import BottomNav from "../components/ui/root/BottomNav";
 import Carousel from "./components/carousel";
-import LiveDonationBlink from "../DetailPage/components/LiveDonationBlink";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import UrgentDonation from "./components/urgentdonation";
 import LatestPrograms from "./components/latestprograms";
-import { apiFetch } from "@/lib/api";
 
 export default function HomePage() {
   const router = useRouter();
@@ -30,7 +28,6 @@ export default function HomePage() {
     "donor" | "beneficiary" | "guest" | null
   >(null);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [recentDonations, setRecentDonations] = useState<any[]>([]);
 
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [toast, setToast] = useState<{
@@ -83,41 +80,12 @@ export default function HomePage() {
       }
 
       setIsCheckingAuth(false);
-      setIsCheckingAuth(false);
     };
 
     checkUserRole();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    const fetchGlobalRecentDonations = async () => {
-      try {
-        const res = await apiFetch(`/donations/all`, {
-          method: "GET",
-        });
-
-        if (res && res.data) {
-          const historyArray = Array.isArray(res.data.history)
-            ? res.data.history
-            : Array.isArray(res.data)
-              ? res.data
-              : [];
-
-          const apiHistory = historyArray.map((tx: any) => ({
-            from_to: tx.donatur_name || t("anonymous", "Anonim"),
-            amount: String(tx.amount_idr || 0),
-          }));
-
-          setRecentDonations(apiHistory);
-        }
-      } catch (err) {
-        console.error("Gagal memuat semua donasi di Homepage:", err);
-      }
-    };
-
-    fetchGlobalRecentDonations();
-  }, [t]);
 
   const renderGreetingName = () => {
     if (isCheckingAuth) {
@@ -134,8 +102,6 @@ export default function HomePage() {
 
   return (
     <main className="flex min-h-screen w-full max-w-lg justify-center mx-auto bg-[#FBF8F3] shadow-2xl relative overflow-x-hidden">
-      <LiveDonationBlink history={recentDonations} />
-
       <div className="flex flex-col w-full min-h-screen relative bg-[#FBF8F3] pb-28">
         {toast && (
           <div
@@ -239,7 +205,6 @@ export default function HomePage() {
               href="/AllProgramsPage?type=donasi"
               className="group relative overflow-hidden bg-white rounded-[1.5rem] p-4 shadow-[0_10px_36px_-12px_rgba(124,57,150,0.22)] border border-[#F3D48A]/40 hover:border-[#E8B94A] hover:-translate-y-1 hover:shadow-[0_16px_40px_-12px_rgba(232,185,74,0.35)] transition-all duration-300 active:scale-95 flex flex-col"
             >
-              {/* Motif kawung, senada dengan hero */}
               <svg
                 className="absolute inset-0 w-full h-full opacity-[0.05] pointer-events-none group-hover:opacity-[0.09] transition-opacity duration-500"
                 preserveAspectRatio="xMidYMid slice"
