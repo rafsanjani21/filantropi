@@ -361,7 +361,7 @@ function ProgramsContent() {
                     {/* 🔥 1. FOTO KAMPANYE (BERSIH DARI BADGE) */}
                     <div className="relative h-44">
                       <img src={imageUrl} alt={campaign.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 bg-gray-100" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
+                      
                     </div>
 
                     <div className="p-5 flex flex-col">

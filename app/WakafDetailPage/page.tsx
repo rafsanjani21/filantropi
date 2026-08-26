@@ -1,7 +1,7 @@
 "use client";
 
 import "@/lib/i18n";
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 import Link from "next/link";
@@ -10,16 +10,17 @@ import toast from "react-hot-toast";
 // Komponen Detail
 import { useCampaignDetail } from "../DetailPage/hooks/useCampaignDetail";
 import NavbarDetail from "../DetailPage/components/navbar";
-import LiveDonationBlink from "../DetailPage/components/LiveDonationBlink";
 import CampaignBanner from "../DetailPage/components/CampaignBanner";
 import CampaignHeader from "../DetailPage/components/CampaignHeader";
 import CampaignStory from "../DetailPage/components/CampaignStory";
+// 🔥 1. Import komponen History
+import DonationHistory from "../DetailPage/components/DonationHistory"; 
 
 // Komponen Wakaf
 import WakafPaymentModal from "./components/WakafPaymentModal";
 import WakafBottomBar from "./components/WakafBottomBar";
 import WakafPledgeModal from "./components/WakafPledgeModal";
-import WakafFormModal from "./components/WakafFormModal"; // 1. Import Modal Form
+import WakafFormModal from "./components/WakafFormModal"; 
 
 function WakafDetailContent() {
   const searchParams = useSearchParams();
@@ -37,14 +38,13 @@ function WakafDetailContent() {
     isInitialized,
   } = useCampaignDetail(slug);
 
-  // 2. Tambahkan state untuk urutan Modal dan Data
   const [isPledgeModalOpen, setIsPledgeModalOpen] = useState(false);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   
   const [wakafName, setWakafName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [transactionData, setTransactionData] = useState<any>(null); // State penyimpan respons API
+  const [transactionData, setTransactionData] = useState<any>(null); 
 
   // LOGIKA PROTEKSI LOGIN: Wajib Login untuk Wakaf
   const handleWakafClick = () => {
@@ -79,23 +79,18 @@ function WakafDetailContent() {
     }
 
     toast.dismiss("checking-auth");
-
-    // 3. Buka Modal Ikrar terlebih dahulu
     setIsPledgeModalOpen(true);
   };
 
-  // 4. Submit Ikrar (Tutup Ikrar -> Buka Form Input)
   const handlePledgeSubmit = (nameFromPledge: any) => {
     const finalName =
       nameFromPledge || user?.name || user?.full_name || "Hamba Allah";
     setWakafName(finalName);
 
-    // Tutup ikrar, buka form input nominal
     setIsPledgeModalOpen(false);
     setIsFormModalOpen(true);
   };
 
-  // 5. Submit Form & Tembak API Backend
   const handleFormSubmit = async (formData: any) => {
     setIsSubmitting(true);
     try {
@@ -103,7 +98,7 @@ function WakafDetailContent() {
       
       const payload = {
         campaignCode: campaign?.campaign_code || "",
-        bankAccountId: "BANK-BSI-01", // Bisa disesuaikan dengan ID Bank di backend Anda
+        bankAccountId: "BANK-BSI-01", 
         amount: formData.amount,
         senderName: formData.senderName,
         senderBank: formData.senderBank,
@@ -126,10 +121,7 @@ function WakafDetailContent() {
         throw new Error(result.message || "Gagal membuat transaksi");
       }
 
-      // Simpan data transaksi (kode unik, total, expired) ke state
       setTransactionData(result.data);
-
-      // Tutup form, buka modal pembayaran (Instruksi Transfer)
       setIsFormModalOpen(false);
       setIsPaymentModalOpen(true);
       
@@ -176,8 +168,6 @@ function WakafDetailContent() {
     <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-[#F4FBF7] overflow-x-hidden">
       <NavbarDetail />
 
-      <LiveDonationBlink history={walletHistory} />
-
       {/* 1. Modal Ikrar */}
       <WakafPledgeModal
         isOpen={isPledgeModalOpen}
@@ -211,6 +201,9 @@ function WakafDetailContent() {
 
         <CampaignHeader campaign={campaign} totalCollected={totalCollected} />
         <CampaignStory story={campaign.story || campaign.description} />
+        
+        {/* 🔥 2. Komponen History ditaruh di sini 🔥 */}
+        <DonationHistory history={walletHistory} />
       </div>
 
       <WakafBottomBar campaign={campaign} onWakafClick={handleWakafClick} />

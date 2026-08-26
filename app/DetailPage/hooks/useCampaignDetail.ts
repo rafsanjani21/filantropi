@@ -37,6 +37,11 @@ export function useCampaignDetail(slug: string | null) {
         const res = await AuthService.getCampaignDetail(slug);
         const data = res.data || res;
         setCampaign(data);
+        
+        if (data?.current_amount !== undefined) {
+          setTotalCollected(Number(data.current_amount));
+        }
+
         if (data?.id) fetchMilestoneStatus(data.id);
       } catch (err: any) {
         setError(err.message || t("fail_fetch_data", "Gagal memuat data"));
@@ -49,32 +54,33 @@ export function useCampaignDetail(slug: string | null) {
 
   const receiverWallet = campaign?.wallet_address || campaign?.user?.wallet_address || "";
   
+  // FETCH HISTORY MENGGUNAKAN API LATEST DONATUR BARU
   useEffect(() => {
-    if (!receiverWallet) return;
+    if (!campaign?.id) return;
+    
     const fetchHistory = async () => {
       try {
-        const res = await apiFetch(`/donations/in/${receiverWallet}`, { method: "GET" });
-        const apiData = res?.data || res;
-        if (apiData) {
-          let apiHistory: any[] = [];
-          if (Array.isArray(apiData.history)) {
-            apiHistory = apiData.history.map((tx: any, index: number) => ({
-              tx_hash: tx.tx_hash || index.toString(),
-              date: tx.created_at,
-              type: "In",
-              amount: String(tx.amount_idr ?? 0),
-              from_to: tx.donatur_name || "Anonim",
-            }));
-          }
-          setWalletHistory(apiHistory);
-          if (apiData.total_balance_idr) setTotalCollected(parseFloat(apiData.total_balance_idr));
+        const res = await apiFetch(`/campaigns/transactions/latest/${campaign.id}`, { method: "GET" });
+        const apiData = res?.data || [];
+        
+        if (Array.isArray(apiData)) {
+          const mappedHistory = apiData.map((tx: any, index: number) => ({
+            tx_hash: index.toString(),
+            date: tx.mutation_date, 
+            type: "In",
+            amount: String(tx.total_transfer ?? 0), 
+            from_to: tx.sender_name || "Anonim", 
+          }));
+          
+          setWalletHistory(mappedHistory);
         }
       } catch (err) {
-        console.error("Gagal memuat riwayat donasi:", err);
+        console.error("Gagal memuat riwayat donasi terbaru:", err);
       }
     };
+    
     fetchHistory();
-  }, [receiverWallet]);
+  }, [campaign?.id]); 
 
   return {
     campaign,

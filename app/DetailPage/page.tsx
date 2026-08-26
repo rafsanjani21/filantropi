@@ -10,7 +10,6 @@ import { apiFetch } from "@/lib/api";
 
 import { useCampaignDetail } from "./hooks/useCampaignDetail";
 import NavbarDetail from "./components/navbar";
-import LiveDonationBlink from "./components/LiveDonationBlink";
 import PaymentModal from "./components/PaymentModal";
 import DisbursementModal from "./components/DisbursementModal";
 import ReportModal from "./components/ReportModal";
@@ -36,7 +35,6 @@ function DetailContent() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
-  // Auto open donate jika dialihkan dari login
   useEffect(() => {
     const isUnlimitedTime = !campaign?.end_date;
     const daysLeft = isUnlimitedTime ? null : Math.max(0, Math.ceil((new Date(campaign.end_date).getTime() - Date.now()) / 86400000));
@@ -134,7 +132,6 @@ function DetailContent() {
   return (
     <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-[#FBF8F3] overflow-x-hidden">
       <NavbarDetail />
-      <LiveDonationBlink history={walletHistory} />
 
       <PaymentModal
         isOpen={isModalOpen}
