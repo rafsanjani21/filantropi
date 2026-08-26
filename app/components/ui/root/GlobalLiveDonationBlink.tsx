@@ -2,25 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
-import { apiFetch } from "@/lib/api"; 
+import { apiFetch } from "@/lib/api";
 
 export default function GlobalLiveDonationBlink() {
   const [history, setHistory] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
 
-  // 1. Fetch data donasi terbaru secara global
+  // 1. Fetch data dari API
   useEffect(() => {
     const fetchGlobalHistory = async () => {
       try {
-        const res = await apiFetch(`/campaigns/transactions/latest`, { method: "GET" });
+        const res = await apiFetch(`/campaigns/transactions`, { method: "GET" });
         const apiData = res?.data || [];
-        
+
         if (Array.isArray(apiData)) {
           const mappedHistory = apiData.map((tx: any) => ({
-            from_to: tx.sender_name || "Anonim",
-            amount: String(tx.total_transfer ?? 0),
+            from_to: tx.sender_name || "Donatur",
+            amount: String(tx.amount ?? 0),
           }));
+          
+          // Data akan diperbarui di state
           setHistory(mappedHistory);
         }
       } catch (err) {
@@ -28,45 +30,59 @@ export default function GlobalLiveDonationBlink() {
       }
     };
 
+    // 1. Ambil data pertama kali saat web dibuka
     fetchGlobalHistory();
-    const interval = setInterval(fetchGlobalHistory, 60000); // Refresh tiap 1 menit
+    
+    // 2. JALAN TENGAH: Ambil data baru secara diam-diam setiap 10 menit (600.000 ms)
+    const interval = setInterval(fetchGlobalHistory, 600000); 
+    
     return () => clearInterval(interval);
   }, []);
 
   const validHistory = history.filter((tx) => Number(tx.amount) > 0);
 
-  // 2. Logika Animasi
+  // 2. Logika Animasi (DIPERBAIKI AGAR LEBIH STABIL)
   useEffect(() => {
-    if (!validHistory.length) return;
+    if (validHistory.length === 0) return;
 
-    const showTimer = setTimeout(() => {
-      setIsVisible(true);
+    // Langsung munculkan notifikasi saat index/data berubah
+    setIsVisible(true);
 
-      const hideTimer = setTimeout(() => {
-        setIsVisible(false);
-        const nextTimer = setTimeout(() => {
-          setCurrentIndex((prev) => (prev + 1) % validHistory.length);
-        }, 500);
-        return () => clearTimeout(nextTimer);
-      }, 3500);
+    // Sembunyikan setelah 3 detik tampil di layar
+    const hideTimer = setTimeout(() => {
+      setIsVisible(false);
+    }, 3000);
 
-      return () => clearTimeout(hideTimer);
-    }, 2500);
+    // Ganti ke data selanjutnya setelah 4 detik (memberi jeda 1 detik saat tersembunyi)
+    const nextTimer = setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % validHistory.length);
+    }, 4000);
 
-    return () => clearTimeout(showTimer);
+    // Bersihkan timer jika komponen dirender ulang untuk menghindari bug Strict Mode
+    return () => {
+      clearTimeout(hideTimer);
+      clearTimeout(nextTimer);
+    };
   }, [currentIndex, validHistory.length]);
 
-  if (!validHistory.length) return null;
+  if (validHistory.length === 0) return null;
 
   const donation = validHistory[currentIndex];
   const donor = donation.from_to;
   const amount = Number(donation.amount).toLocaleString("id-ID");
 
   return (
-    <div className="fixed top-5 left-1/2 z-[9999] w-full max-w-sm -translate-x-1/2 px-4 pointer-events-none">
-      <div className={`transition-all duration-700 ease-out ${isVisible ? "translate-y-0 opacity-100 scale-100" : "-translate-y-8 opacity-0 scale-95"}`}>
-        <div className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/80 backdrop-blur-xl shadow-2xl">
+    <div className="fixed top-5 left-1/2 z-[99999] w-full max-w-sm -translate-x-1/2 px-4 pointer-events-none">
+      <div
+        className={`transition-all duration-500 ease-in-out transform ${
+          isVisible
+            ? "translate-y-0 opacity-100 scale-100"
+            : "-translate-y-10 opacity-0 scale-95"
+        }`}
+      >
+        <div className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/90 backdrop-blur-xl shadow-2xl">
           <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-purple-500 to-pink-500" />
+          
           <div className="flex items-center gap-3 p-4">
             <div className="relative shrink-0">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 shadow-lg">
@@ -77,17 +93,25 @@ export default function GlobalLiveDonationBlink() {
                 <span className="relative inline-flex h-4 w-4 rounded-full bg-green-500" />
               </span>
             </div>
+            
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-bold text-gray-900">{donor}</div>
-                  <div className="text-xs text-gray-500">berdonasi</div>
+                  <div className="truncate text-sm font-bold text-gray-900">
+                    {donor}
+                  </div>
+                  <div className="text-xs text-gray-500">Berdonasi</div>
                 </div>
               </div>
             </div>
+            
             <div className="text-right">
-              <div className="text-[10px] uppercase tracking-wide text-gray-400">Total</div>
-              <div className="text-base font-extrabold text-purple-700 whitespace-nowrap">Rp {amount}</div>
+              <div className="text-[10px] font-bold uppercase tracking-wide text-gray-400">
+                Nominal
+              </div>
+              <div className="text-base font-extrabold text-purple-700 whitespace-nowrap">
+                Rp {amount}
+              </div>
             </div>
           </div>
         </div>
