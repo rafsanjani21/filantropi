@@ -60,7 +60,7 @@ export default function ProgramPage() {
     const wallet = campaign.wallet_address || campaign.user?.wallet_address || campaign.beneficiary?.wallet_address;
     
     // 2. Angka bawaan (fallback) jika API gagal
-    let totalAmount = campaign.current_amount_idr || 0;
+    let totalAmount = campaign.current_amount || 0;
 
     if (wallet) {
       try {
@@ -260,7 +260,7 @@ setCampaigns(campaignsWithTotalCollected);
             const isUnlimitedTarget = !campaign.target_amount || campaign.target_amount === 0;
             const target = isUnlimitedTarget ? 1 : Number(campaign.target_amount);
 
-            const collected = campaign.live_collected !== undefined ? campaign.live_collected : (campaign.current_amount_idr || 0);
+            const collected = campaign.live_collected !== undefined ? campaign.live_collected : (campaign.current_amount || 0);
 
             let progress: number | string = 0;
             const percent = (collected / target) * 100;

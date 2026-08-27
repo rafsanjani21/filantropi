@@ -13,7 +13,7 @@ type Campaign = {
   full_name?: string;
   category_id: number;
   target_amount?: number | null;
-  current_amount_idr?: number | null;
+  current_amount?: number | null;
   end_date?: string | null;
   status?: string;
   image_banner?: string | string[];
@@ -68,8 +68,8 @@ export default function LatestPrograms() {
             })
             // --- LOGIKA SORTING ---
             .sort((a, b) => {
-              const amountA = Number(a.current_amount_idr) || 0;
-              const amountB = Number(b.current_amount_idr) || 0;
+              const amountA = Number(a.current_amount) || 0;
+              const amountB = Number(b.current_amount) || 0;
               return amountB - amountA; // Nominal terbesar berada di paling awal
             })
             // ----------------------
@@ -126,7 +126,7 @@ export default function LatestPrograms() {
       {/* Daftar Program */}
       <div className="flex gap-5 overflow-x-auto no-scrollbar pb-8 px-6 w-full snap-x snap-mandatory">
         {campaigns.map((campaign) => {
-          const collected = Number(campaign.current_amount_idr) || 0;
+          const collected = Number(campaign.current_amount) || 0;
           const daysLeft = calculateDaysLeft(campaign.end_date);
 
           const isUnlimitedTarget =

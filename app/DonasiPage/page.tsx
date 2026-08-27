@@ -154,7 +154,7 @@ export default function DonasiPage() {
           <>
             {displayedCampaigns.map((campaign) => {
               const isUnlimitedTarget = !campaign.target_amount || campaign.target_amount === 0;
-              const collected = campaign.current_amount_idr || 0;
+              const collected = campaign.current_amount || 0;
               const target = isUnlimitedTarget ? null : Number(campaign.target_amount); 
               
               const calcTarget = isUnlimitedTarget ? 1 : Number(target);

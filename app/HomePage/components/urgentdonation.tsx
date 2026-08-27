@@ -14,7 +14,7 @@ type Campaign = {
   full_name?: string;
   category_id: number;
   target_amount?: number | null;
-  current_amount_idr?: number | null;
+  current_amount?: number | null;
   end_date?: string | null;
   image_banner?: string | string[]; 
 };
@@ -102,7 +102,7 @@ export default function UrgentDonation() {
 
       <div className="flex gap-5 overflow-x-auto no-scrollbar pb-8 px-6 w-full snap-x snap-mandatory">
         {urgentCampaigns.map((campaign) => {
-          const collected = campaign.current_amount_idr || 0;
+          const collected = campaign.current_amount || 0;
           const daysLeft = calculateDaysLeft(campaign.end_date) as number; // Dijamin bukan null karena filter
           
           // 🔥 PENGECEKAN UNLIMITED TARGET (Walau waktunya urgent, bisa jadi targetnya bebas)

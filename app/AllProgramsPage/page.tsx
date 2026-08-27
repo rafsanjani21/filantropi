@@ -24,7 +24,7 @@ type Campaign = {
   title: string;
   status?: string;
   target_amount?: number | null;
-  current_amount_idr?: number | null;
+  current_amount?: number | null;
   end_date?: string | null;
   created_at?: string | null;
   image_banner?: string | string[];
@@ -161,8 +161,8 @@ function ProgramsContent() {
       if (aOngoing && !bOngoing) return -1;
       if (!aOngoing && bOngoing) return 1;
 
-      const amountA = Number(campA.current_amount_idr) || 0;
-      const amountB = Number(campB.current_amount_idr) || 0;
+      const amountA = Number(campA.current_amount) || 0;
+      const amountB = Number(campB.current_amount) || 0;
       const timeA = campA.created_at ? new Date(campA.created_at).getTime() : Number(campA.id);
       const timeB = campB.created_at ? new Date(campB.created_at).getTime() : Number(campB.id);
 
@@ -302,7 +302,7 @@ function ProgramsContent() {
 
               const isUnlimitedTarget = !campaign.target_amount || campaign.target_amount === 0;
               const target = isUnlimitedTarget ? 1 : Number(campaign.target_amount);
-              const collected = Number(campaign.current_amount_idr) || 0;
+              const collected = Number(campaign.current_amount) || 0;
 
               const progressRaw = (collected / target) * 100;
               const progress = progressRaw > 100 ? 100 : Math.round(progressRaw);

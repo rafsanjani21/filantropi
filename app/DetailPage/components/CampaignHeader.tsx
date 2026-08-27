@@ -6,7 +6,7 @@ export default function CampaignHeader({ campaign, totalCollected }: { campaign:
   
   const isUnlimitedTarget = !campaign.target_amount;
   const target = isUnlimitedTarget ? 1 : parseFloat(String(campaign.target_amount).replace(/[^\d.-]/g, ""));
-  const collected = parseFloat(String((totalCollected ?? campaign.current_amount_idr) || 0).replace(/[^\d.-]/g, ""));
+  const collected = parseFloat(String((totalCollected ?? campaign.current_amount) || 0).replace(/[^\d.-]/g, ""));
   const progress = isUnlimitedTarget || target === 0 ? 0 : Math.min(100, Math.floor((collected / target) * 100));
 
   const isUnlimitedTime = !campaign?.end_date;
