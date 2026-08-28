@@ -13,14 +13,13 @@ import NavbarDetail from "../DetailPage/components/navbar";
 import CampaignBanner from "../DetailPage/components/CampaignBanner";
 import CampaignHeader from "../DetailPage/components/CampaignHeader";
 import CampaignStory from "../DetailPage/components/CampaignStory";
-// 🔥 1. Import komponen History
-import DonationHistory from "../DetailPage/components/DonationHistory"; 
+import DonationHistory from "../DetailPage/components/DonationHistory";
 
 // Komponen Wakaf
 import WakafPaymentModal from "./components/WakafPaymentModal";
 import WakafBottomBar from "./components/WakafBottomBar";
 import WakafPledgeModal from "./components/WakafPledgeModal";
-import WakafFormModal from "./components/WakafFormModal"; 
+import WakafFormModal from "./components/WakafFormModal";
 
 function WakafDetailContent() {
   const searchParams = useSearchParams();
@@ -41,12 +40,12 @@ function WakafDetailContent() {
   const [isPledgeModalOpen, setIsPledgeModalOpen] = useState(false);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  
+
   const [wakafName, setWakafName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [transactionData, setTransactionData] = useState<any>(null); 
+  const [transactionData, setTransactionData] = useState<any>(null);
 
-  // LOGIKA PROTEKSI LOGIN: Wajib Login untuk Wakaf
+  // LOGIKA PROTEKSI WAKAF (LOGIN, ROLE, DAN KYC)
   const handleWakafClick = () => {
     const token =
       localStorage.getItem("access_token") ||
@@ -57,6 +56,7 @@ function WakafDetailContent() {
       return;
     }
 
+    // 1. Cek Login
     if (!token || !user) {
       toast.error("Anda harus login terlebih dahulu untuk menunaikan wakaf.", {
         icon: "🔒",
@@ -71,14 +71,35 @@ function WakafDetailContent() {
       return;
     }
 
+    // 2. Cek Role (Penerima Manfaat tidak bisa berwakaf)
     if (role === "beneficiary") {
-      toast.error("Akun Penerima Manfaat tidak dapat menunaikan wakaf. Silakan pakai akun Pengguna Umum.", {
-        style: { borderRadius: "10px", background: "#333", color: "#fff" },
-      });
+      toast.error(
+        "Akun Penerima Manfaat tidak dapat menunaikan wakaf. Silakan pakai akun Pengguna Umum.",
+        {
+          style: { borderRadius: "10px", background: "#333", color: "#fff" },
+        },
+      );
+      return;
+    }
+
+    // 🔥 3. CEK STATUS KYC (Wajib Lengkap Profil) 🔥
+    // Memeriksa boolean false atau angka 0
+    if (user.is_kyc === false || user.is_kyc === 0 || user.is_kyc === "0") {
+      toast.error(
+        "Data diri Anda belum lengkap! Silakan lengkapi profil dan KTP (KYC) terlebih dahulu.",
+        {
+          icon: "⚠️",
+          style: { borderRadius: "10px", background: "#333", color: "#fff" },
+        },
+      );
+
+      router.push("/ProfilePage/UserPage");
       return;
     }
 
     toast.dismiss("checking-auth");
+    
+    // Jika semua validasi lolos (is_kyc true/1), buka Modal Ikrar
     setIsPledgeModalOpen(true);
   };
 
@@ -94,25 +115,27 @@ function WakafDetailContent() {
   const handleFormSubmit = async (formData: any) => {
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-      
+      const token =
+        localStorage.getItem("access_token") ||
+        sessionStorage.getItem("access_token");
+
       const payload = {
         campaignCode: campaign?.campaign_code || "",
-        bankAccountId: "BANK-BSI-01", 
+        bankAccountId: "BANK-BSI-01",
         amount: formData.amount,
         senderName: formData.senderName,
         senderBank: formData.senderBank,
-        senderAccountNumber: formData.senderAccountNumber
+        senderAccountNumber: formData.senderAccountNumber,
       };
 
       const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
       const response = await fetch(`${API_BASE}/campaigns/transaction/wakaf`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
@@ -124,12 +147,14 @@ function WakafDetailContent() {
       setTransactionData(result.data);
       setIsFormModalOpen(false);
       setIsPaymentModalOpen(true);
-      
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || "Terjadi kesalahan sistem saat memproses transaksi", {
-         style: { borderRadius: "16px", fontSize: "13px", fontWeight: "600" },
-      });
+      toast.error(
+        err.message || "Terjadi kesalahan sistem saat memproses transaksi",
+        {
+          style: { borderRadius: "16px", fontSize: "13px", fontWeight: "600" },
+        },
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -168,22 +193,23 @@ function WakafDetailContent() {
     <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-[#F4FBF7] overflow-x-hidden">
       <NavbarDetail />
 
-      {/* 1. Modal Ikrar */}
+      {/* Modal Ikrar */}
       <WakafPledgeModal
         isOpen={isPledgeModalOpen}
         onClose={() => setIsPledgeModalOpen(false)}
         onSubmit={handlePledgeSubmit}
       />
 
-      {/* 2. Modal Form Input */}
+      {/* Modal Form Input */}
       <WakafFormModal
         isOpen={isFormModalOpen}
         onClose={() => setIsFormModalOpen(false)}
         onSubmit={handleFormSubmit}
         isSubmitting={isSubmitting}
+        currentUser={user}
       />
 
-      {/* 3. Modal Pembayaran Bank */}
+      {/* Modal Pembayaran Bank */}
       <WakafPaymentModal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
@@ -201,8 +227,6 @@ function WakafDetailContent() {
 
         <CampaignHeader campaign={campaign} totalCollected={totalCollected} />
         <CampaignStory story={campaign.story || campaign.description} />
-        
-        {/* 🔥 2. Komponen History ditaruh di sini 🔥 */}
         <DonationHistory history={walletHistory} />
       </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Wallet, User, Building, Hash } from "lucide-react";
+import { X, Wallet } from "lucide-react";
 import toast from "react-hot-toast";
 
 type WakafFormModalProps = {
@@ -9,46 +9,44 @@ type WakafFormModalProps = {
   onClose: () => void;
   onSubmit: (formData: any) => void;
   isSubmitting: boolean;
+  currentUser?: any; // Tambahkan prop ini untuk menerima data profil
 };
 
-export default function WakafFormModal({ isOpen, onClose, onSubmit, isSubmitting }: WakafFormModalProps) {
-  const [amount, setAmount] = useState(""); // Menyimpan angka murni (tanpa titik)
-  const [senderName, setSenderName] = useState("");
-  const [senderBank, setSenderBank] = useState("");
-  const [senderAccountNumber, setSenderAccountNumber] = useState("");
+export default function WakafFormModal({ isOpen, onClose, onSubmit, isSubmitting, currentUser }: WakafFormModalProps) {
+  const [amount, setAmount] = useState(""); 
 
   if (!isOpen) return null;
 
-  // Fungsi untuk menangani perubahan input nominal
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // 1. Hapus semua karakter selain angka (biar huruf/titik bawaan hilang)
     const rawValue = e.target.value.replace(/\D/g, "");
-    // 2. Simpan angka murninya ke state
     setAmount(rawValue);
   };
 
-  // Fungsi untuk memformat angka murni menjadi ada titiknya (misal: 1000000 -> 1.000.000)
   const formattedAmount = amount ? new Intl.NumberFormat("id-ID").format(Number(amount)) : "";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validasi nominal (menggunakan angka murni)
-    if (!amount || Number(amount) < 10000) {
-      return toast("Minimal wakaf adalah Rp 10.000", {
+    if (!amount || Number(amount) < 1000) {
+      return toast("Minimal wakaf adalah Rp 1.000", {
         icon: '⚠️',
         style: { background: '#FFFBEB', color: '#92400E', borderRadius: '16px', fontSize: '13px', fontWeight: '600' },
       });
     }
 
-    // Kirim data ke parent (page.tsx)
+    // Tembak data profil secara otomatis tanpa perlu diketik manual
     onSubmit({
-      amount: Number(amount), // Pastikan yang dikirim ke API adalah angka aslinya
-      senderName,
-      senderBank,
-      senderAccountNumber
+      amount: Number(amount),
+      senderName: currentUser?.bank_account_name || currentUser?.full_name || currentUser?.name || "Hamba Allah",
+      senderBank: currentUser?.bank_name || "-",
+      senderAccountNumber: currentUser?.no_req || currentUser?.no_re || "-"
     });
   };
+
+  // Variabel untuk ditampilkan di layar
+  const displayName = currentUser?.bank_account_name || currentUser?.full_name || currentUser?.name || "-";
+  const displayBank = currentUser?.bank_name || "-";
+  const displayAccount = currentUser?.no_req || currentUser?.no_re || "-";
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
@@ -64,84 +62,56 @@ export default function WakafFormModal({ isOpen, onClose, onSubmit, isSubmitting
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4 max-h-[75vh] overflow-y-auto no-scrollbar">
+        <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-6 max-h-[75vh] overflow-y-auto no-scrollbar">
           
-          {/* Nominal Input (Wajib) */}
+          {/* Nominal Input */}
           <div>
             <label className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 block">
               Nominal Wakaf <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <span className="text-gray-500 font-bold">Rp</span>
               </div>
               <input
-                type="text"          // <-- Ubah jadi text
-                inputMode="numeric"  // <-- Memaksa keyboard HP menampilkan angka
+                type="text"
+                inputMode="numeric"
                 required
-                value={formattedAmount} // <-- Gunakan variabel yang sudah diformat
+                value={formattedAmount}
                 onChange={handleAmountChange}
                 placeholder="100.000"
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 outline-none transition-all text-sm font-bold text-gray-800"
+                className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-emerald-600/10 focus:border-emerald-600 outline-none transition-all text-sm font-black text-gray-800"
               />
             </div>
           </div>
 
-          <div className="my-2 border-t border-dashed border-gray-200 relative">
-             <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-white px-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                Data Pengirim
-             </span>
-          </div>
-
-          {/* Nama Pengirim */}
-          <div>
-            <label className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 block">Nama Pengirim</label>
-            <div className="relative">
-              <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={senderName}
-                onChange={(e) => setSenderName(e.target.value)}
-                placeholder="Misal: Ahmad Subarjo"
-                className="w-full pl-9 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 outline-none transition-all text-sm text-gray-800"
-              />
+          {/* Data Profil Otomatis (Read-Only) */}
+          <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-4 flex flex-col gap-3">
+            <div className="flex items-center gap-2 mb-1">
+              <Wallet size={14} className="text-emerald-600" />
+              <span className="text-[10px] font-extrabold text-emerald-800 uppercase tracking-widest">Data Rekening Anda</span>
             </div>
-          </div>
-
-          {/* Bank Pengirim */}
-          <div>
-            <label className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 block">Bank Asal</label>
-            <div className="relative">
-              <Building size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={senderBank}
-                onChange={(e) => setSenderBank(e.target.value)}
-                placeholder="Misal: Mandiri"
-                className="w-full pl-9 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 outline-none transition-all text-sm text-gray-800"
-              />
+            
+            <div className="flex justify-between items-center border-b border-emerald-100/50 pb-2">
+              <span className="text-xs font-medium text-gray-500">Pemilik</span>
+              <span className="text-xs font-bold text-gray-800 text-right truncate max-w-[150px]">{displayName}</span>
             </div>
-          </div>
+            
+            <div className="flex justify-between items-center border-b border-emerald-100/50 pb-2">
+              <span className="text-xs font-medium text-gray-500">Bank</span>
+              <span className="text-xs font-bold text-gray-800 text-right uppercase">{displayBank}</span>
+            </div>
 
-          {/* No Rekening Pengirim */}
-          <div>
-            <label className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 block">No. Rekening Asal</label>
-            <div className="relative">
-              <Hash size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={senderAccountNumber}
-                onChange={(e) => setSenderAccountNumber(e.target.value)}
-                placeholder="Misal: 9998887771"
-                className="w-full pl-9 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 outline-none transition-all text-sm text-gray-800"
-              />
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-medium text-gray-500">No. Rekening</span>
+              <span className="text-xs font-bold text-gray-800 text-right">{displayAccount}</span>
             </div>
           </div>
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-2 bg-emerald-600 text-white font-bold text-sm py-3.5 rounded-xl hover:bg-emerald-700 active:scale-[0.98] transition-all shadow-md shadow-emerald-200 flex justify-center items-center gap-2 disabled:opacity-70"
+            className="w-full mt-2 bg-emerald-600 text-white font-bold text-sm py-3.5 rounded-xl hover:bg-emerald-700 active:scale-[0.98] transition-all shadow-lg shadow-emerald-600/20 flex justify-center items-center gap-2 disabled:opacity-70"
           >
             {isSubmitting ? (
               <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
