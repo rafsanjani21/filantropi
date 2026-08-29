@@ -122,7 +122,7 @@ export default function BottomNav() {
 
               const targetPath =
                 menu.requiresAuth && role === "guest"
-                  ? "/LoginPage"
+                  ? "/LoginPage/Masuk"
                   : menu.path;
 
               const handleClick = (e: React.MouseEvent) => {

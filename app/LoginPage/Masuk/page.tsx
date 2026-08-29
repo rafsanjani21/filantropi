@@ -8,13 +8,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { AlertCircle, ShieldCheck } from "lucide-react";
 import NavbarLogin from "@/app/components/ui/login/navbar";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "next/navigation";
 
 function MasukContent() {
   const { smartAuth, loading } = useAuth();
   const [message, setMessage] = useState("");
   const { t } = useTranslation();
-  const searchParams = useSearchParams();
 
   const handleGoogleAuth = async () => {
     setMessage("");
@@ -24,11 +22,8 @@ function MasukContent() {
       const id_token = await result.user.getIdToken();
       const name = result.user.displayName || "User";
       
-      const roleFromQuery = searchParams.get("role");
-      const roleFromSession = sessionStorage.getItem("selected_role");
-      const fallbackRole = roleFromQuery || roleFromSession || "user";
-
-      await smartAuth(id_token, name, fallbackRole);
+      // 🔥 ROLE DIKUNCI LANGSUNG SEBAGAI "user" 🔥
+      await smartAuth(id_token, name, "user");
     } catch (err: any) {
       setMessage(err.message || t("auth_fail_process"));
     }

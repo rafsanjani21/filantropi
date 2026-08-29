@@ -37,7 +37,7 @@ export default function ProgramPage() {
       const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
 
       if (!token) {
-        router.replace("/LoginPage");
+        router.replace("/LoginPage/Masuk");
         return;
       }
 

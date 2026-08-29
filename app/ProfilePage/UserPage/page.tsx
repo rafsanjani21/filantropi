@@ -19,8 +19,6 @@ import {
   MapPin,
   Landmark,
   FileText,
-  ArrowRight,
-  ChevronDown // 🔥 Tambahan Ikon Baru
 } from "lucide-react";
 
 const BANK_OPTIONS = [
@@ -46,7 +44,6 @@ export default function UserPage() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [isNew, setIsNew] = useState(false);
-  const [isFinishingReg, setIsFinishingReg] = useState(false);
   
   const [isBankLainnya, setIsBankLainnya] = useState(false);
 
@@ -92,16 +89,13 @@ export default function UserPage() {
 
   useEffect(() => {
     const idToken = sessionStorage.getItem("id_token");
-    const tempAccess = sessionStorage.getItem("temp_access_hidden");
+    const tempName = sessionStorage.getItem("temp_name");
 
+    // ALUR LAMA: Jika ada idToken, berarti user baru mendaftar
     if (idToken) {
       setIsNew(true);
       setIsEditing(true);
-      setForm((prev) => ({ ...prev, name: sessionStorage.getItem("temp_name") || "" }));
-    } else if (tempAccess) {
-      setIsNew(false);
-      setIsFinishingReg(true);
-      setIsEditing(true);
+      setForm((prev) => ({ ...prev, name: tempName || "" }));
     } else {
       fetchProfile();
     }
@@ -202,6 +196,7 @@ export default function UserPage() {
 
     try {
       if (isNew) {
+        // 🔥 ALUR LAMA: Hanya mendaftar, lalu lempar ke Homepage
         const idToken = sessionStorage.getItem("id_token");
         if (!idToken) throw new Error(t("access_denied_relogin"));
 
@@ -222,56 +217,22 @@ export default function UserPage() {
 
         if (!res.ok) throw new Error(data.message || `Error Server: ${res.status}`);
 
-        sessionStorage.setItem("temp_access_hidden", data.data?.access_token || data.access_token);
-        sessionStorage.setItem("temp_refresh_hidden", data.data?.refresh_token || data.refresh_token);
+        // Simpan token ke localStorage
+        localStorage.setItem("access_token", data.data?.access_token || data.access_token);
+        localStorage.setItem("refresh_token", data.data?.refresh_token || data.refresh_token);
         
         sessionStorage.removeItem("id_token");
         sessionStorage.removeItem("temp_name");
 
-        setIsNew(false);
-        setIsFinishingReg(true);
-        setIsEditing(true);
-
-        showToast("Langkah pertama berhasil! Silakan lengkapi sisa form di bawah ini.", "success");
-        setTimeout(() => {
-          window.scrollTo({ top: 300, behavior: 'smooth' });
-        }, 500);
-
-      } else if (isFinishingReg) {
-        const hiddenToken = sessionStorage.getItem("temp_access_hidden");
-        const hiddenRefresh = sessionStorage.getItem("temp_refresh_hidden");
-
-        if (!hiddenToken) throw new Error("Sesi habis, silakan muat ulang halaman.");
-
-        localStorage.setItem("access_token", hiddenToken);
-        if (hiddenRefresh) localStorage.setItem("refresh_token", hiddenRefresh);
-
-        const updateData = new FormData();
-        updateData.append("full_name", form.name);
-        if (form.nik) updateData.append("nik", form.nik);
-        if (form.phone_number) updateData.append("phone_number", form.phone_number);
-        if (form.address) updateData.append("address", form.address);
-        if (form.bank_name) updateData.append("bank_name", form.bank_name);
-        if (form.no_req) updateData.append("no_req", form.no_req);
-        if (form.bank_account_name) updateData.append("bank_account_name", form.bank_account_name);
+        showToast("Pendaftaran berhasil!", "success");
         
-        if (file) updateData.append("profile_image_url", file);
-        if (ktpFile) updateData.append("ktp_image_url", ktpFile);
-
-        await updateProfile(updateData, "donor");
-
-        localStorage.setItem("access_token", hiddenToken);
-        if (hiddenRefresh) localStorage.setItem("refresh_token", hiddenRefresh);
-        sessionStorage.removeItem("temp_access_hidden");
-        sessionStorage.removeItem("temp_refresh_hidden");
-
-        showToast("Profil lengkap! Membawa Anda ke halaman utama...", "success");
-        
+        // Langsung lemparkan ke Homepage seperti semula
         setTimeout(() => {
-          window.location.href = "/"; 
-        }, 1200);
+          router.replace("/");
+        }, 1500);
 
       } else {
+        // 🔥 ALUR NORMAL EDIT PROFIL (User Lama)
         const updateData = new FormData();
         updateData.append("full_name", form.name);
         updateData.append("nik", form.nik);
@@ -285,10 +246,14 @@ export default function UserPage() {
         if (ktpFile) updateData.append("ktp_image_url", ktpFile);
 
         await updateProfile(updateData, "donor");
-        await fetchProfile();
         
         setIsEditing(false);
         showToast("Data profil berhasil disimpan dengan aman!", "success");
+        
+        // Me-refresh halaman agar data baru terambil utuh
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
       }
     } catch (err: any) {
       console.error(err);
@@ -329,7 +294,7 @@ export default function UserPage() {
       <main className="flex-1 px-8 pt-8 pb-12 flex flex-col items-center">
         <div className="w-full mb-8 text-center">
           <h1 className="text-3xl font-extrabold text-white tracking-tight">
-            {isNew || isFinishingReg ? t("complete_profile", "Lengkapi Profil") : t("my_profile", "Profil Saya")}
+            {isNew ? t("complete_profile", "Lengkapi Profil") : t("my_profile", "Profil Saya")}
           </h1>
         </div>
 
@@ -354,13 +319,13 @@ export default function UserPage() {
           <div className="space-y-5">
             <InputField label={t("full_name_label", "Nama Lengkap")} value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} icon={<User size={18} />} placeholder={t("full_name_placeholder", "Masukkan nama lengkap")} disabled={!isEditing} />
 
+            {/* Field NIK Dll HANYA MUNCUL jika bukan user baru mendaftar */}
             {!isNew && (
               <div className="animate-in slide-in-from-top-4 fade-in duration-500 space-y-5">
                 <InputField label="Nomor Induk Kependudukan (NIK)" value={form.nik} onChange={(e: any) => setForm({ ...form, nik: e.target.value.replace(/\D/g, "").slice(0, 16) })} icon={<CreditCard size={18} />} placeholder="Masukkan 16 digit NIK Anda" disabled={!isEditing} maxLength={16} errorMessage={nikError} />
                 <InputField label="Nomor WhatsApp / HP" value={form.phone_number} onChange={(e: any) => { let val = e.target.value.replace(/\D/g, ""); if (val.startsWith("62")) val = "0" + val.slice(2); else if (val.length > 0 && val[0] !== "0") val = "0" + val; setForm({ ...form, phone_number: val.slice(0, 13) }); }} icon={<Phone size={18} />} placeholder="Contoh: 081234567890" disabled={!isEditing} maxLength={13} errorMessage={waError} />
                 <InputField label="Alamat Lengkap" value={form.address} onChange={(e: any) => setForm({ ...form, address: e.target.value }) } icon={<MapPin size={18} />} placeholder="Jl. Jendral Sudirman, Palembang" disabled={!isEditing} />
                 
-                {/* 🔥 CUSTOM DROPDOWN BANK 🔥 */}
                 <SelectField
                   label="Nama Bank"
                   value={isBankLainnya ? "Lainnya" : form.bank_name}
@@ -413,13 +378,13 @@ export default function UserPage() {
 
           {isEditing ? (
             <div className="flex gap-3 mt-10">
-              {!isNew && !isFinishingReg && (
+              {!isNew && (
                 <button onClick={handleCancel} disabled={loading} className="w-1/3 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 py-4 rounded-2xl font-bold transition-all duration-300 active:scale-95 disabled:opacity-60 cursor-pointer">
                   <X size={20} className="mr-1" /> Batal
                 </button>
               )}
-              <button onClick={handleSubmit} disabled={loading} className={`${isNew || isFinishingReg ? "w-full" : "w-2/3"} flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-4 px-6 rounded-2xl font-bold shadow-[0_10px_20px_-10px_rgba(124,57,150,0.5)] hover:-translate-y-1 transition-all duration-300 active:scale-95 disabled:opacity-60 cursor-pointer`}>
-                {loading ? <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div> : <>{isNew ? <ArrowRight size={20}/> : <Save size={20} />} {isNew ? "Lanjutkan" : isFinishingReg ? "Selesai Daftar" : "Simpan Data"}</>}
+              <button onClick={handleSubmit} disabled={loading} className={`${isNew ? "w-full" : "w-2/3"} flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-4 px-6 rounded-2xl font-bold shadow-[0_10px_20px_-10px_rgba(124,57,150,0.5)] hover:-translate-y-1 transition-all duration-300 active:scale-95 disabled:opacity-60 cursor-pointer`}>
+                {loading ? <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div> : <><Save size={20} /> {isNew ? "Selesai Daftar" : "Simpan Data"}</>}
               </button>
             </div>
           ) : (
@@ -446,7 +411,6 @@ function InputField({ label, value, onChange, icon, placeholder, disabled, maxLe
   );
 }
 
-// 🔥 KOMPONEN BARU: CUSTOM DROPDOWN SELECT 🔥
 function SelectField({ label, value, onChange, icon, options, disabled }: any) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -456,7 +420,6 @@ function SelectField({ label, value, onChange, icon, options, disabled }: any) {
         {label}
       </label>
       
-      {/* Box Input Dropdown */}
       <div
         onClick={() => !disabled && setIsOpen(!isOpen)}
         className={`flex items-center justify-between rounded-2xl px-4 py-3.5 transition-all duration-300 border-2 cursor-pointer ${
@@ -476,17 +439,16 @@ function SelectField({ label, value, onChange, icon, options, disabled }: any) {
           </span>
         </div>
         {!disabled && (
-          <ChevronDown
-            size={18}
-            className={`text-gray-400 transition-transform duration-300 ${isOpen ? "rotate-180 text-purple-600" : ""}`}
-          />
+          <div className="pointer-events-none text-gray-400">
+            <svg className={`w-4 h-4 fill-current transition-transform duration-300 ${isOpen ? "rotate-180 text-purple-600" : ""}`} viewBox="0 0 20 20">
+              <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+            </svg>
+          </div>
         )}
       </div>
 
-      {/* Menu List */}
       {isOpen && (
         <>
-          {/* Overlay tembus pandang untuk menutup dropdown saat area luar diklik */}
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
           
           <div className="absolute top-[84px] left-0 w-full bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">

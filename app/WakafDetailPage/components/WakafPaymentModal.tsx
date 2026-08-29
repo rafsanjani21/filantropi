@@ -41,7 +41,7 @@ export default function WakafPaymentModal({
     
     return (
       <>
-        {formattedMain}<span className="text-amber-500 bg-amber-50 px-1 rounded-sm">{uniquePart}</span>
+        {formattedMain}<span className="text-emerald-700 bg-amber-50 px-1 rounded-sm">{uniquePart}</span>
       </>
     );
   };

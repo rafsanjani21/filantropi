@@ -5,7 +5,7 @@ export default function NavbarRegister() {
   return (
     <nav className="w-full bg-transparent pt-6 pb-4 relative flex items-center justify-center">
       <button className="absolute left-6 flex items-center">
-        <Link href="/LoginPage">
+        <Link href="/LoginPage/Masuk">
           <ArrowLeft className="text-white w-6 h-6 cursor-pointer" />
         </Link>
       </button>

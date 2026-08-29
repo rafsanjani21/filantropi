@@ -67,7 +67,7 @@ function WakafDetailContent() {
         "redirect_after_login",
         window.location.pathname + window.location.search,
       );
-      router.push("/LoginPage");
+      router.push("/LoginPage/Masuk");
       return;
     }
 
