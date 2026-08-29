@@ -5,7 +5,7 @@ export default function DonationHistory({ history }: { history: any[] }) {
     <div className="px-6 pb-6 pt-4 bg-[#FBF8F3]">
       <div className="flex items-center gap-2 mb-4">
         <History size={18} className="text-[#7C3996]" />
-        <h2 className="text-lg font-bold text-[#2A1B33]">Donasi Masuk</h2>
+        <h2 className="text-lg font-bold text-[#2A1B33]">Dana Masuk</h2>
       </div>
       <div className="flex flex-col gap-3">
         {history.length > 0 ? history.slice(0, 5).map((tx, i) => (
@@ -23,7 +23,7 @@ export default function DonationHistory({ history }: { history: any[] }) {
               +Rp {parseFloat(tx.amount || "0").toLocaleString("id-ID")}
             </p>
           </div>
-        )) : <p className="text-sm text-gray-500 text-center py-4">Belum ada donasi masuk.</p>}
+        )) : <p className="text-sm text-gray-500 text-center py-4">Belum ada dana masuk.</p>}
       </div>
       {history.length > 0 && <p className="text-xs text-gray-400 mt-3 justify-center text-center">5 donasi terakhir ditampilkan.</p>}
     </div>

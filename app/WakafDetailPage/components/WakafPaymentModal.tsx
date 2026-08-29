@@ -87,7 +87,7 @@ export default function WakafPaymentModal({
           {/* INFO NOMINAL TRANSFER (PALING PENTING) */}
           <div className="w-full mb-5 bg-white border-2 border-emerald-500 rounded-2xl p-4 text-center shadow-lg shadow-emerald-500/20 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500"></div>
-            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1">Total Tagihan</p>
+            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1">Total Wakaf</p>
             <div className="flex items-center justify-center gap-1 mb-2">
               <span className="text-lg font-bold text-gray-400">Rp</span>
               <span className="text-3xl font-black text-emerald-700 tracking-tight">
@@ -100,16 +100,16 @@ export default function WakafPaymentModal({
             >
               <Copy size={13} /> Salin Nominal
             </button>
-            <p className="text-[10px] text-amber-600 font-medium mt-3 leading-tight px-2">
+            {/* <p className="text-[10px] text-amber-600 font-medium mt-3 leading-tight px-2">
               *Penting: Transfer hingga <b>3 digit terakhir</b> agar wakaf diverifikasi.
-            </p>
+            </p> */}
           </div>
 
           {/* Info Batas Waktu */}
           {transactionData?.expiredAt && (
              <div className="w-full flex items-center justify-center gap-2 mb-4 bg-gray-50 border border-gray-100 py-2 rounded-lg text-xs font-medium text-gray-500">
                 <Clock size={14} className="text-gray-400" />
-                Bayar sebelum: <b className="text-gray-700">{transactionData.expiredAt}</b>
+                Transfer sebelum: <b className="text-gray-700">{transactionData.expiredAt}</b>
              </div>
           )}
 
@@ -148,10 +148,10 @@ export default function WakafPaymentModal({
               <AlertCircle size={20} className="text-amber-600 mt-0.5 shrink-0" />
               <div className="flex flex-col w-full">
                 <span className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">
-                  Berita Transfer (Opsional)
+                  Berita Transfer (Wajib)
                 </span>
                 <p className="text-[11px] text-amber-700 mt-1 mb-2.5 leading-relaxed">
-                  Bila aplikasi bank Anda mewajibkan berita, Anda dapat memasukkan kode berikut.
+                  Tambahkan kode berikut di berita transfer agar wakaf Anda dapat diverifikasi. Jangan lupa untuk menyalin kode ini dengan benar.
                 </p>
                 <div className="flex items-center justify-between bg-white border border-amber-200 rounded-lg p-2 shadow-sm w-full">
                   <span className="text-xs font-black text-amber-900 pl-2 tracking-wide truncate">

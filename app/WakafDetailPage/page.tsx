@@ -45,7 +45,7 @@ function WakafDetailContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [transactionData, setTransactionData] = useState<any>(null);
 
-  // LOGIKA PROTEKSI WAKAF (LOGIN, ROLE, DAN KYC)
+  // LOGIKA PROTEKSI WAKAF (LOGIN, ROLE, DAN KELENGKAPAN REKENING)
   const handleWakafClick = () => {
     const token =
       localStorage.getItem("access_token") ||
@@ -82,24 +82,24 @@ function WakafDetailContent() {
       return;
     }
 
-    // 🔥 3. CEK STATUS KYC (Wajib Lengkap Profil) 🔥
-    // Memeriksa boolean false atau angka 0
-    if (user.is_kyc === false || user.is_kyc === 0 || user.is_kyc === "0") {
+    // 🔥 3. CEK KELENGKAPAN DATA REKENING 🔥
+    // Memeriksa apakah Pemilik, Bank, atau No. Rekening kosong
+    if (!user.bank_account_name || !user.bank_name || !user.no_req) {
       toast.error(
-        "Data diri Anda belum lengkap! Silakan lengkapi profil dan KTP (KYC) terlebih dahulu.",
+        "Data rekening belum lengkap! Silakan lengkapi Nama Pemilik, Bank, & No. Rekening di profil Anda terlebih dahulu.",
         {
           icon: "⚠️",
           style: { borderRadius: "10px", background: "#333", color: "#fff" },
         },
       );
 
-      router.push("/ProfilePage/UserPage");
+      router.push("/UserPage");
       return;
     }
 
     toast.dismiss("checking-auth");
     
-    // Jika semua validasi lolos (is_kyc true/1), buka Modal Ikrar
+    // Jika semua validasi lolos, buka Modal Ikrar
     setIsPledgeModalOpen(true);
   };
 
