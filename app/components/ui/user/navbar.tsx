@@ -1,13 +1,12 @@
 import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 
 export default function Navbar() {
   return (
     <nav className="w-full bg-transparent pt-6 pb-4 relative flex items-center justify-center">
       <button className="absolute left-6 flex items-center">
-        <Link href="/ProfilePage">
+        <a href="/ProfilePage">
           <ArrowLeft className="text-white w-6 h-6 cursor-pointer" />
-        </Link>
+        </a>
       </button>
 
       <img
