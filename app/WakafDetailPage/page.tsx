@@ -93,7 +93,7 @@ function WakafDetailContent() {
         },
       );
 
-      router.push("/UserPage");
+      router.push("/ProfilePage/UserPage");
       return;
     }
 
