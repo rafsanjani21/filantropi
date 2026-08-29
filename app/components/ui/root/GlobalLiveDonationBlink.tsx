@@ -3,14 +3,21 @@
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+// 🔥 1. Import usePathname dari Next.js
+import { usePathname } from "next/navigation"; 
 
 export default function GlobalLiveDonationBlink() {
+  const pathname = usePathname(); // 🔥 2. Inisialisasi usePathname
+
   const [history, setHistory] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
 
-  // 1. Fetch data dari API
+  // Fetch data dari API
   useEffect(() => {
+    // Jika BUKAN di beranda, tidak perlu repot-repot nge-fetch data
+    if (pathname !== "/") return; 
+
     const fetchGlobalHistory = async () => {
       try {
         const res = await apiFetch(`/campaigns/transactions`, { method: "GET" });
@@ -22,7 +29,6 @@ export default function GlobalLiveDonationBlink() {
             amount: String(tx.amount ?? 0),
           }));
           
-          // Data akan diperbarui di state
           setHistory(mappedHistory);
         }
       } catch (err) {
@@ -30,42 +36,36 @@ export default function GlobalLiveDonationBlink() {
       }
     };
 
-    // 1. Ambil data pertama kali saat web dibuka
     fetchGlobalHistory();
-    
-    // 2. JALAN TENGAH: Ambil data baru secara diam-diam setiap 10 menit (600.000 ms)
     const interval = setInterval(fetchGlobalHistory, 600000); 
     
     return () => clearInterval(interval);
-  }, []);
+  }, [pathname]); // 🔥 Trigger ulang jika berpindah halaman
 
   const validHistory = history.filter((tx) => Number(tx.amount) > 0);
 
-  // 2. Logika Animasi (DIPERBAIKI AGAR LEBIH STABIL)
+  // Logika Animasi
   useEffect(() => {
-    if (validHistory.length === 0) return;
+    if (validHistory.length === 0 || pathname !== "/") return; // 🔥 Hentikan animasi jika bukan di beranda
 
-    // Langsung munculkan notifikasi saat index/data berubah
     setIsVisible(true);
 
-    // Sembunyikan setelah 3 detik tampil di layar
     const hideTimer = setTimeout(() => {
       setIsVisible(false);
     }, 3000);
 
-    // Ganti ke data selanjutnya setelah 4 detik (memberi jeda 1 detik saat tersembunyi)
     const nextTimer = setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % validHistory.length);
     }, 4000);
 
-    // Bersihkan timer jika komponen dirender ulang untuk menghindari bug Strict Mode
     return () => {
       clearTimeout(hideTimer);
       clearTimeout(nextTimer);
     };
-  }, [currentIndex, validHistory.length]);
+  }, [currentIndex, validHistory.length, pathname]); // 🔥 Pantau perubahan URL
 
-  if (validHistory.length === 0) return null;
+  // 🔥 3. KUNCI UTAMA: Jika URL saat ini bukan "/", JANGAN render (munculkan) apa pun
+  if (pathname !== "/" || validHistory.length === 0) return null;
 
   const donation = validHistory[currentIndex];
   const donor = donation.from_to;
