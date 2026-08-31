@@ -148,21 +148,31 @@ export default function WakafPaymentModal({
                 </p>
               </div>
             </div>
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 mt-2 w-full">
-              <p className="text-xs font-bold text-gray-500 mb-2">
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mt-2">
+              <p className="text-sm font-bold text-gray-500 mb-2">
                 Nomor Rekening:
               </p>
-              {/* Box Rekening Dibuat Flex dengan Batasan */}
-              <div className="flex items-center justify-between gap-2 w-full bg-white p-2 rounded-lg border border-gray-200">
-                <span className="text-lg font-black text-emerald-700 tracking-widest truncate min-w-0">
+              
+              {/* 🔥 PERBAIKAN DI SINI: Tambah gap-2, ubah background jadi putih agar lebih jelas seperti desain Anda 🔥 */}
+              <div className="flex items-center justify-between gap-2 bg-white border border-gray-200 rounded-xl p-2.5 shadow-sm">
+                
+                {/* 🔥 Ubah text-xl jadi text-lg, dan tracking-widest jadi tracking-wider agar muat di layar HP 🔥 */}
+                <span className="text-lg font-black text-emerald-700 tracking-wider">
                   {accountNumber}
                 </span>
+                
                 <button
-                  onClick={() => handleCopyText(accountNumber, "Nomor rekening berhasil disalin!")}
-                  className="p-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md transition-colors flex items-center gap-1.5 shrink-0"
+                  onClick={() =>
+                    handleCopyText(
+                      accountNumber,
+                      "Nomor rekening berhasil disalin!"
+                    )
+                  }
+                  // 🔥 Tambah shrink-0 agar tombol salin tidak tertekan/mengecil 🔥
+                  className="shrink-0 p-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors flex items-center gap-2"
                 >
-                  <Copy size={14} />
-                  <span className="text-[11px] font-bold">Salin</span>
+                  <Copy size={18} />
+                  <span className="text-xs font-bold">Salin</span>
                 </button>
               </div>
             </div>
