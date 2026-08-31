@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 // 🔥 1. Import usePathname dari Next.js
-import { usePathname } from "next/navigation"; 
+import { usePathname } from "next/navigation";
 
 export default function GlobalLiveDonationBlink() {
   const pathname = usePathname(); // 🔥 2. Inisialisasi usePathname
@@ -16,11 +16,13 @@ export default function GlobalLiveDonationBlink() {
   // Fetch data dari API
   useEffect(() => {
     // Jika BUKAN di beranda, tidak perlu repot-repot nge-fetch data
-    if (pathname !== "/") return; 
+    if (pathname !== "/HomePage") return;
 
     const fetchGlobalHistory = async () => {
       try {
-        const res = await apiFetch(`/campaigns/transactions`, { method: "GET" });
+        const res = await apiFetch(`/campaigns/transactions`, {
+          method: "GET",
+        });
         const apiData = res?.data || [];
 
         if (Array.isArray(apiData)) {
@@ -28,7 +30,7 @@ export default function GlobalLiveDonationBlink() {
             from_to: tx.sender_name || "Donatur",
             amount: String(tx.amount ?? 0),
           }));
-          
+
           setHistory(mappedHistory);
         }
       } catch (err) {
@@ -37,16 +39,16 @@ export default function GlobalLiveDonationBlink() {
     };
 
     fetchGlobalHistory();
-    const interval = setInterval(fetchGlobalHistory, 600000); 
-    
+    const interval = setInterval(fetchGlobalHistory, 600000);
+
     return () => clearInterval(interval);
-  }, [pathname]); // 🔥 Trigger ulang jika berpindah halaman
+  }, [pathname]);
 
   const validHistory = history.filter((tx) => Number(tx.amount) > 0);
 
   // Logika Animasi
   useEffect(() => {
-    if (validHistory.length === 0 || pathname !== "/") return; // 🔥 Hentikan animasi jika bukan di beranda
+    if (validHistory.length === 0 || pathname !== "/HomePage") return;
 
     setIsVisible(true);
 
@@ -64,8 +66,8 @@ export default function GlobalLiveDonationBlink() {
     };
   }, [currentIndex, validHistory.length, pathname]); // 🔥 Pantau perubahan URL
 
-  // 🔥 3. KUNCI UTAMA: Jika URL saat ini bukan "/", JANGAN render (munculkan) apa pun
-  if (pathname !== "/" || validHistory.length === 0) return null;
+  // 🔥 3. KUNCI UTAMA: Jika URL saat ini bukan "/HomePage", JANGAN render (munculkan) apa pun
+  if (pathname !== "/HomePage" || validHistory.length === 0) return null;
 
   const donation = validHistory[currentIndex];
   const donor = donation.from_to;
@@ -82,7 +84,7 @@ export default function GlobalLiveDonationBlink() {
       >
         <div className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/90 backdrop-blur-xl shadow-2xl">
           <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-purple-500 to-pink-500" />
-          
+
           <div className="flex items-center gap-3 p-4">
             <div className="relative shrink-0">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 shadow-lg">
@@ -93,7 +95,7 @@ export default function GlobalLiveDonationBlink() {
                 <span className="relative inline-flex h-4 w-4 rounded-full bg-green-500" />
               </span>
             </div>
-            
+
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <div className="min-w-0">
@@ -104,7 +106,7 @@ export default function GlobalLiveDonationBlink() {
                 </div>
               </div>
             </div>
-            
+
             <div className="text-right">
               <div className="text-[10px] font-bold uppercase tracking-wide text-gray-400">
                 Nominal

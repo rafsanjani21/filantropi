@@ -280,11 +280,25 @@ export default function ProfilePagePenerima() {
                     : t("general_account")
               }
             />
+            {isBeneficiary && (
+              <>
+                <MenuRow
+                  href="/ProgramPage"
+                  icon={<LayoutDashboard size={20} />}
+                  iconBg="bg-[#E8B94A]/15 group-hover:bg-[#E8B94A]"
+                  iconColor="text-[#8A6413]"
+                  hoverBg="hover:bg-[#E8B94A]/[0.08]"
+                  title={t("my_programs")}
+                  subtitle={t("manage_campaigns")}
+                />
+                <div className="h-px bg-gray-100 mx-4 my-0.5" />
+              </>
+            )}
           </div>
         </div>
 
         {/*  ACTIVITY */}
-        <div className="w-full mb-5">
+        {/* <div className="w-full mb-5">
           <SectionLabel>Aktivitas Anda</SectionLabel>
           <div className="bg-white/[0.97] backdrop-blur-sm rounded-lg shadow-xl shadow-black/10 p-2 border border-white/40 flex flex-col">
             {isBeneficiary && (
@@ -312,7 +326,7 @@ export default function ProfilePagePenerima() {
               subtitle="Riwayat Anda"
             />
           </div>
-        </div>
+        </div> */}
 
         {/*  HELP & INFO */}
         <div className="w-full mb-6">

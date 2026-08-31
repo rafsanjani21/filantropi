@@ -93,7 +93,7 @@ export default function WakafPledgeModal({ isOpen, onClose, onSubmit }: WakafPle
                   htmlFor="wakafAgree" 
                   className="text-sm text-emerald-950 leading-relaxed cursor-pointer select-none font-medium italic"
                 >
-                  "Saya berikrar menyerahkan sebagian harta ini sebagai wakaf. Semoga Allah SWT menerima dan menjadikannya pahala jariyah."
+                  "Saya berikrar menyerahkan sebagian harta ini sebagai wakaf abadi. Semoga Allah SWT menerima dan menjadikannya pahala jariyah."
                 </label>
               </div>
             </div>

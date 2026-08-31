@@ -39,7 +39,6 @@ export default function RootLayout({
         <Toaster position="top-right" reverseOrder={false} />
         <AuthProvider>
           <I18nProvider>
-            {/* Notifikasi donasi global muncul di semua halaman */}
             <GlobalLiveDonationBlink />
             {children}
           </I18nProvider>

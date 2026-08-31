@@ -30,7 +30,53 @@ function MasukContent() {
   };
 
   return (
-    <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-linear-to-t from-[#7C3996] to-[#b359d4] shadow-2xl overflow-hidden">
+    <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-gradient-to-b from-[#3E1854] via-[#6B2E88] to-[#8A45A8] shadow-2xl overflow-hidden">
+      <svg
+            className="absolute inset-0 w-full h-full opacity-[0.09] pointer-events-none"
+            preserveAspectRatio="xMidYMid slice"
+            aria-hidden="true"
+          >
+            <defs>
+              <pattern
+                id="kawung"
+                width="56"
+                height="56"
+                patternUnits="userSpaceOnUse"
+              >
+                <g fill="none" stroke="#F3D48A" strokeWidth="1.1">
+                  <ellipse
+                    cx="14"
+                    cy="14"
+                    rx="12"
+                    ry="8"
+                    transform="rotate(45 14 14)"
+                  />
+                  <ellipse
+                    cx="42"
+                    cy="14"
+                    rx="12"
+                    ry="8"
+                    transform="rotate(-45 42 14)"
+                  />
+                  <ellipse
+                    cx="14"
+                    cy="42"
+                    rx="12"
+                    ry="8"
+                    transform="rotate(-45 14 42)"
+                  />
+                  <ellipse
+                    cx="42"
+                    cy="42"
+                    rx="12"
+                    ry="8"
+                    transform="rotate(45 42 42)"
+                  />
+                </g>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#kawung)" />
+          </svg>
       <NavbarLogin />
 
       <main className="flex-1 flex flex-col items-center justify-center px-8 pb-12 mt-10">

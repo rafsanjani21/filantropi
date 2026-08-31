@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ChevronDown, Mail, HelpCircle, ShieldAlert, Phone, MapPin } from "lucide-react"; // Import Phone & MapPin ditambahkan
+import { ArrowLeft, ChevronDown, Mail, HelpCircle, ShieldAlert, Phone, MapPin } from "lucide-react";
 
 export default function PusatBantuanPage() {
   const router = useRouter();
@@ -10,24 +10,24 @@ export default function PusatBantuanPage() {
 
   const faqs = [
     {
-      question: "Apa itu Token FCC?",
-      answer: "FCC adalah token kripto berbasis jaringan Polygon (Matic) yang digunakan sebagai alat tukar utama di platform donasi kami. Transaksi menjadi lebih transparan, cepat, dan terdesentralisasi."
+      question: "Bagaimana cara melakukan donasi/wakaf?",
+      answer: "Pilih program donasi atau wakaf yang Anda inginkan, masukkan nominal, dan pilih metode pembayaran (Transfer Bank). Setelah itu, Anda akan mendapatkan rincian nomor rekening tujuan. Pastikan Anda melengkapi profil Anda sebelum berdonasi."
     },
     {
-      question: "Bagaimana cara melakukan donasi?",
-      answer: "Anda harus memiliki dompet digital (seperti MetaMask) yang terhubung ke jaringan Polygon. Pastikan Anda memiliki saldo FCC dan sedikit MATIC untuk biaya gas (gas fee), lalu klik tombol 'Donasi' pada program yang Anda pilih."
+      question: "Apa perbedaan Donasi dan Wakaf di platform ini?",
+      answer: "Donasi sosial (Sedekah) digunakan untuk bantuan langsung habis pakai seperti bencana alam atau pangan. Sedangkan Wakaf (Amal Jariyah) digunakan untuk pembangunan aset permanen seperti masjid atau fasilitas umum yang manfaatnya berkelanjutan."
     },
     {
-      question: "Apakah donasi bisa dibatalkan/dikembalikan?",
-      answer: "Tidak. Sesuai dengan sifat dasar teknologi Blockchain, semua transaksi yang sudah berhasil dicatat di dalam blok bersifat permanen dan tidak dapat dibatalkan (irreversible)."
+      question: "Mengapa saya diarahkan untuk mengisi profil sebelum berdonasi?",
+      answer: "Sebagai bentuk kepatuhan terhadap prinsip transparansi dan regulasi keamanan (KYC), kami mewajibkan donatur untuk melengkapi data dasar seperti Nama, NIK, dan Nomor Rekening. Data ini dijamin kerahasiaannya."
     },
     {
-      question: "Bagaimana cara mencairkan dana (Penerima)?",
-      answer: "Dana FCC akan otomatis masuk ke alamat dompet (wallet address) yang telah Anda daftarkan di profil. Anda bisa menukarnya menjadi uang fiat melalui bursa kripto (exchange) lokal."
+      question: "Berapa lama proses verifikasi pembayaran?",
+      answer: "Proses verifikasi pembayaran biasanya memakan waktu 1x24 jam hari kerja. Sistem kami akan melakukan pengecekan mutasi bank secara otomatis. Status donasi Anda dapat dilihat di riwayat profil Anda."
     },
     {
-      question: "Kenapa transaksi saya gagal?",
-      answer: "Penyebab paling umum adalah: (1) Saldo MATIC Anda tidak cukup untuk membayar gas fee. (2) Jaringan Polygon sedang sangat sibuk. (3) Anda menolak konfirmasi transaksi di dalam dompet digital Anda."
+      question: "Apakah donasi bisa dibatalkan atau dikembalikan?",
+      answer: "Donasi yang telah berhasil masuk ke rekening yayasan tidak dapat ditarik kembali (refund) karena dana tersebut akan langsung disalurkan atau dicatat sesuai akad program yang dipilih."
     }
   ];
 
@@ -35,7 +35,53 @@ export default function PusatBantuanPage() {
     <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-gray-50 pb-10">
       
       {/* HEADER */}
-      <div className="bg-linear-to-r from-[#7C3996] to-[#b359d4] px-6 pt-8 pb-6 flex items-center gap-4 sticky top-0 z-50 text-white shadow-md rounded-b-3xl">
+      <div className="bg-gradient-to-b from-[#3E1854] via-[#6B2E88] to-[#8A45A8] px-6 pt-8 pb-6 flex items-center gap-4 sticky top-0 z-50 text-white shadow-md rounded-b-3xl">
+        <svg
+            className="absolute inset-0 w-full h-full opacity-[0.09] pointer-events-none"
+            preserveAspectRatio="xMidYMid slice"
+            aria-hidden="true"
+          >
+            <defs>
+              <pattern
+                id="kawung"
+                width="56"
+                height="56"
+                patternUnits="userSpaceOnUse"
+              >
+                <g fill="none" stroke="#F3D48A" strokeWidth="1.1">
+                  <ellipse
+                    cx="14"
+                    cy="14"
+                    rx="12"
+                    ry="8"
+                    transform="rotate(45 14 14)"
+                  />
+                  <ellipse
+                    cx="42"
+                    cy="14"
+                    rx="12"
+                    ry="8"
+                    transform="rotate(-45 42 14)"
+                  />
+                  <ellipse
+                    cx="14"
+                    cy="42"
+                    rx="12"
+                    ry="8"
+                    transform="rotate(-45 14 42)"
+                  />
+                  <ellipse
+                    cx="42"
+                    cy="42"
+                    rx="12"
+                    ry="8"
+                    transform="rotate(45 42 42)"
+                  />
+                </g>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#kawung)" />
+          </svg>
         <button onClick={() => router.back()} className="hover:bg-white/20 p-2 rounded-full transition cursor-pointer">
           <ArrowLeft size={24} />
         </button>
@@ -82,9 +128,7 @@ export default function PusatBantuanPage() {
             <div>
               <p className="text-[10px] font-bold text-purple-800 uppercase tracking-wide mt-1">Kantor Pusat</p>
               <p className="text-xs font-medium text-purple-900 mt-1 leading-relaxed pr-2">
-                Gedung Kebaikan Bersama Lt. 4<br />
-                Jl. Sudirman No. 123, Jakarta Selatan<br />
-                DKI Jakarta 12190
+                Jl. Rawamangun Muka Timur No.78, RT.6/RW.12, Rawamangun, Kec. Pulo Gadung, Kota Jakarta Timur, Daerah Khusus Ibukota Jakarta 13220
               </p>
             </div>
           </div>
@@ -124,13 +168,13 @@ export default function PusatBantuanPage() {
           </div>
         </div>
 
-        {/* PERINGATAN BLOCKCHAIN */}
+        {/* PERINGATAN KEAMANAN (DIUBAH DARI WEB3 MENJADI KEAMANAN TRANSAKSI UMUM) */}
         <div className="mt-4 bg-orange-50 border border-orange-200 rounded-3xl p-5 flex gap-3">
           <ShieldAlert size={24} className="text-orange-500 shrink-0" />
           <div>
-            <h3 className="text-xs font-bold text-orange-800 mb-1">Peringatan Keamanan Web3</h3>
+            <h3 className="text-xs font-bold text-orange-800 mb-1">Peringatan Keamanan Transaksi</h3>
             <p className="text-[10px] text-orange-700 leading-relaxed">
-              Kami tidak akan pernah meminta Private Key atau Seed Phrase Anda. Pastikan Anda hanya bertransaksi di dalam aplikasi resmi ini.
+              Kami tidak pernah meminta PIN, kata sandi (password), atau kode OTP Anda. Pastikan Anda hanya mentransfer dana ke rekening resmi atas nama platform kami.
             </p>
           </div>
         </div>
