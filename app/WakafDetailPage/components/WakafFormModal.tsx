@@ -79,7 +79,7 @@ export default function WakafFormModal({ isOpen, onClose, onSubmit, isSubmitting
                 required
                 value={formattedAmount}
                 onChange={handleAmountChange}
-                placeholder="100.000"
+                placeholder="0"
                 className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-emerald-600/10 focus:border-emerald-600 outline-none transition-all text-sm font-black text-gray-800"
               />
             </div>
