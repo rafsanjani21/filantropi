@@ -25,21 +25,41 @@ function DetailContent() {
   const router = useRouter();
   const slug = searchParams.get("slug");
 
-  const { campaign, loading, error, walletHistory, totalCollected, milestone, receiverWallet, user, fetchMilestoneStatus } = useCampaignDetail(slug);
+  const {
+    campaign,
+    loading,
+    error,
+    walletHistory,
+    totalCollected,
+    receiverWallet,
+    user,
+  } = useCampaignDetail(slug);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [donationType, setDonationType] = useState("Donasi");
   const [wakafName, setWakafName] = useState("");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [showDisburseConfirmModal, setShowDisburseConfirmModal] = useState(false);
+  const [showDisburseConfirmModal, setShowDisburseConfirmModal] =
+    useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   useEffect(() => {
     const isUnlimitedTime = !campaign?.end_date;
-    const daysLeft = isUnlimitedTime ? null : Math.max(0, Math.ceil((new Date(campaign.end_date).getTime() - Date.now()) / 86400000));
-    
-    if (sessionStorage.getItem("auto_open_donate") === "true" && campaign?.status === "active" && (isUnlimitedTime || (daysLeft as number) > 0)) {
+    const daysLeft = isUnlimitedTime
+      ? null
+      : Math.max(
+          0,
+          Math.ceil(
+            (new Date(campaign.end_date).getTime() - Date.now()) / 86400000,
+          ),
+        );
+
+    if (
+      sessionStorage.getItem("auto_open_donate") === "true" &&
+      campaign?.status === "active" &&
+      (isUnlimitedTime || (daysLeft as number) > 0)
+    ) {
       sessionStorage.removeItem("auto_open_donate");
       setTimeout(() => {
         setDonationType(campaign?.is_wakaf ? "Wakaf" : "Donasi");
@@ -61,7 +81,10 @@ function DetailContent() {
       query.append("campaignId", campaign.id);
       query.append("donationType", donationType);
       if (donationType === "Wakaf") query.append("wakafName", wakafName);
-      query.append("name", user ? user.full_name || user.name || "Orang Baik" : guestName);
+      query.append(
+        "name",
+        user ? user.full_name || user.name || "Orang Baik" : guestName,
+      );
 
       router.push(`/PaymentSimulation?${query.toString()}`);
     }, 800);
@@ -71,12 +94,18 @@ function DetailContent() {
     setIsSubmittingReport(true);
     const loadingToast = toast.loading("Mengajukan pencairan dana...");
     try {
-      await apiFetch(`/campaigns/disbursements/${campaign.id}`, { method: "POST" });
+      await apiFetch(`/campaigns/disbursements/${campaign.id}`, {
+        method: "POST",
+      });
       toast.success("Pencairan berhasil diajukan!", { id: loadingToast });
       setShowDisburseConfirmModal(false);
-      fetchMilestoneStatus(campaign.id);
     } catch (err: any) {
-      toast.error(typeof err === "string" ? err : err.message || "Gagal mengajukan pencairan.", { id: loadingToast });
+      toast.error(
+        typeof err === "string"
+          ? err
+          : err.message || "Gagal mengajukan pencairan.",
+        { id: loadingToast },
+      );
     } finally {
       setIsSubmittingReport(false);
     }
@@ -90,12 +119,19 @@ function DetailContent() {
     files.forEach((file) => formData.append("proof_images", file));
 
     try {
-      await apiFetch(`/campaigns/report/${campaign.id}`, { method: "POST", body: formData });
+      await apiFetch(`/campaigns/report/${campaign.id}`, {
+        method: "POST",
+        body: formData,
+      });
       toast.success("Laporan berhasil dikirim!", { id: loadingToast });
       setShowReportModal(false);
-      fetchMilestoneStatus(campaign.id);
     } catch (err: any) {
-      toast.error(typeof err === "string" ? err : err.message || "Gagal mengirim laporan.", { id: loadingToast });
+      toast.error(
+        typeof err === "string"
+          ? err
+          : err.message || "Gagal mengirim laporan.",
+        { id: loadingToast },
+      );
     } finally {
       setIsSubmittingReport(false);
     }
@@ -120,14 +156,20 @@ function DetailContent() {
         </div>
         <h2 className="text-xl font-bold text-[#2A1B33]">Terjadi Kesalahan</h2>
         <p className="text-sm text-gray-500">{error}</p>
-        <Link href="/" className="mt-2 px-6 py-2.5 bg-[#7C3996] text-white text-sm font-bold rounded-full shadow-sm hover:bg-[#6B2E88] transition-colors">
+        <Link
+          href="/"
+          className="mt-2 px-6 py-2.5 bg-[#7C3996] text-white text-sm font-bold rounded-full shadow-sm hover:bg-[#6B2E88] transition-colors"
+        >
           Kembali
         </Link>
       </div>
     );
   }
 
-  const isCampaignOwner = !!(user && (user.id === campaign.user_id || user.wallet_address === receiverWallet));
+  const isCampaignOwner = !!(
+    user &&
+    (user.id === campaign.user_id || user.wallet_address === receiverWallet)
+  );
 
   return (
     <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-[#FBF8F3] overflow-x-hidden">
@@ -142,7 +184,10 @@ function DetailContent() {
         onSubmit={handleSimulatePayment}
         isProcessing={isProcessingPayment}
         onLoginRedirect={() => {
-          sessionStorage.setItem("redirect_after_login", window.location.pathname + window.location.search);
+          sessionStorage.setItem(
+            "redirect_after_login",
+            window.location.pathname + window.location.search,
+          );
           router.push("/LoginPage/Masuk");
         }}
         receiverWallet={receiverWallet}
@@ -153,7 +198,7 @@ function DetailContent() {
         onClose={() => setShowDisburseConfirmModal(false)}
         onSubmit={handleDisbursementSubmit}
         isSubmitting={isSubmittingReport}
-        currentPhase={milestone?.current_phase || 1}
+        currentPhase={1}
       />
 
       <ReportModal
@@ -164,21 +209,24 @@ function DetailContent() {
       />
 
       <CampaignBanner images={campaign.image_banner} />
-      
+
       <div className="relative -mt-6 w-full bg-white flex flex-col z-10 pb-28 shadow-xl rounded-t-[1.75rem]">
         <div className="flex justify-center pt-3 pb-1">
           <span className="w-10 h-1 rounded-full bg-[#7C3996]/15" />
         </div>
-        
+
         <CampaignHeader campaign={campaign} totalCollected={totalCollected} />
         <CampaignStory story={campaign.story || campaign.description} />
         <DonationHistory history={walletHistory} />
       </div>
 
-      <BottomActionBar 
+      <BottomActionBar
         campaign={campaign}
         isCampaignOwner={isCampaignOwner}
-        onDonate={() => { setDonationType(campaign?.is_wakaf ? "Wakaf" : "Donasi"); setIsModalOpen(true); }}
+        onDonate={() => {
+          setDonationType(campaign?.is_wakaf ? "Wakaf" : "Donasi");
+          setIsModalOpen(true);
+        }}
         onDisburse={() => setShowDisburseConfirmModal(true)}
         onReport={() => setShowReportModal(true)}
       />

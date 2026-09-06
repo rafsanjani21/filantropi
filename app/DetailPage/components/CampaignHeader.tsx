@@ -1,5 +1,6 @@
 import { CheckCircle2, Clock, XCircle, Infinity } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import Link from "next/link"; 
 
 export default function CampaignHeader({ campaign, totalCollected }: { campaign: any, totalCollected: number | null }) {
   const { t } = useTranslation();
@@ -12,6 +13,14 @@ export default function CampaignHeader({ campaign, totalCollected }: { campaign:
   const isUnlimitedTime = !campaign?.end_date;
   const daysLeft = isUnlimitedTime ? null : Math.max(0, Math.ceil((new Date(campaign.end_date).getTime() - Date.now()) / 86400000));
 
+  // 🔥 DETEKSI WAKAF SEPERTI DI PAGE_4.TSX
+  // 🔥 DETEKSI WAKAF GABUNGAN (Cek is_wakaf ATAU campaign_code)
+  const isWakafProgram = 
+    campaign.is_wakaf === true || 
+    campaign.is_wakaf === 1 || 
+    String(campaign.is_wakaf).toLowerCase() === "true" || 
+    String(campaign.is_wakaf) === "1" ||
+    (campaign.campaign_code && String(campaign.campaign_code).toLowerCase().includes("wkf"));
   function getCategoryName(category_id: number) {
     const map: Record<number, string> = { 1: "Pendidikan", 2: "Kesehatan", 3: "Bencana Alam", 4: "Ekonomi", 5: "Umum" };
     return map[category_id] || "Umum";
@@ -33,17 +42,30 @@ export default function CampaignHeader({ campaign, totalCollected }: { campaign:
   return (
     <div className="p-6 border-b border-gray-100 mt-2">
       <div className="flex flex-wrap items-start justify-between gap-y-2 gap-x-3 mb-4">
+        
         <div className="flex-1 min-w-[130px] pr-2">
-          <span className="text-sm font-semibold text-[#5B2A73] leading-tight">
-            {campaign.full_name || "Penerima Manfaat"}
-            <CheckCircle2 className="inline-block w-4 h-4 text-[#7C3996] ml-1 mb-0.5 align-middle" />
-          </span>
+          <Link 
+            href={`/CreatorProfile/${campaign.user_id}`} 
+            className="inline-flex items-center gap-1.5 group cursor-pointer active:scale-[0.98] transition-transform"
+          >
+            <div className="flex items-center gap-2 px-2 py-1 -ml-2 rounded-lg group-hover:bg-gray-50 transition-colors">
+              <span className="text-sm font-bold text-[#5B2A73] leading-tight border-b border-transparent group-hover:border-[#5B2A73] transition-colors">
+                {campaign.full_name || "Penerima Manfaat"}
+              </span>
+              <CheckCircle2 className="w-4 h-4 text-[#7C3996] shrink-0" />
+            </div>
+          </Link>
         </div>
+
         <div className="flex flex-wrap items-center gap-1.5 shrink-0 justify-end">
           {renderStatusBadge()}
-          <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-[#E8B94A]/15 text-[#8A6413] uppercase border border-[#E8B94A]/30 shrink-0">
-            {getCategoryName(campaign.category_id)}
-          </span>
+          
+          {/* 🔥 Kategori hanya ditampilkan jika BUKAN program wakaf 🔥 */}
+          {!isWakafProgram && (
+            <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-[#E8B94A]/15 text-[#8A6413] uppercase border border-[#E8B94A]/30 shrink-0">
+              {getCategoryName(campaign.category_id)}
+            </span>
+          )}
         </div>
       </div>
 

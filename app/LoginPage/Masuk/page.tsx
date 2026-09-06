@@ -6,7 +6,7 @@ import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "@/lib/firebase";
 import { useAuth } from "@/hooks/useAuth";
 import { AlertCircle, ShieldCheck } from "lucide-react";
-import NavbarLogin from "@/app/components/ui/login/navbar";
+import NavbarLogin from "@/app/LoginPage/components/login/navbar";
 import { useTranslation } from "react-i18next";
 
 function MasukContent() {

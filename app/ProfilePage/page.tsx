@@ -2,7 +2,7 @@
 
 import "@/lib/i18n";
 import Link from "next/link";
-import Navbar from "@/app/components/ui/profile/navbar";
+import Navbar from "@/app/ProfilePage/components/navbar";
 import BottomNav from "@/app/components/ui/root/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
@@ -298,42 +298,27 @@ export default function ProfilePagePenerima() {
         </div>
 
         {/*  ACTIVITY */}
-        {/* <div className="w-full mb-5">
+        <div className="w-full mb-5">
           <SectionLabel>Aktivitas Anda</SectionLabel>
           <div className="bg-white/[0.97] backdrop-blur-sm rounded-lg shadow-xl shadow-black/10 p-2 border border-white/40 flex flex-col">
-            {isBeneficiary && (
-              <>
-                <MenuRow
-                  href="/ProgramPage"
-                  icon={<LayoutDashboard size={20} />}
-                  iconBg="bg-[#E8B94A]/15 group-hover:bg-[#E8B94A]"
-                  iconColor="text-[#8A6413]"
-                  hoverBg="hover:bg-[#E8B94A]/[0.08]"
-                  title={t("my_programs")}
-                  subtitle={t("manage_campaigns")}
-                />
-                <div className="h-px bg-gray-100 mx-4 my-0.5" />
-              </>
-            )}
-
             <MenuRow
-              href="/HistoryPage"
+              href="/ProfilePage/HistoryWakafPage"
               icon={<History size={20} />}
               iconBg="bg-[#5B2A73]/10 group-hover:bg-[#5B2A73]"
               iconColor="text-[#5B2A73]"
               hoverBg="hover:bg-[#5B2A73]/[0.04]"
-              title={t("donation_history")}
-              subtitle="Riwayat Anda"
+              title="Riwayat Wakaf"
+              subtitle="Riwayat Wakaf Anda"
             />
           </div>
-        </div> */}
+        </div>
 
         {/*  HELP & INFO */}
         <div className="w-full mb-6">
           <SectionLabel>Bantuan &amp; Informasi</SectionLabel>
           <div className="bg-white/[0.97] backdrop-blur-sm rounded-lg shadow-xl shadow-black/10 p-2 border border-white/40 flex flex-col">
             <MenuRow
-              href="/PusatBantuan"
+              href="/ProfilePage/PusatBantuan"
               icon={<HelpCircle size={20} />}
               iconBg="bg-gray-100 group-hover:bg-gray-500"
               iconColor="text-gray-500"
@@ -342,7 +327,7 @@ export default function ProfilePagePenerima() {
             />
             <div className="h-px bg-gray-100 mx-4 my-0.5" />
             <MenuRow
-              href="/SyaratKetentuan"
+              href="/ProfilePage/SyaratKetentuan"
               icon={<Scale size={20} />}
               iconBg="bg-gray-100 group-hover:bg-gray-500"
               iconColor="text-gray-500"

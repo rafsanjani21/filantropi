@@ -98,7 +98,7 @@ function WakafDetailContent() {
     }
 
     toast.dismiss("checking-auth");
-    
+
     // Jika semua validasi lolos, buka Modal Ikrar
     setIsPledgeModalOpen(true);
   };

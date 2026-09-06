@@ -2,7 +2,7 @@ import { History, ArrowDownRight } from "lucide-react";
 
 export default function DonationHistory({ history }: { history: any[] }) {
   return (
-    <div className="px-6 pb-6 pt-4 bg-[#FBF8F3]">
+    <div className="px-6 pb-6 pt-4">
       <div className="flex items-center gap-2 mb-4">
         <History size={18} className="text-[#7C3996]" />
         <h2 className="text-lg font-bold text-[#2A1B33]">Dana Masuk</h2>

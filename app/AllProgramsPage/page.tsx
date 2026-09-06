@@ -22,6 +22,7 @@ type Campaign = {
   id: string | number;
   slug?: string;
   title: string;
+  campaign_code?: string;
   status?: string;
   target_amount?: number | null;
   current_amount?: number | null;
@@ -128,7 +129,8 @@ function ProgramsContent() {
           campaign.is_wakaf === true || 
           campaign.is_wakaf === 1 || 
           String(campaign.is_wakaf).toLowerCase() === "true" || 
-          String(campaign.is_wakaf) === "1";
+          String(campaign.is_wakaf) === "1" ||
+          (campaign.campaign_code && String(campaign.campaign_code).toLowerCase().includes("wkf"));
 
         if (isWakafTheme && !isWakafProgram) return false;
         if (typeFilter === "donasi" && isWakafProgram) return false;
@@ -334,6 +336,7 @@ function ProgramsContent() {
 
                     <div className="p-5 flex flex-col">
                       <div className="flex items-center gap-2 mb-3">
+                        {/* Label Tipe Program (Wakaf/Donasi) */}
                         {isWakafProgram ? (
                           <div className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
                             <BookOpen size={12} /> Wakaf
@@ -344,9 +347,12 @@ function ProgramsContent() {
                           </div>
                         )}
                         
-                        <div className="bg-gray-50 text-gray-500 border border-gray-200 text-[9px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider shadow-sm">
-                          {getCategoryLabel(campaign.category_id)}
-                        </div>
+                        
+                        {!isWakafProgram && (
+                          <div className="bg-gray-50 text-gray-500 border border-gray-200 text-[9px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider shadow-sm">
+                            {getCategoryLabel(campaign.category_id)}
+                          </div>
+                        )}
                       </div>
 
                       <h3 className={`text-lg font-bold line-clamp-2 leading-snug text-[#2A1B33] transition-colors ${isWakafTheme ? 'group-hover:text-emerald-600' : 'group-hover:text-[#7C3996]'}`}>

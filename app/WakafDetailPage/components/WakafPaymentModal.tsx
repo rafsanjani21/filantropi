@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation"; // 🔥 1. Import useRouter
 import { X, Copy, Landmark, AlertCircle, Clock } from "lucide-react";
 import toast from "react-hot-toast";
 import WakafSuccessModal from "./WakafSuccessModal"; 
@@ -21,6 +22,7 @@ export default function WakafPaymentModal({
   isProcessing,
   transactionData,
 }: WakafPaymentModalProps) {
+  const router = useRouter(); // 🔥 2. Panggil router
   const [hasCopiedCode, setHasCopiedCode] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
@@ -33,8 +35,10 @@ export default function WakafPaymentModal({
         onClose={() => {
           setShowConfirmation(false);
           setHasCopiedCode(false);
-          onClose();
-          window.location.reload();
+          onClose(); // Tutup modal panduan
+          
+          // 🔥 3. Hapus window.location.reload() dan ganti dengan ini:
+          router.push("/ProfilePage/HistoryWakafPage"); 
         }} 
       />
     );
@@ -153,10 +157,7 @@ export default function WakafPaymentModal({
                 Nomor Rekening:
               </p>
               
-              {/* 🔥 PERBAIKAN DI SINI: Tambah gap-2, ubah background jadi putih agar lebih jelas seperti desain Anda 🔥 */}
               <div className="flex items-center justify-between gap-2 bg-white border border-gray-200 rounded-xl p-2.5 shadow-sm">
-                
-                {/* 🔥 Ubah text-xl jadi text-lg, dan tracking-widest jadi tracking-wider agar muat di layar HP 🔥 */}
                 <span className="text-lg font-black text-emerald-700 tracking-wider">
                   {accountNumber}
                 </span>
@@ -168,7 +169,6 @@ export default function WakafPaymentModal({
                       "Nomor rekening berhasil disalin!"
                     )
                   }
-                  // 🔥 Tambah shrink-0 agar tombol salin tidak tertekan/mengecil 🔥
                   className="shrink-0 p-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Copy size={18} />
@@ -191,7 +191,6 @@ export default function WakafPaymentModal({
                 Salin kode di bawah ini dan tempel di kolom <b>"Berita / Catatan"</b> saat transfer.
               </p>
               
-              {/* 🔥 PERBAIKAN: Kotak Kode Transaksi Ditumpuk Atas Bawah 🔥 */}
               <div className="flex flex-col items-center bg-white border-2 border-amber-200 rounded-xl p-3 shadow-sm gap-3 w-full">
                 <span className="text-sm font-black text-amber-900 tracking-widest break-all text-center w-full">
                   {transactionCode}

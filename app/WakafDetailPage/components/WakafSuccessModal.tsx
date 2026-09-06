@@ -1,7 +1,7 @@
 "use client";
 
 import { Clock, CheckCircle2 } from "lucide-react";
-
+import { useRouter } from "next/navigation";
 type WakafSuccessModalProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -9,6 +9,7 @@ type WakafSuccessModalProps = {
 
 export default function WakafSuccessModal({ isOpen, onClose }: WakafSuccessModalProps) {
   if (!isOpen) return null;
+  const router = useRouter();
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
@@ -22,10 +23,13 @@ export default function WakafSuccessModal({ isOpen, onClose }: WakafSuccessModal
         </div>
         <h3 className="text-2xl font-black text-gray-900 mb-2">Sedang Diproses</h3>
         <p className="text-sm font-medium text-gray-500 mb-8 leading-relaxed">
-          Terima kasih, sistem kami sedang memverifikasi transfer wakaf Anda. Silakan tunggu beberapa saat dan refresh halaman secara berkala.
+          Terima kasih, sistem kami sedang memverifikasi transfer wakaf Anda. Silakan tunggu konfirmasi verifikasi melalui email dalam waktu satu jam kedepan.
         </p>
         <button
-          onClick={onClose}
+          onClick={() => {
+            onClose();
+            router.push("/ProfilePage/HistoryWakafPage");
+          }}
           className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black text-lg py-4 rounded-2xl active:scale-[0.98] transition-all shadow-lg flex justify-center items-center gap-2"
         >
           <CheckCircle2 size={24} /> Oke
