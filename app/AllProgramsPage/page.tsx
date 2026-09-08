@@ -130,7 +130,7 @@ function ProgramsContent() {
           campaign.is_wakaf === 1 || 
           String(campaign.is_wakaf).toLowerCase() === "true" || 
           String(campaign.is_wakaf) === "1" ||
-          (campaign.campaign_code && String(campaign.campaign_code).toLowerCase().includes("wkf"));
+          (campaign.campaign_code && String(campaign.campaign_code).toLowerCase().includes("fw"));
 
         if (isWakafTheme && !isWakafProgram) return false;
         if (typeFilter === "donasi" && isWakafProgram) return false;

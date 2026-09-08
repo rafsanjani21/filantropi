@@ -20,7 +20,7 @@ export default function CampaignHeader({ campaign, totalCollected }: { campaign:
     campaign.is_wakaf === 1 || 
     String(campaign.is_wakaf).toLowerCase() === "true" || 
     String(campaign.is_wakaf) === "1" ||
-    (campaign.campaign_code && String(campaign.campaign_code).toLowerCase().includes("wkf"));
+    (campaign.campaign_code && String(campaign.campaign_code).toLowerCase().includes("fw"));
   function getCategoryName(category_id: number) {
     const map: Record<number, string> = { 1: "Pendidikan", 2: "Kesehatan", 3: "Bencana Alam", 4: "Ekonomi", 5: "Umum" };
     return map[category_id] || "Umum";

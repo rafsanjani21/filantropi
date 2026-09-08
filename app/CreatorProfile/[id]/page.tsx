@@ -205,7 +205,7 @@ export default function CreatorProfilePage() {
         camp.is_wakaf === 1 || 
         String(camp.is_wakaf).toLowerCase() === "true" || 
         String(camp.is_wakaf) === "1" ||
-        (camp.campaign_code && camp.campaign_code.toLowerCase().includes("wkf"));
+        (camp.campaign_code && camp.campaign_code.toLowerCase().includes("fw"));
 
       // 🔥 Tentukan URL dinamis
       const targetUrl = isWakafProgram 

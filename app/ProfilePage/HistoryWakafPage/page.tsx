@@ -41,7 +41,7 @@ export default function HistoryWakafPage() {
         }
 
         const formattedData: WakafRecord[] = result.data
-          .filter((item: any) => item.transaction_code && item.transaction_code.includes("wkf"))
+          .filter((item: any) => item.transaction_code && item.transaction_code.includes("fw"))
           .map((item: any) => {
             
             // Format Tanggal
