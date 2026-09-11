@@ -56,7 +56,7 @@ function WakafDetailContent() {
       return;
     }
 
-    // 1. Cek Login
+    // Cek Login
     if (!token || !user) {
       toast.error("Anda harus login terlebih dahulu untuk menunaikan wakaf.", {
         icon: "🔒",
@@ -71,7 +71,7 @@ function WakafDetailContent() {
       return;
     }
 
-    // 2. Cek Role (Penerima Manfaat tidak bisa berwakaf)
+    // Cek Role (Penerima Manfaat tidak bisa berwakaf)
     if (role === "beneficiary") {
       toast.error(
         "Akun Penerima Manfaat tidak dapat menunaikan wakaf. Silakan pakai akun Pengguna Umum.",
@@ -82,17 +82,28 @@ function WakafDetailContent() {
       return;
     }
 
-    // 🔥 3. CEK KELENGKAPAN DATA REKENING 🔥
-    // Memeriksa apakah Pemilik, Bank, atau No. Rekening kosong
-    if (!user.bank_account_name || !user.bank_name || !user.no_req) {
+    // CEK KELENGKAPAN SEMUA DATA PROFIL & REKENING
+    if (
+      !user.nik ||
+      !user.phone_number ||
+      !user.address ||
+      !user.domicile_province ||
+      !user.domicile_city ||
+      !user.domicile_district ||
+      !user.domicile_village ||
+      !user.bank_name ||
+      !user.no_req ||
+      !user.bank_account_name
+    ) {
       toast.error(
-        "Data rekening belum lengkap! Silakan lengkapi Nama Pemilik, Bank, & No. Rekening di profil Anda terlebih dahulu.",
+        "Data profil belum lengkap! Silakan lengkapi profil Anda terlebih dahulu.",
         {
           icon: "⚠️",
           style: { borderRadius: "10px", background: "#333", color: "#fff" },
         },
       );
 
+      // Arahkan ke halaman edit profil
       router.push("/ProfilePage/UserPage");
       return;
     }
