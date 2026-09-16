@@ -27,7 +27,7 @@ export default function WakafCard({ item }: { item: WakafRecord }) {
   const renderStatusBadge = (status: string) => {
     const lowerStatus = status.toLowerCase();
 
-    if (lowerStatus === "diterima") {
+    if (lowerStatus === "success") {
       return (
         <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full border border-emerald-200">
           <CheckCircle2 size={14} />
@@ -63,7 +63,7 @@ export default function WakafCard({ item }: { item: WakafRecord }) {
     <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col relative overflow-hidden group hover:border-emerald-200 transition-colors">
       <div
         className={`absolute left-0 top-0 bottom-0 w-1 ${
-          lowerStatus === "diterima"
+          lowerStatus === "success"
             ? "bg-emerald-500"
             : lowerStatus === "ditolak"
               ? "bg-red-400"
@@ -109,7 +109,7 @@ export default function WakafCard({ item }: { item: WakafRecord }) {
             <span className="text-red-700">
               Wakaf ditolak. Silakan hubungi admin.
             </span>
-          ) : lowerStatus === "diterima" ? (
+          ) : lowerStatus === "success" ? (
             <span className="text-emerald-700">
               Ada pertanyaan terkait wakaf ini?
             </span>
