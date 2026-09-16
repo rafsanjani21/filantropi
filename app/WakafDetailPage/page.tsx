@@ -20,6 +20,7 @@ import WakafPaymentModal from "./components/WakafPaymentModal";
 import WakafBottomBar from "./components/WakafBottomBar";
 import WakafPledgeModal from "./components/WakafPledgeModal";
 import WakafFormModal from "./components/WakafFormModal";
+import NameSelectionModal from "./components/NameSelectionModal";
 
 function WakafDetailContent() {
   const searchParams = useSearchParams();
@@ -37,13 +38,22 @@ function WakafDetailContent() {
     isInitialized,
   } = useCampaignDetail(slug);
 
-  const [isPledgeModalOpen, setIsPledgeModalOpen] = useState(false);
+  // STATE MODAL
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isNameSelectionModalOpen, setIsNameSelectionModalOpen] = useState(false);
+  const [isPledgeModalOpen, setIsPledgeModalOpen] = useState(false);
 
+  // STATE DATA WAKAF
   const [wakafName, setWakafName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [transactionData, setTransactionData] = useState<any>(null);
+  
+  // STATE ATAS NAMA & PEMBAYARAN
+  const [wakafFor, setWakafFor] = useState<"self" | "other">("self");
+  const [representativeName, setRepresentativeName] = useState(""); 
+  const [paymentMethod, setPaymentMethod] = useState<"gateway" | "manual">("gateway");
+  const [transferNotes, setTransferNotes] = useState("");
 
   // LOGIKA PROTEKSI WAKAF (LOGIN, ROLE, DAN KELENGKAPAN REKENING)
   const handleWakafClick = () => {
@@ -56,7 +66,7 @@ function WakafDetailContent() {
       return;
     }
 
-    // Cek Login
+    // 1. Cek Login
     if (!token || !user) {
       toast.error("Anda harus login terlebih dahulu untuk menunaikan wakaf.", {
         icon: "🔒",
@@ -71,7 +81,7 @@ function WakafDetailContent() {
       return;
     }
 
-    // Cek Role (Penerima Manfaat tidak bisa berwakaf)
+    // 2. Cek Role (Penerima Manfaat tidak bisa berwakaf)
     if (role === "beneficiary") {
       toast.error(
         "Akun Penerima Manfaat tidak dapat menunaikan wakaf. Silakan pakai akun Pengguna Umum.",
@@ -82,7 +92,7 @@ function WakafDetailContent() {
       return;
     }
 
-    // CEK KELENGKAPAN SEMUA DATA PROFIL & REKENING
+    // 3. CEK KELENGKAPAN SEMUA DATA PROFIL & REKENING
     if (
       !user.nik ||
       !user.phone_number ||
@@ -102,70 +112,121 @@ function WakafDetailContent() {
           style: { borderRadius: "10px", background: "#333", color: "#fff" },
         },
       );
-
-      // Arahkan ke halaman edit profil
       router.push("/ProfilePage/UserPage");
       return;
     }
 
     toast.dismiss("checking-auth");
 
-    // Jika semua validasi lolos, buka Modal Ikrar
-    setIsPledgeModalOpen(true);
+    // Jika validasi lolos, BUKA MODAL PEMILIHAN NAMA
+    setIsNameSelectionModalOpen(true);
   };
 
+  // LOGIKA SETELAH SETUJU IKRAR (LANJUT KE INPUT NOMINAL)
   const handlePledgeSubmit = (nameFromPledge: any) => {
-    const finalName =
-      nameFromPledge || user?.name || user?.full_name || "Hamba Allah";
+    const finalName = nameFromPledge || user?.name || user?.full_name || "Hamba Allah";
     setWakafName(finalName);
-
     setIsPledgeModalOpen(false);
     setIsFormModalOpen(true);
   };
 
+  // LOGIKA UTAMA TRANSAKSI PEMBAYARAN (GATEWAY & MANUAL)
   const handleFormSubmit = async (formData: any) => {
     setIsSubmitting(true);
     try {
-      const token =
-        localStorage.getItem("access_token") ||
-        sessionStorage.getItem("access_token");
+      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      
+      // 🔥 1. JALUR PAYMENT GATEWAY (XENDIT/MIDTRANS)
+      if (paymentMethod === "gateway") {
+        const GATEWAY_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081";
+        
+        const payloadGateway = {
+          // PASTIKAN AMOUNT DIUBAH JADI ANGKA (NUMBER)
+          amount: Number(formData.amount), 
+          campaign_name: campaign?.title || campaign?.name || "Wakaf",
+          campaign_id: campaign?.id || campaign?.campaign_code,
+          sender_name: wakafName || formData.senderName || user?.full_name,
+          transfer_notes: formData.doa || "Tanpa pesan",
+          user_email: user?.email || "hamba@allah.com"
+        };
 
-      const payload = {
+        // Tambahkan console.log ini untuk mengecek apa yang sebenarnya dikirim ke backend
+        console.log("MENGIRIM DATA KE BACKEND:", payloadGateway);
+
+        const responseGateway = await fetch(`${GATEWAY_URL}/campaigns/create/transaction-wakaf`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payloadGateway),
+        });
+
+        const resultGateway = await responseGateway.json();
+        
+        // 🔥 Penyesuaian pengecekan error berdasarkan respons JSON
+        if (!responseGateway.ok || resultGateway.error === true) {
+          throw new Error(resultGateway.message || "Gagal membuat tagihan otomatis");
+        }
+
+        // 🔥 Mengambil payment_url persis dari objek "data" di JSON respons Anda
+        const paymentUrl = resultGateway.data?.payment_url;
+        
+        if (paymentUrl) {
+          // Arahkan ke URL Pembayaran (Xendit)
+          window.location.href = paymentUrl;
+          return; // Hentikan eksekusi kode di sini agar tidak lanjut ke manual
+        } else {
+          throw new Error("URL Pembayaran tidak ditemukan dari server");
+        }
+      }
+
+      // 🔥 2. JALUR TRANSFER MANUAL (ATAU FALLBACK JIKA GATEWAY ERROR)
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const payloadManual = {
         campaignCode: campaign?.campaign_code || "",
         bankAccountId: "BANK-BSI-01",
         amount: formData.amount,
-        senderName: formData.senderName,
+        senderName: wakafName || formData.senderName,
         senderBank: formData.senderBank,
         senderAccountNumber: formData.senderAccountNumber,
+        transfer_notes: formData.doa || "Tanpa pesan",
       };
 
-      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const response = await fetch(`${API_BASE}/campaigns/transaction/wakaf`, {
+      const responseManual = await fetch(`${API_BASE}/campaigns/transaction/wakaf`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payloadManual),
       });
 
-      const result = await response.json();
+      const resultManual = await responseManual.json();
 
-      if (!response.ok || result.error) {
-        throw new Error(result.message || "Gagal membuat transaksi");
+      if (!responseManual.ok || resultManual.error) {
+        throw new Error(resultManual.message || "Gagal membuat transaksi manual");
       }
 
-      setTransactionData(result.data);
+      setTransactionData(resultManual.data);
       setIsFormModalOpen(false);
       setIsPaymentModalOpen(true);
+
     } catch (err: any) {
       console.error(err);
-      toast.error(
-        err.message || "Terjadi kesalahan sistem saat memproses transaksi",
-        {
-          style: { borderRadius: "16px", fontSize: "13px", fontWeight: "600" },
-        },
-      );
+      
+      // JIKA GATEWAY ERROR, PINDAHKAN OPSI KE MANUAL OTOMATIS
+      if (paymentMethod === "gateway") {
+        toast.error("Sistem otomatis sedang sibuk. Mengalihkan ke Transfer Manual...", {
+          style: { borderRadius: "16px", fontSize: "13px", fontWeight: "600", background: '#333', color: '#fff' },
+        });
+        setPaymentMethod("manual"); 
+      } else {
+        toast.error(
+          err.message || "Terjadi kesalahan sistem saat memproses transaksi",
+          { style: { borderRadius: "16px", fontSize: "13px", fontWeight: "600", background: '#333', color: '#fff' } }
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -204,14 +265,32 @@ function WakafDetailContent() {
     <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-[#F4FBF7] overflow-x-hidden">
       <NavbarDetail />
 
+      {/* Modal Pemilihan Nama */}
+      <NameSelectionModal 
+        isOpen={isNameSelectionModalOpen}
+        onClose={() => setIsNameSelectionModalOpen(false)}
+        onProceed={() => {
+          setIsNameSelectionModalOpen(false);
+          setIsPledgeModalOpen(true);
+        }}
+        userName={user?.full_name || ""}
+        wakafFor={wakafFor}
+        setWakafFor={setWakafFor}
+        representativeName={representativeName}
+        setRepresentativeName={setRepresentativeName}
+      />
+
       {/* Modal Ikrar */}
       <WakafPledgeModal
         isOpen={isPledgeModalOpen}
         onClose={() => setIsPledgeModalOpen(false)}
         onSubmit={handlePledgeSubmit}
+        userName={user?.full_name || "Hamba Allah"} 
+        wakafFor={wakafFor}
+        representativeName={representativeName}
       />
 
-      {/* Modal Form Input */}
+      {/* Modal Form Input Nominal */}
       <WakafFormModal
         isOpen={isFormModalOpen}
         onClose={() => setIsFormModalOpen(false)}
@@ -220,7 +299,7 @@ function WakafDetailContent() {
         currentUser={user}
       />
 
-      {/* Modal Pembayaran Bank */}
+      {/* Modal Instruksi Pembayaran (Khusus Manual) */}
       <WakafPaymentModal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
@@ -239,6 +318,46 @@ function WakafDetailContent() {
         <CampaignHeader campaign={campaign} totalCollected={totalCollected} />
         <CampaignStory story={campaign.story || campaign.description} />
         <DonationHistory history={walletHistory} />
+
+        {/* 🔥 UI PILIHAN METODE PEMBAYARAN 🔥 */}
+        <div className="px-5 mt-6 mb-4">
+          <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm">
+            <h3 className="text-sm font-bold text-gray-800 mb-4">Pilih Metode Pembayaran</h3>
+            
+            <div className="flex flex-col gap-3">
+              {/* Opsi 1: Otomatis */}
+              <label className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all ${paymentMethod === "gateway" ? "border-emerald-600 bg-emerald-50/50" : "border-gray-100 hover:border-emerald-200"}`}>
+                <input type="radio" checked={paymentMethod === "gateway"} onChange={() => setPaymentMethod("gateway")} className="w-5 h-5 text-emerald-600 focus:ring-emerald-500 accent-emerald-600" />
+                <div className="ml-3 flex-1">
+                  <p className={`text-sm font-bold ${paymentMethod === "gateway" ? "text-emerald-900" : "text-gray-700"}`}>Pembayaran Otomatis</p>
+                  <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">Virtual Account, QRIS, E-Wallet (Otomatis Terverifikasi)</p>
+                </div>
+              </label>
+
+              {/* Opsi 2: Manual */}
+              <label className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all ${paymentMethod === "manual" ? "border-emerald-600 bg-emerald-50/50" : "border-gray-100 hover:border-emerald-200"}`}>
+                <input type="radio" checked={paymentMethod === "manual"} onChange={() => setPaymentMethod("manual")} className="w-5 h-5 text-emerald-600 focus:ring-emerald-500 accent-emerald-600" />
+                <div className="ml-3 flex-1">
+                  <p className={`text-sm font-bold ${paymentMethod === "manual" ? "text-emerald-900" : "text-gray-700"}`}>Transfer Bank Manual</p>
+                  <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">Transfer manual & upload bukti transaksi</p>
+                </div>
+              </label>
+            </div>
+            
+            {/* Input Pesan Doa */}
+            <div className="mt-5 pt-4 border-t border-gray-100">
+              <label className="text-xs font-bold text-gray-700 mb-2 block">Pesan / Doa (Opsional)</label>
+              <textarea
+                value={transferNotes}
+                onChange={(e) => setTransferNotes(e.target.value)}
+                placeholder="Tuliskan doa atau pesan Anda..."
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none text-sm text-gray-800 transition-all"
+                rows={2}
+              />
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <WakafBottomBar campaign={campaign} onWakafClick={handleWakafClick} />

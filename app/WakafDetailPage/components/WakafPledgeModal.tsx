@@ -8,13 +8,26 @@ type WakafPledgeModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (wakafName: string) => void;
+  // Tambahan props dari modal sebelumnya
+  userName: string;
+  wakafFor: "self" | "other";
+  representativeName: string;
 };
 
-export default function WakafPledgeModal({ isOpen, onClose, onSubmit }: WakafPledgeModalProps) {
-  const [wakafName, setWakafName] = useState("");
+export default function WakafPledgeModal({ 
+  isOpen, 
+  onClose, 
+  onSubmit,
+  userName,
+  wakafFor,
+  representativeName
+}: WakafPledgeModalProps) {
   const [wakafAgree, setWakafAgree] = useState(false);
 
   if (!isOpen) return null;
+
+  // Tentukan nama final yang akan dicatat sebagai pewakif
+  const finalWakafName = wakafFor === "other" ? representativeName : userName;
 
   const handleSubmit = () => {
     if (!wakafAgree) {
@@ -32,8 +45,7 @@ export default function WakafPledgeModal({ isOpen, onClose, onSubmit }: WakafPle
         },
       });
     }
-    onSubmit(wakafName);
-    setWakafName("");
+    onSubmit(finalWakafName);
     setWakafAgree(false);
   };
 
@@ -93,7 +105,10 @@ export default function WakafPledgeModal({ isOpen, onClose, onSubmit }: WakafPle
                   htmlFor="wakafAgree" 
                   className="text-sm text-emerald-950 leading-relaxed cursor-pointer select-none font-medium italic"
                 >
-                  "Saya berikrar menyerahkan sebagian harta ini sebagai wakaf abadi. Semoga Allah SWT menerima dan menjadikannya pahala jariyah."
+                  "Saya <strong>{userName}</strong> 
+                  {wakafFor === "other" && (
+                    <span> bertindak atas nama / mewakili <strong>{representativeName}</strong>,</span>
+                  )} berikrar menyerahkan harta ini sebagai wakaf abadi. Semoga Allah SWT menerima dan menjadikannya pahala jariyah."
                 </label>
               </div>
             </div>
