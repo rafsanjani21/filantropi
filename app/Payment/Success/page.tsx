@@ -97,9 +97,8 @@ function SuccessContent() {
             <CheckCircle2 size={48} strokeWidth={2.5} />
           </div>
           <p className="text-emerald-50 font-arabic text-2xl mb-2" style={{ fontFamily: "'Scheherazade New', 'Amiri', serif" }}>
-            بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم
+            الحمد لله
           </p>
-          <h1 className="text-2xl font-black text-white tracking-wide">Alhamdulillah</h1>
           <p className="text-emerald-100 text-sm mt-1 font-medium">Pembayaran Anda Telah Berhasil</p>
         </div>
       </div>
@@ -147,10 +146,10 @@ function SuccessContent() {
         {/* Tombol Aksi */}
         <div className="mt-8 space-y-3">
           <button 
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/ProfilePage/HistoryWakafPage")}
             className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-200"
           >
-            <Home size={18} /> Kembali ke Beranda
+            <Home size={18} /> Ke History Wakaf
           </button>
         </div>
       </div>

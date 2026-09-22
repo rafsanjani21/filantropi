@@ -39,8 +39,7 @@ function DetailContent() {
   const [donationType, setDonationType] = useState("Donasi");
   const [wakafName, setWakafName] = useState("");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [showDisburseConfirmModal, setShowDisburseConfirmModal] =
-    useState(false);
+  const [showDisburseConfirmModal, setShowDisburseConfirmModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
@@ -68,26 +67,73 @@ function DetailContent() {
     }
   }, [campaign]);
 
-  const handleSimulatePayment = (amount: number, guestName: string) => {
+  // 🔥 FUNGSI PEMBAYARAN: FULL GATEWAY, TANPA TOKEN, TANPA MANUAL 🔥
+  const handlePaymentSubmit = async (
+    amount: number, 
+    guestName: string, 
+    transferNotes: string = "Tanpa pesan",
+    userEmail: string = ""
+  ) => {
     setIsProcessingPayment(true);
-    const loadingToast = toast.loading("Meneruskan ke pembayaran...");
-    setTimeout(() => {
-      toast.dismiss(loadingToast);
+    const loadingToast = toast.loading("Menghubungkan ke sistem pembayaran...");
+
+    try {
+      const isWakaf = donationType === "Wakaf";
+      const finalName = user ? user.full_name || user.name || "Hamba Allah" : guestName || "Hamba Allah";
+
+      const GATEWAY_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081";
+      
+      const endpoint = isWakaf 
+        ? `${GATEWAY_URL}/campaigns/create/transaction-wakaf`
+        : `${GATEWAY_URL}/campaigns/create/transaction-donasi`;
+
+      const payloadGateway: any = {
+        amount: Number(amount),
+        campaign_name: campaign?.title || campaign?.name || "Donasi",
+        campaign_id: campaign?.id || campaign?.campaign_code,
+        sender_name: isWakaf ? (wakafName || finalName) : finalName,
+        transfer_notes: transferNotes,
+        user_email: user?.email || userEmail || "hamba@allah.com"
+      };
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+          // Authorization Token dihapus sepenuhnya
+        },
+        body: JSON.stringify(payloadGateway),
+      });
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+         throw new Error(`Server bermasalah (Status: ${response.status})`);
+      }
+
+      const result = await response.json();
+
+      if (!response.ok || result.error === true) {
+        throw new Error(result.message || "Gagal membuat tagihan pembayaran");
+      }
+
+      const paymentUrl = result.data?.payment_url;
+      
+      if (paymentUrl) {
+        toast.dismiss(loadingToast);
+        window.location.href = paymentUrl; // Redirect langsung ke Xendit
+      } else {
+        throw new Error("URL Pembayaran tidak ditemukan dari server");
+      }
+
+    } catch (err: any) {
+      console.error("Payment Error:", err);
+      toast.error(err.message || "Terjadi kesalahan sistem saat memproses transaksi", { 
+        id: loadingToast,
+        style: { borderRadius: "16px", fontSize: "13px", fontWeight: "600" }
+      });
+    } finally {
       setIsProcessingPayment(false);
-      setIsModalOpen(false);
-
-      const query = new URLSearchParams();
-      query.append("amount", amount.toString());
-      query.append("campaignId", campaign.id);
-      query.append("donationType", donationType);
-      if (donationType === "Wakaf") query.append("wakafName", wakafName);
-      query.append(
-        "name",
-        user ? user.full_name || user.name || "Orang Baik" : guestName,
-      );
-
-      router.push(`/PaymentSimulation?${query.toString()}`);
-    }, 800);
+    }
   };
 
   const handleDisbursementSubmit = async () => {
@@ -178,19 +224,9 @@ function DetailContent() {
       <PaymentModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        donationType={donationType}
-        wakafName={wakafName}
         currentUser={user}
-        onSubmit={handleSimulatePayment}
+        onSubmit={handlePaymentSubmit}
         isProcessing={isProcessingPayment}
-        onLoginRedirect={() => {
-          sessionStorage.setItem(
-            "redirect_after_login",
-            window.location.pathname + window.location.search,
-          );
-          router.push("/LoginPage/Masuk");
-        }}
-        receiverWallet={receiverWallet}
       />
 
       <DisbursementModal

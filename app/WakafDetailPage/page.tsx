@@ -319,45 +319,6 @@ function WakafDetailContent() {
         <CampaignStory story={campaign.story || campaign.description} />
         <DonationHistory history={walletHistory} />
 
-        {/* 🔥 UI PILIHAN METODE PEMBAYARAN 🔥 */}
-        <div className="px-5 mt-6 mb-4">
-          <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm">
-            <h3 className="text-sm font-bold text-gray-800 mb-4">Pilih Metode Pembayaran</h3>
-            
-            <div className="flex flex-col gap-3">
-              {/* Opsi 1: Otomatis */}
-              <label className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all ${paymentMethod === "gateway" ? "border-emerald-600 bg-emerald-50/50" : "border-gray-100 hover:border-emerald-200"}`}>
-                <input type="radio" checked={paymentMethod === "gateway"} onChange={() => setPaymentMethod("gateway")} className="w-5 h-5 text-emerald-600 focus:ring-emerald-500 accent-emerald-600" />
-                <div className="ml-3 flex-1">
-                  <p className={`text-sm font-bold ${paymentMethod === "gateway" ? "text-emerald-900" : "text-gray-700"}`}>Pembayaran Otomatis</p>
-                  <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">Virtual Account, QRIS, E-Wallet (Otomatis Terverifikasi)</p>
-                </div>
-              </label>
-
-              {/* Opsi 2: Manual */}
-              <label className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all ${paymentMethod === "manual" ? "border-emerald-600 bg-emerald-50/50" : "border-gray-100 hover:border-emerald-200"}`}>
-                <input type="radio" checked={paymentMethod === "manual"} onChange={() => setPaymentMethod("manual")} className="w-5 h-5 text-emerald-600 focus:ring-emerald-500 accent-emerald-600" />
-                <div className="ml-3 flex-1">
-                  <p className={`text-sm font-bold ${paymentMethod === "manual" ? "text-emerald-900" : "text-gray-700"}`}>Transfer Bank Manual</p>
-                  <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">Transfer manual & upload bukti transaksi</p>
-                </div>
-              </label>
-            </div>
-            
-            {/* Input Pesan Doa */}
-            <div className="mt-5 pt-4 border-t border-gray-100">
-              <label className="text-xs font-bold text-gray-700 mb-2 block">Pesan / Doa (Opsional)</label>
-              <textarea
-                value={transferNotes}
-                onChange={(e) => setTransferNotes(e.target.value)}
-                placeholder="Tuliskan doa atau pesan Anda..."
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none text-sm text-gray-800 transition-all"
-                rows={2}
-              />
-            </div>
-          </div>
-        </div>
-
       </div>
 
       <WakafBottomBar campaign={campaign} onWakafClick={handleWakafClick} />
