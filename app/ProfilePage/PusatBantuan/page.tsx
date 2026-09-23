@@ -105,7 +105,7 @@ export default function PusatBantuanPage() {
             </div>
             <div>
               <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-wide">Telepon / WhatsApp</p>
-              <p className="text-sm font-semibold text-emerald-900 mt-0.5">+62 812-3456-7890</p>
+              <p className="text-sm font-semibold text-emerald-900 mt-0.5">+62 877-7014-5898</p>
             </div>
           </a>
 
