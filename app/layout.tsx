@@ -4,6 +4,7 @@ import "./globals.css";
 import I18nProvider from "./I18nProvider"; 
 import { Toaster } from "react-hot-toast";
 import AuthProvider from "./components/ui/root/AuthProvider";
+import WhatsAppButton from "./components/ui/root/WhatsAppButton";
 
 import GlobalLiveDonationBlink from "./components/ui/root/GlobalLiveDonationBlink";
 
@@ -41,6 +42,7 @@ export default function RootLayout({
           <I18nProvider>
             <GlobalLiveDonationBlink />
             {children}
+            <WhatsAppButton />
           </I18nProvider>
         </AuthProvider>
       </body>
