@@ -99,7 +99,7 @@ export default function HistoryWakafPage() {
         <rect width="100%" height="100%" fill="url(#kawung-profile)" />
       </svg>
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push('/ProfilePage')}
           className="hover:bg-white/20 p-2 rounded-full transition cursor-pointer"
         >
           <ArrowLeft size={24} />
