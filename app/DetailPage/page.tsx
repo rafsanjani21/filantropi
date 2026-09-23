@@ -80,7 +80,7 @@ function DetailContent() {
 
     try {
       const isWakaf = donationType === "Wakaf";
-      const finalName = user ? user.full_name || user.name || "Hamba Allah" : guestName || "Hamba Allah";
+      const finalName = guestName || user?.full_name || user?.name || "Hamba Allah";
 
       const GATEWAY_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081";
       

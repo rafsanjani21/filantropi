@@ -99,7 +99,7 @@ function SuccessContent() {
           <p className="text-emerald-50 font-arabic text-2xl mb-2" style={{ fontFamily: "'Scheherazade New', 'Amiri', serif" }}>
             الحمد لله
           </p>
-          <p className="text-emerald-100 text-sm mt-1 font-medium">Pembayaran Anda Telah Berhasil</p>
+          <p className="text-emerald-100 text-sm mt-1 font-medium">Transaksi Anda Telah Berhasil</p>
         </div>
       </div>
 
@@ -149,7 +149,7 @@ function SuccessContent() {
             onClick={() => router.push("/ProfilePage/HistoryWakafPage")}
             className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-200"
           >
-            <Home size={18} /> Ke History Wakaf
+            <Home size={18} /> Ke Riwayat Transaksi
           </button>
         </div>
       </div>
