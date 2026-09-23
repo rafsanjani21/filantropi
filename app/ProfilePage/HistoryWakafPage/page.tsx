@@ -43,7 +43,7 @@ export default function HistoryWakafPage() {
         const formattedData: WakafRecord[] = result.data
           .filter((item: any) => 
             item.transaction_code && 
-            (item.transaction_code.includes("fw") || item.transaction_code.includes("WKF"))
+            (item.transaction_code.includes("fw") || item.transaction_code.includes("WKF") || item.transaction_code.includes("DNS"))
           )
           .map((item: any) => {
             
@@ -80,7 +80,7 @@ export default function HistoryWakafPage() {
   return (
     <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-gray-50 pb-12">
       {/* HEADER */}
-      <div className="bg-emerald-700 px-6 pt-8 pb-6 flex items-center gap-4 sticky top-0 z-50 text-white shadow-md rounded-b-[2rem]">
+      <div className="bg-gradient-to-b from-[#3E1854] via-[#6B2E88] to-[#8A45A8] px-6 pt-8 pb-6 flex items-center gap-4 sticky top-0 z-50 text-white shadow-md rounded-b-[2rem]">
         <svg
         className="absolute inset-0 w-full h-full opacity-[0.06] pointer-events-none"
         preserveAspectRatio="xMidYMid slice"
@@ -105,15 +105,15 @@ export default function HistoryWakafPage() {
           <ArrowLeft size={24} />
         </button>
         <div>
-          <h1 className="text-xl font-black tracking-tight">Riwayat Wakaf</h1>
-          <p className="text-xs text-emerald-100 mt-0.5 font-medium">Catatan amal jariyah Anda</p>
+          <h1 className="text-xl font-black tracking-tight">Riwayat Wakaf/Donasi</h1>
+          <p className="text-xs text-purple-100 mt-0.5 font-medium">Catatan Wakaf dan Donasi Anda</p>
         </div>
       </div>
 
       <div className="px-5 pt-6 flex flex-col gap-6">
         <div>
           <h3 className="text-sm font-bold text-gray-800 mb-4 px-1 flex items-center gap-2">
-            <Receipt size={18} className="text-emerald-600" /> Daftar Transaksi
+            <Receipt size={18} className="text-purple-600" /> Daftar Transaksi
           </h3>
 
           {loading ? (

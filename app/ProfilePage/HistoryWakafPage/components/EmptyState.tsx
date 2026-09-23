@@ -7,12 +7,12 @@ export default function EmptyState({ onAction }: { onAction: () => void }) {
         <Receipt size={32} className="text-gray-300" />
       </div>
       <p className="text-gray-800 font-bold mb-1">Belum Ada Riwayat</p>
-      <p className="text-xs text-gray-500 mb-5">Anda belum menunaikan wakaf apapun.</p>
+      <p className="text-xs text-gray-500 mb-5">Anda belum menunaikan wakaf atau donasi apapun.</p>
       <button 
         onClick={onAction}
-        className="bg-emerald-50 text-emerald-700 font-bold text-sm px-6 py-2.5 rounded-full hover:bg-emerald-100 transition"
+        className="bg-purple-50 text-purple-700 font-bold text-sm px-6 py-2.5 rounded-full hover:bg-purple-100 transition"
       >
-        Mulai Berwakaf
+        Mulai Berwakaf/donasi
       </button>
     </div>
   );

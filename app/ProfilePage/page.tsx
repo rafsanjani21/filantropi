@@ -307,8 +307,8 @@ export default function ProfilePagePenerima() {
               iconBg="bg-[#5B2A73]/10 group-hover:bg-[#5B2A73]"
               iconColor="text-[#5B2A73]"
               hoverBg="hover:bg-[#5B2A73]/[0.04]"
-              title="Riwayat Wakaf"
-              subtitle="Riwayat Wakaf Anda"
+              title="Riwayat"
+              subtitle="Riwayat Wakaf/Donasi Anda"
             />
           </div>
         </div>
