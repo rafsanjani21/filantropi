@@ -72,7 +72,8 @@ function DetailContent() {
     amount: number, 
     guestName: string, 
     transferNotes: string = "Tanpa pesan",
-    userEmail: string = ""
+    userEmail: string = "",
+    idempotencyKey: string = ""
   ) => {
     setIsProcessingPayment(true);
     const loadingToast = toast.loading("Menghubungkan ke sistem pembayaran...");
@@ -93,14 +94,20 @@ function DetailContent() {
         campaign_id: campaign?.id || campaign?.campaign_code,
         sender_name: isWakaf ? (wakafName || finalName) : finalName,
         transfer_notes: transferNotes,
-        user_email: user?.email || userEmail || "hamba@allah.com"
+        user_email: user?.email || userEmail || "hamba@allah.com",
+        ...(idempotencyKey && { idempotency_key: idempotencyKey })
       };
+
+      const token = typeof window !== "undefined" 
+        ? localStorage.getItem("access_token") || sessionStorage.getItem("access_token") 
+        : null;
 
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
-          // Authorization Token dihapus sepenuhnya
+          "Content-Type": "application/json",
+          // Jika token ada, masukkan ke dalam header Authorization
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: JSON.stringify(payloadGateway),
       });

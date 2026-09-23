@@ -2,7 +2,6 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  Building2,
   Calendar,
 } from "lucide-react";
 
@@ -24,12 +23,15 @@ export default function WakafCard({ item }: { item: WakafRecord }) {
     }).format(amount);
   };
 
+  // 🔥 Deteksi apakah ini transaksi Donasi berdasarkan ID
+  const isDonasi = item.id.toUpperCase().includes("DNS");
+
   const renderStatusBadge = (status: string) => {
     const lowerStatus = status.toLowerCase();
 
     if (lowerStatus === "success") {
       return (
-        <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full border border-emerald-200">
+        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border ${isDonasi ? "bg-purple-100 text-purple-700 border-purple-200" : "bg-emerald-100 text-emerald-700 border-emerald-200"}`}>
           <CheckCircle2 size={14} />
           <span className="text-[10px] font-bold uppercase tracking-wider">
             {status}
@@ -59,12 +61,19 @@ export default function WakafCard({ item }: { item: WakafRecord }) {
 
   const lowerStatus = item.status.toLowerCase();
 
+  // Ubah format string bawaan menjadi tanggal dan jam
+  const dateObj = new Date(item.date); 
+  const formattedDate = dateObj.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+  const formattedTime = dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+
   return (
-    <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col relative overflow-hidden group hover:border-emerald-200 transition-colors">
+    <div className={`bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col relative overflow-hidden group transition-colors ${isDonasi ? "hover:border-purple-200" : "hover:border-emerald-200"}`}>
+      
+      {/* Garis Penanda di Kiri (Berubah warna sesuai tipe dan status) */}
       <div
         className={`absolute left-0 top-0 bottom-0 w-1 ${
           lowerStatus === "success"
-            ? "bg-emerald-500"
+            ? isDonasi ? "bg-purple-500" : "bg-emerald-500"
             : lowerStatus === "ditolak"
               ? "bg-red-400"
               : "bg-amber-400"
@@ -86,11 +95,11 @@ export default function WakafCard({ item }: { item: WakafRecord }) {
       <div className="flex items-center gap-4 text-xs font-medium text-gray-500 mb-4 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
         <div className="flex items-center gap-1.5">
           <Calendar size={14} className="text-gray-400" />
-          {item.date}
+          {formattedDate}
         </div>
         <div className="flex items-center gap-1.5">
-          <Building2 size={14} className="text-gray-400" />
-          Transfer Bank
+          <Clock size={14} className="text-gray-400" />
+          {formattedTime} WIB
         </div>
       </div>
 
@@ -98,7 +107,7 @@ export default function WakafCard({ item }: { item: WakafRecord }) {
         <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
           Total
         </span>
-        <span className="text-lg font-black text-emerald-700">
+        <span className={`text-lg font-black ${isDonasi ? "text-purple-700" : "text-emerald-700"}`}>
           {formatCurrency(item.amount)}
         </span>
       </div>
@@ -107,11 +116,11 @@ export default function WakafCard({ item }: { item: WakafRecord }) {
         <div className="text-[10px] leading-tight flex-1">
           {lowerStatus === "ditolak" ? (
             <span className="text-red-700">
-              Wakaf ditolak. Silakan hubungi admin.
+              {isDonasi ? "Donasi ditolak." : "Wakaf ditolak."} Silakan hubungi admin.
             </span>
           ) : lowerStatus === "success" ? (
-            <span className="text-emerald-700">
-              Ada pertanyaan terkait wakaf ini?
+            <span className={isDonasi ? "text-purple-700" : "text-emerald-700"}>
+              {isDonasi ? "Ada pertanyaan terkait donasi ini?" : "Ada pertanyaan terkait wakaf ini?"}
             </span>
           ) : (
             <span className="text-amber-700">
@@ -124,8 +133,8 @@ export default function WakafCard({ item }: { item: WakafRecord }) {
           <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-0.5 text-end">
             Hubungi Nomor
           </p>
-          <p className="text-sm font-bold text-emerald-700">
-            {item.contact_number}
+          <p className={`text-sm font-bold ${isDonasi ? "text-purple-700" : "text-emerald-700"}`}>
+            {isDonasi ? "087770145898" : item.contact_number}
           </p>
         </div>
       </div>

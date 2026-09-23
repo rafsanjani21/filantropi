@@ -60,7 +60,7 @@ export default function HistoryWakafPage() {
               id: item.transaction_code !== "-" ? item.transaction_code : item.id.substring(0, 8).toUpperCase(),
               campaign_title: item.campaign_name,
               amount: item.amount,
-              date: formattedDate,
+              date: item.created_at,
               status: item.status || "Diproses",
               contact_number: item.contact_number || "-",
             };
