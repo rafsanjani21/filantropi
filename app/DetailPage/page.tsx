@@ -10,10 +10,8 @@ import { apiFetch } from "@/lib/api";
 
 import { useCampaignDetail } from "./hooks/useCampaignDetail";
 import NavbarDetail from "./components/navbar";
-import PaymentModal from "./components/PaymentModal";
 import DisbursementModal from "./components/DisbursementModal";
 import ReportModal from "./components/ReportModal";
-
 import CampaignBanner from "./components/CampaignBanner";
 import CampaignHeader from "./components/CampaignHeader";
 import CampaignStory from "./components/CampaignStory";
@@ -35,23 +33,18 @@ function DetailContent() {
     user,
   } = useCampaignDetail(slug);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [donationType, setDonationType] = useState("Donasi");
-  const [wakafName, setWakafName] = useState("");
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showDisburseConfirmModal, setShowDisburseConfirmModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
+  // Fitur Auto-Open Donate (Dari halaman luar)
   useEffect(() => {
     const isUnlimitedTime = !campaign?.end_date;
     const daysLeft = isUnlimitedTime
       ? null
       : Math.max(
           0,
-          Math.ceil(
-            (new Date(campaign.end_date).getTime() - Date.now()) / 86400000,
-          ),
+          Math.ceil((new Date(campaign.end_date).getTime() - Date.now()) / 86400000),
         );
 
     if (
@@ -61,87 +54,11 @@ function DetailContent() {
     ) {
       sessionStorage.removeItem("auto_open_donate");
       setTimeout(() => {
-        setDonationType(campaign?.is_wakaf ? "Wakaf" : "Donasi");
-        setIsModalOpen(true);
+        // Redirect langsung ke halaman form alih-alih membuka modal
+        router.push(`/DetailPage/FormDonasiPage?slug=${campaign?.slug}`);
       }, 500);
     }
-  }, [campaign]);
-
-  // 🔥 FUNGSI PEMBAYARAN: FULL GATEWAY, TANPA TOKEN, TANPA MANUAL 🔥
-  const handlePaymentSubmit = async (
-    amount: number, 
-    guestName: string, 
-    transferNotes: string = "Tanpa pesan",
-    userEmail: string = "",
-    idempotencyKey: string = ""
-  ) => {
-    setIsProcessingPayment(true);
-    const loadingToast = toast.loading("Menghubungkan ke sistem pembayaran...");
-
-    try {
-      const isWakaf = donationType === "Wakaf";
-      const finalName = guestName || user?.full_name || user?.name || "Hamba Allah";
-
-      const GATEWAY_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081";
-      
-      const endpoint = isWakaf 
-        ? `${GATEWAY_URL}/campaigns/create/transaction-wakaf`
-        : `${GATEWAY_URL}/campaigns/create/transaction-donasi`;
-
-      const payloadGateway: any = {
-        amount: Number(amount),
-        campaign_name: campaign?.title || campaign?.name || "Donasi",
-        campaign_id: campaign?.id || campaign?.campaign_code,
-        sender_name: isWakaf ? (wakafName || finalName) : finalName,
-        transfer_notes: transferNotes,
-        user_email: user?.email || userEmail || "hamba@allah.com",
-        ...(idempotencyKey && { idempotency_key: idempotencyKey })
-      };
-
-      const token = typeof window !== "undefined" 
-        ? localStorage.getItem("access_token") || sessionStorage.getItem("access_token") 
-        : null;
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Jika token ada, masukkan ke dalam header Authorization
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify(payloadGateway),
-      });
-
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-         throw new Error(`Server bermasalah (Status: ${response.status})`);
-      }
-
-      const result = await response.json();
-
-      if (!response.ok || result.error === true) {
-        throw new Error(result.message || "Gagal membuat tagihan pembayaran");
-      }
-
-      const paymentUrl = result.data?.payment_url;
-      
-      if (paymentUrl) {
-        toast.dismiss(loadingToast);
-        window.location.href = paymentUrl; // Redirect langsung ke Xendit
-      } else {
-        throw new Error("URL Pembayaran tidak ditemukan dari server");
-      }
-
-    } catch (err: any) {
-      console.error("Payment Error:", err);
-      toast.error(err.message || "Terjadi kesalahan sistem saat memproses transaksi", { 
-        id: loadingToast,
-        style: { borderRadius: "16px", fontSize: "13px", fontWeight: "600" }
-      });
-    } finally {
-      setIsProcessingPayment(false);
-    }
-  };
+  }, [campaign, router]);
 
   const handleDisbursementSubmit = async () => {
     setIsSubmittingReport(true);
@@ -228,14 +145,6 @@ function DetailContent() {
     <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-[#FBF8F3] overflow-x-hidden">
       <NavbarDetail />
 
-      <PaymentModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        currentUser={user}
-        onSubmit={handlePaymentSubmit}
-        isProcessing={isProcessingPayment}
-      />
-
       <DisbursementModal
         isOpen={showDisburseConfirmModal}
         onClose={() => setShowDisburseConfirmModal(false)}
@@ -267,8 +176,8 @@ function DetailContent() {
         campaign={campaign}
         isCampaignOwner={isCampaignOwner}
         onDonate={() => {
-          setDonationType(campaign?.is_wakaf ? "Wakaf" : "Donasi");
-          setIsModalOpen(true);
+          // 🔥 Redirect langsung ke FormDonasiPage!
+          router.push(`/DetailPage/FormDonasiPage?slug=${campaign?.slug}`);
         }}
         onDisburse={() => setShowDisburseConfirmModal(true)}
         onReport={() => setShowReportModal(true)}
