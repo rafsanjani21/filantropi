@@ -1,4 +1,4 @@
-// 🔥 UBAH: Mengambil URL dari .env.local dan menjadikannya 'export'
+
 export const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export async function apiFetch(endpoint: string, options: RequestInit) {
@@ -35,18 +35,18 @@ export async function apiFetch(endpoint: string, options: RequestInit) {
 
   let res = await doFetch(access_token);
 
-  // 🔥 HANDLE TOKEN EXPIRED
+  // HANDLE TOKEN EXPIRED
   if (res.status === 401 && !isNoAuth) {
     const refresh_token = localStorage.getItem("refresh_token") || sessionStorage.getItem("refresh_token") || localStorage.getItem("admin_refresh_token");
 
-    // 🔥 FUNGSI BANTUAN UNTUK LOGOUT PAKSA + NOTIFIKASI
+    // FUNGSI BANTUAN UNTUK LOGOUT PAKSA + NOTIFIKASI
     const forceLogout = () => {
   // 1. DAFTARKAN HALAMAN YANG BOLEH TANPA TOKEN
   const allowedPaths = [
     "/LoginPage", 
     "/LoginPage/Masuk", 
-    "/ProfilePage/PagePenerima/Tipe", // 🔥 TAMBAHKAN INI
-    "/ProfilePage/UserPage"            // 🔥 TAMBAHKAN INI
+    "/ProfilePage/PagePenerima/Tipe", 
+    "/ProfilePage/UserPage" 
   ];
 
   // 2. CEK APAKAH USER SEDANG DI HALAMAN PENDAFTARAN
@@ -59,8 +59,7 @@ export async function apiFetch(endpoint: string, options: RequestInit) {
   localStorage.removeItem("access_token");
   localStorage.removeItem("refresh_token");
   sessionStorage.clear();
-  
-  alert("Sesi Anda telah habis. Silakan login kembali.");
+
   window.location.href = "/LoginPage/Masuk";
 };
 
@@ -94,11 +93,11 @@ export async function apiFetch(endpoint: string, options: RequestInit) {
         localStorage.setItem("access_token", newToken);
       }
 
-      // 🔥 retry request dengan token yang baru
+      // retry request dengan token yang baru
       res = await doFetch(newToken);
       
     } catch {
-      // 🔥 JIKA REFRESH TOKEN GAGAL/HABIS, EKSEKUSI ALERT & LOGOUT
+      //JIKA REFRESH TOKEN GAGAL/HABIS, EKSEKUSI ALERT & LOGOUT
       forceLogout();
       return Promise.reject("Sesi habis");
     }

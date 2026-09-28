@@ -6,7 +6,7 @@ type VaViewProps = {
   vaData: any; 
   amount: number | "";
   selectedMethod: any;
-  transactionType: "donasi" | "wakaf"; // Penentu Tema UI
+  transactionType: "donasi" | "wakaf";
   onBack: () => void;
   onCheckStatus: () => void;
 };

@@ -7,6 +7,7 @@ import AuthProvider from "./components/ui/root/AuthProvider";
 import WhatsAppButton from "./components/ui/root/WhatsAppButton";
 
 import GlobalLiveDonationBlink from "./components/ui/root/GlobalLiveDonationBlink";
+import SessionModal from "./components/ui/root/SessionModal";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -45,6 +46,7 @@ export default function RootLayout({
             <WhatsAppButton />
           </I18nProvider>
         </AuthProvider>
+        <SessionModal />
       </body>
     </html>
   );
