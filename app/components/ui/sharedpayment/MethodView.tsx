@@ -53,10 +53,9 @@ export default function MethodView({ amount, selectedMethod, transactionType, on
       ]
     },
     {
-      title: "Gerai Retail & Paylater",
+      title: "Gerai Retail",
       methods: [
         { id: "INDOMARET", name: "Indomaret", logo: "https://upload.wikimedia.org/wikipedia/commons/4/44/Indomaret.svg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original" },
-        { id: "AKULAKU", name: "Akulaku Paylater", logo: "/logo/akulaku.png" },
       ]
     }
   ];

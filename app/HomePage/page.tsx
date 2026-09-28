@@ -16,7 +16,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
-import UrgentDonation from "./components/urgentdonation";
 import LatestPrograms from "./components/latestprograms";
 
 export default function HomePage() {
@@ -353,7 +352,6 @@ export default function HomePage() {
         {/* Konten Halaman Bawah */}
         <div className="relative w-full -mt-8 z-10">
           <div className="bg-[#FBF8F3] rounded-t-[1.75rem] flex-1 w-full pt-14 flex flex-col gap-8">
-            <UrgentDonation />
             <LatestPrograms />
           </div>
         </div>

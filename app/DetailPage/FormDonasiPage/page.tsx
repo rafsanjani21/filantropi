@@ -90,7 +90,7 @@ export default function FormDonasiPage() {
         : `idemp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       // Mapping Format Bank Backend (Misal: MANDIRI -> MANDIRI_VA)
-      const isRetailOrQR = ["QRIS", "ASTRAPAY", "INDOMARET", "AKULAKU"].includes(selectedMethod.id);
+      const isRetailOrQR = ["QRIS", "ASTRAPAY", "INDOMARET"].includes(selectedMethod.id);
       const apiPaymentMethod = isRetailOrQR ? selectedMethod.id : `${selectedMethod.id}_VA`;
 
       const payload = {
