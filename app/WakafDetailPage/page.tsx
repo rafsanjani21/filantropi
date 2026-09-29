@@ -5,7 +5,6 @@ import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 import Link from "next/link";
-import toast from "react-hot-toast";
 
 // Komponen Detail Utama
 import { useCampaignDetail } from "../DetailPage/hooks/useCampaignDetail";
@@ -23,81 +22,18 @@ function WakafDetailContent() {
   const router = useRouter();
   const slug = searchParams.get("slug");
 
+  // Hapus pemanggilan 'user', 'role', dan 'isInitialized' karena tidak lagi dibutuhkan
   const {
     campaign,
     loading,
     error,
     walletHistory,
     totalCollected,
-    user,
-    role,
-    isInitialized,
   } = useCampaignDetail(slug);
 
-  // LOGIKA PROTEKSI WAKAF (LOGIN, ROLE, DAN KELENGKAPAN REKENING)
+  // LOGIKA PROTEKSI DIHAPUS - Akses Publik / Guest Checkout
   const handleWakafClick = () => {
-    const token =
-      localStorage.getItem("access_token") ||
-      sessionStorage.getItem("access_token");
-
-    if (token && !isInitialized) {
-      toast.loading("Memeriksa sesi login...", { id: "checking-auth" });
-      return;
-    }
-
-    // 1. Cek Login
-    if (!token || !user) {
-      toast.error("Anda harus login terlebih dahulu untuk menunaikan wakaf.", {
-        icon: "⚠️",
-        style: { borderRadius: "10px", background: "#333", color: "#fff" },
-      });
-
-      sessionStorage.setItem(
-        "redirect_after_login",
-        window.location.pathname + window.location.search,
-      );
-      router.push("/LoginPage/Masuk");
-      return;
-    }
-
-    // 2. Cek Role (Penerima Manfaat tidak bisa berwakaf)
-    if (role === "beneficiary") {
-      toast.error(
-        "Akun Penerima Manfaat tidak dapat menunaikan wakaf. Silakan pakai akun Pengguna Umum.",
-        {
-          style: { borderRadius: "10px", background: "#333", color: "#fff" },
-        }
-      );
-      return;
-    }
-
-    // 3. CEK KELENGKAPAN SEMUA DATA PROFIL & REKENING
-    if (
-      !user.nik ||
-      !user.phone_number ||
-      !user.address ||
-      !user.domicile_province ||
-      !user.domicile_city ||
-      !user.domicile_district ||
-      !user.domicile_village ||
-      !user.bank_name ||
-      !user.no_req ||
-      !user.bank_account_name
-    ) {
-      toast.error(
-        "Data profil belum lengkap! Silakan lengkapi profil Anda terlebih dahulu.",
-        {
-          icon: "📝",
-          style: { borderRadius: "10px", background: "#333", color: "#fff" },
-        }
-      );
-      router.push("/ProfilePage/UserPage");
-      return;
-    }
-
-    toast.dismiss("checking-auth");
-
-    // Lolos validasi -> Redirect ke halaman Flow Form Wakaf
+    // Langsung arahkan ke halaman Form Wakaf tanpa validasi profil/login
     router.push(`/WakafDetailPage/FormWakafPage?slug=${campaign?.slug}`);
   };
 

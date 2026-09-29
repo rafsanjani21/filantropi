@@ -5,15 +5,18 @@ type NameSelectionViewProps = {
   setWakafFor: (v: "self" | "other") => void;
   representativeName: string;
   setRepresentativeName: (v: string) => void;
+  name: string;
+  setName: (v: string) => void;
   onNext: () => void;
   onBack: () => void;
 };
 
-export default function NameSelectionView({ wakafFor, setWakafFor, representativeName, setRepresentativeName, onNext, onBack }: NameSelectionViewProps) {
+export default function NameSelectionView({ 
+  wakafFor, setWakafFor, representativeName, setRepresentativeName, name, setName, onNext, onBack 
+}: NameSelectionViewProps) {
   return (
     <div className="w-full max-w-md mx-auto bg-slate-50 min-h-screen flex flex-col relative animate-in slide-in-from-right-4 duration-300">
       
-      {/* HEADER MODERN (Glassmorphism) */}
       <div className="bg-white/80 backdrop-blur-md px-5 py-4 flex items-center gap-4 sticky top-0 z-20 border-b border-slate-100">
         <button onClick={onBack} className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200 transition-colors">
           <ArrowLeft size={18} />
@@ -29,14 +32,11 @@ export default function NameSelectionView({ wakafFor, setWakafFor, representativ
           </p>
         </div>
 
-        {/* OPSI GRID MODERN */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <button 
             onClick={() => setWakafFor("self")} 
             className={`flex flex-col items-center justify-center p-6 rounded-3xl border-2 transition-all duration-300 ${
-              wakafFor === "self" 
-                ? "border-emerald-500 bg-emerald-50/50 shadow-[0_8px_20px_-6px_rgba(16,185,129,0.2)]" 
-                : "border-slate-100 bg-white hover:border-emerald-200 hover:shadow-sm"
+              wakafFor === "self" ? "border-emerald-500 bg-emerald-50/50 shadow-[0_8px_20px_-6px_rgba(16,185,129,0.2)]" : "border-slate-100 bg-white hover:border-emerald-200 hover:shadow-sm"
             }`}
           >
             <div className={`p-3 rounded-2xl mb-4 transition-colors ${wakafFor === "self" ? "bg-emerald-500 text-white" : "bg-slate-50 text-slate-400"}`}>
@@ -48,9 +48,7 @@ export default function NameSelectionView({ wakafFor, setWakafFor, representativ
           <button 
             onClick={() => setWakafFor("other")} 
             className={`flex flex-col items-center justify-center p-6 rounded-3xl border-2 transition-all duration-300 ${
-              wakafFor === "other" 
-                ? "border-emerald-500 bg-emerald-50/50 shadow-[0_8px_20px_-6px_rgba(16,185,129,0.2)]" 
-                : "border-slate-100 bg-white hover:border-emerald-200 hover:shadow-sm"
+              wakafFor === "other" ? "border-emerald-500 bg-emerald-50/50 shadow-[0_8px_20px_-6px_rgba(16,185,129,0.2)]" : "border-slate-100 bg-white hover:border-emerald-200 hover:shadow-sm"
             }`}
           >
             <div className={`p-3 rounded-2xl mb-4 transition-colors ${wakafFor === "other" ? "bg-emerald-500 text-white" : "bg-slate-50 text-slate-400"}`}>
@@ -60,30 +58,58 @@ export default function NameSelectionView({ wakafFor, setWakafFor, representativ
           </button>
         </div>
 
-        {/* INPUT NAMA ORANG LAIN (Muncul Lembut) */}
-        {wakafFor === "other" && (
+        {/* JIKA MEMILIH DIRI SENDIRI */}
+        {wakafFor === "self" && (
           <div className="animate-in fade-in slide-in-from-top-4 duration-300">
             <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
-              <label className="text-[12px] font-bold text-slate-500 mb-2 block uppercase tracking-wider">Nama Lengkap (Almarhum/Keluarga)</label>
+              <label className="text-[12px] font-bold text-slate-500 mb-2 block uppercase tracking-wider">Nama Lengkap Anda</label>
+              <input 
+                type="text" 
+                value={name} 
+                onChange={(e) => setName(e.target.value)} 
+                placeholder="Tulis nama Anda..." 
+                className="w-full bg-slate-50 border-none rounded-xl p-4 text-[14px] font-bold text-slate-800 outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder-slate-400" 
+              />
+            </div>
+          </div>
+        )}
+
+        {/* JIKA MEMILIH ORANG LAIN */}
+        {wakafFor === "other" && (
+          <div className="animate-in fade-in slide-in-from-top-4 duration-300 space-y-4">
+            <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
+              <label className="text-[12px] font-bold text-slate-500 mb-2 block uppercase tracking-wider">Nama Anda (Pengirim)</label>
+              <input 
+                type="text" 
+                value={name} 
+                onChange={(e) => setName(e.target.value)} 
+                placeholder="Tulis nama Anda..." 
+                className="w-full bg-slate-50 border-none rounded-xl p-4 text-[14px] font-bold text-slate-800 outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder-slate-400" 
+              />
+            </div>
+            
+            <div className="bg-white p-5 rounded-3xl border border-emerald-100 shadow-sm relative overflow-hidden">
+              {/* Garis Aksen Kiri */}
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500"></div>
+              <label className="text-[12px] font-bold text-emerald-600 mb-2 block uppercase tracking-wider">Diwakafkan Untuk</label>
               <input 
                 type="text" 
                 value={representativeName} 
                 onChange={(e) => setRepresentativeName(e.target.value)} 
-                placeholder="Tulis nama lengkap..." 
-                className="w-full bg-slate-50 border-none rounded-xl p-4 text-[14px] font-bold text-slate-800 outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder-slate-400" 
+                placeholder="Nama Almarhum/Keluarga..." 
+                className="w-full bg-emerald-50/50 border-none rounded-xl p-4 text-[14px] font-bold text-slate-800 outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder-slate-400" 
               />
             </div>
           </div>
         )}
       </div>
 
-      {/* FLOATING BOTTOM BUTTON */}
       <div className="fixed bottom-0 w-full max-w-md bg-gradient-to-t from-slate-50 via-slate-50/90 to-transparent p-6 pt-10 z-10 pointer-events-none">
         <button 
           onClick={onNext} 
           className="w-full bg-emerald-600 text-white font-bold text-[15px] py-4 rounded-2xl shadow-xl shadow-emerald-600/20 hover:bg-emerald-700 hover:shadow-emerald-600/40 active:scale-[0.98] transition-all pointer-events-auto"
         >
-          Lanjut ke Ikrar
+          Lanjut ke Nominal
         </button>
       </div>
     </div>

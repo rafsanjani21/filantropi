@@ -28,8 +28,9 @@ export default function PledgeView({ userName, wakafFor, representativeName, onN
             <Quote size={80} />
           </div>
 
-          <h2 className="text-xl font-black text-emerald-800 mb-8 text-center italic font-serif">
-            "Bismillaahirrahmaanirrahiim"
+          {/* LAFADZ BISMILLAH ARAB */}
+          <h2 className="text-3xl font-bold text-emerald-800 mb-8 text-center leading-relaxed font-serif" dir="rtl">
+            بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
           </h2>
           
           <div className="text-[14px] text-slate-600 leading-loose space-y-4 relative z-10">

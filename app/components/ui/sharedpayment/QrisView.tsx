@@ -182,7 +182,7 @@ export default function QrisView({ qrisData, amount, transactionType, onBack, on
 
       <div className="fixed bottom-0 w-full max-w-md bg-white/80 backdrop-blur-xl p-5 border-t border-slate-100 z-30 shadow-[0_-20px_40px_-20px_rgba(0,0,0,0.05)]">
         <button onClick={onCheckStatus} className={`w-full ${theme.bgMain} text-white font-bold text-[15px] py-4 rounded-full shadow-lg ${theme.hoverBtn} active:scale-95 transition-all flex items-center justify-center gap-2`}>
-          Selesai & Cek Status
+          Selesai & Kembali ke Beranda
           <ChevronRight size={18} />
         </button>
       </div>
