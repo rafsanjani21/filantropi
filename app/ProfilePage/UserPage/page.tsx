@@ -59,7 +59,7 @@ export default function UserPage() {
   const [districts, setDistricts] = useState<Region[]>([]);
   const [villages, setVillages] = useState<Region[]>([]);
 
-  // 🔥 STATE FORM DIPERBARUI (Tambah gender)
+  
   const [form, setForm] = useState({
     name: "", gender: "", nik: "", phone_number: "", address: "",
     domicile_province: "", domicile_city: "", domicile_district: "", domicile_village: "",
@@ -138,7 +138,7 @@ export default function UserPage() {
     try {
       const data = await getProfile();
       
-      // 🔥 Data gender ditangkap dari backend
+      
       const loadedForm = {
         name: data.full_name || "", gender: data.gender || "", nik: data.nik || "", phone_number: data.phone_number || "", address: data.address || "",
         domicile_province: data.domicile_province || "", domicile_city: data.domicile_city || "",
@@ -317,7 +317,7 @@ export default function UserPage() {
 
         const regData = new FormData();
         regData.append("full_name", form.name); 
-        regData.append("gender", form.gender); // 🔥 Tambah gender saat daftar
+        regData.append("gender", form.gender); 
         regData.append("role", "user"); 
         regData.append("id_token", idToken);
         if (file) regData.append("profile_image_url", file);
@@ -353,7 +353,7 @@ export default function UserPage() {
       } else {
         const updateData = new FormData();
         updateData.append("full_name", form.name); 
-        updateData.append("gender", form.gender); // 🔥 Tambah gender saat update
+        updateData.append("gender", form.gender); 
         updateData.append("nik", form.nik); 
         updateData.append("phone_number", form.phone_number);
         updateData.append("address", form.address); 
@@ -553,7 +553,7 @@ export default function UserPage() {
         </div>
       </main>
 
-      {/* 🔥 MODAL OVERLAY UNTUK LIVE WEBCAM (TAMPILAN MOBILE) 🔥 */}
+      {/*  MODAL OVERLAY UNTUK LIVE WEBCAM (TAMPILAN MOBILE)  */}
       {activeCamera && (
         <div className="fixed inset-0 z-[150] flex justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="w-full max-w-lg h-full bg-slate-900 flex flex-col relative overflow-hidden shadow-2xl">

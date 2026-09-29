@@ -13,8 +13,8 @@ export default function CampaignHeader({ campaign, totalCollected }: { campaign:
   const isUnlimitedTime = !campaign?.end_date;
   const daysLeft = isUnlimitedTime ? null : Math.max(0, Math.ceil((new Date(campaign.end_date).getTime() - Date.now()) / 86400000));
 
-  // 🔥 DETEKSI WAKAF SEPERTI DI PAGE_4.TSX
-  // 🔥 DETEKSI WAKAF GABUNGAN (Cek is_wakaf ATAU campaign_code)
+  
+  //  DETEKSI WAKAF GABUNGAN (Cek is_wakaf ATAU campaign_code)
   const isWakafProgram = 
     campaign.is_wakaf === true || 
     campaign.is_wakaf === 1 || 
@@ -60,7 +60,7 @@ export default function CampaignHeader({ campaign, totalCollected }: { campaign:
         <div className="flex flex-wrap items-center gap-1.5 shrink-0 justify-end">
           {renderStatusBadge()}
           
-          {/* 🔥 Kategori hanya ditampilkan jika BUKAN program wakaf 🔥 */}
+          {/*  Kategori hanya ditampilkan jika BUKAN program wakaf  */}
           {!isWakafProgram && (
             <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-[#E8B94A]/15 text-[#8A6413] uppercase border border-[#E8B94A]/30 shrink-0">
               {getCategoryName(campaign.category_id)}

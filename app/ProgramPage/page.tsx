@@ -256,7 +256,7 @@ setCampaigns(campaignsWithTotalCollected);
         ) : campaigns.length > 0 ? (
           campaigns.map((campaign) => {
 
-            // 🔥 LOGIKA UNLIMITED TARGET
+            //  LOGIKA UNLIMITED TARGET
             const isUnlimitedTarget = !campaign.target_amount || campaign.target_amount === 0;
             const target = isUnlimitedTarget ? 1 : Number(campaign.target_amount);
 
@@ -306,7 +306,7 @@ setCampaigns(campaignsWithTotalCollected);
                             <div className="flex items-baseline gap-1">
                               <span className="text-sm font-black text-[#5B2A73]">Rp {Number(collected).toLocaleString("id-ID")}</span>
 
-                              {/* 🔥 Sembunyikan pembagi target dana jika Unlimited */}
+                              {/*  Sembunyikan pembagi target dana jika Unlimited */}
                               {!isUnlimitedTarget && (
                                 <span className="text-[10px] text-gray-400 font-normal">
                                   / Rp {target.toLocaleString("id-ID")}
@@ -315,7 +315,7 @@ setCampaigns(campaignsWithTotalCollected);
                             </div>
                           </div>
 
-                          {/* 🔥 Sembunyikan persentase jika Unlimited */}
+                          {/*  Sembunyikan persentase jika Unlimited */}
                           {!isUnlimitedTarget && (
                             <span className="text-xs font-black text-[#5B2A73] bg-[#E8B94A]/15 border border-[#E8B94A]/30 px-2 py-0.5 rounded-md">
                               {progress}%
@@ -323,7 +323,7 @@ setCampaigns(campaignsWithTotalCollected);
                           )}
                         </div>
 
-                        {/* 🔥 Sembunyikan bar persentase jika Unlimited */}
+                        {/*  Sembunyikan bar persentase jika Unlimited */}
                         {!isUnlimitedTarget && (
                           <div className="w-full bg-[#7C3996]/10 h-2.5 rounded-full overflow-hidden">
                             <div

@@ -145,7 +145,7 @@ export default function GalangPage() {
       formData.append("description", form.description);
       formData.append("story", form.story);
 
-      // 🔥 SESUAI GAMBAR DB: Mengirimkan Text "1" atau "0" ke backend
+      //  SESUAI GAMBAR DB: Mengirimkan Text "1" atau "0" ke backend
       const isWakaf = form.donation_type === "wakaf";
       const isDonasi = form.donation_type === "donasi";
 
@@ -393,7 +393,7 @@ export default function GalangPage() {
             required
           />
 
-          {/* 🔥 UI BARU: PILIHAN DONASI ATAU WAKAF 🔥 */}
+          {/* PILIHAN DONASI ATAU WAKAF  */}
           <div className="flex flex-col gap-1.5 w-full">
             <label className="text-sm font-bold text-gray-700 ml-1">Jenis Kampanye</label>
             <div className="grid grid-cols-2 gap-3 mt-1">

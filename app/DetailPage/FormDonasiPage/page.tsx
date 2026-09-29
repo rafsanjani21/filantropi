@@ -100,10 +100,10 @@ export default function FormDonasiPage() {
         sender_phone: email, 
         amount: Number(amount),
         transfer_notes: doa || "Tanpa pesan",
-        payment_method: apiPaymentMethod // 🔥 Dikirim sesuai format v2 (Cth: MANDIRI_VA)
+        payment_method: apiPaymentMethod 
       };
 
-      // 🔥 HIT ENDPOINT V2 UNTUK SEMUA METODE DONASI
+      // HIT ENDPOINT V2 UNTUK SEMUA METODE DONASI
       // Sesuaikan URL jika endpoint Donasi Anda menggunakan '/api/campaigns/...'
       const response = await fetch(`${GATEWAY_URL}/campaigns/create/v2/transaction-donasi`, {
         method: "POST",

@@ -33,6 +33,7 @@ export default function FormWakafPage() {
   // STATE DATA KONTAK & DOA
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [doa, setDoa] = useState("");
   
   const [isProcessing, setIsProcessing] = useState(false);
@@ -43,6 +44,7 @@ export default function FormWakafPage() {
     if (user) {
       if (!name) setName(user.full_name || user.name || "");
       if (!email) setEmail(user.email || "");
+      if (!phone) setPhone(user.phone_number || user.phone || "");
     }
   }, [user]);
 
@@ -96,7 +98,8 @@ export default function FormWakafPage() {
         campaign_id: campaign?.id || campaign?.campaign_code,
         campaign_name: campaign?.title || campaign?.name || "Wakaf",
         sender_name: finalSenderName,
-        sender_email: email, 
+        sender_email: email,
+        sender_phone: phone, 
         amount: Number(amount),
         transfer_notes: doa || "Semoga berkah", 
         payment_method: apiPaymentMethod 
@@ -186,7 +189,10 @@ export default function FormWakafPage() {
         <FormWakafView 
           amount={amount} selectedMethod={selectedMethod} 
           wakafName={wakafFor === "other" && representativeName ? representativeName : (name || "Hamba Allah")}
-          name={name} setName={setName} email={email} setEmail={setEmail} doa={doa} setDoa={setDoa}
+          name={name} setName={setName} 
+          email={email} setEmail={setEmail} 
+          doa={doa} setDoa={setDoa}
+          phone={phone} setPhone={setPhone}
           onSubmit={handleSubmitPayment} isProcessing={isProcessing} onBack={handleBack} onChangeMethod={() => setCurrentView("method")}
         />
       )}

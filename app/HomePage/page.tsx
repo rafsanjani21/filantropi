@@ -196,7 +196,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 🔥 SHORTCUT MENU (DONASI VS WAKAF) 🔥 */}
+        {/*  SHORTCUT MENU (DONASI VS WAKAF)  */}
         <div className="relative -mt-14 z-20 px-5">
           <div className="grid grid-cols-2 gap-3.5">
             {/* 1. Card Donasi Sosial */}

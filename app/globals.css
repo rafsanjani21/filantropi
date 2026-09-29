@@ -16,7 +16,7 @@
   
   /* Font Khusus (Jakarta & Rubik) */
   --font-jakarta: var(--font-jakarta), sans-serif;
-  --font-rubik: var(--font-rubik), sans-serif; /* 🔥 Tambahkan baris ini */
+  --font-rubik: var(--font-rubik), sans-serif;
 }
 
 body {

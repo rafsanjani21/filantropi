@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import { apiFetch } from "@/lib/api";
-// 🔥 1. Import usePathname dari Next.js
+//  1. Import usePathname dari Next.js
 import { usePathname } from "next/navigation";
 
 export default function GlobalLiveDonationBlink() {
-  const pathname = usePathname(); // 🔥 2. Inisialisasi usePathname
+  const pathname = usePathname(); // 2. Inisialisasi usePathname
 
   const [history, setHistory] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -64,9 +64,9 @@ export default function GlobalLiveDonationBlink() {
       clearTimeout(hideTimer);
       clearTimeout(nextTimer);
     };
-  }, [currentIndex, validHistory.length, pathname]); // 🔥 Pantau perubahan URL
+  }, [currentIndex, validHistory.length, pathname]); 
 
-  // 🔥 3. KUNCI UTAMA: Jika URL saat ini bukan "/HomePage", JANGAN render (munculkan) apa pun
+  //  3. KUNCI UTAMA: Jika URL saat ini bukan "/HomePage", JANGAN render (munculkan) apa pun
   if (pathname !== "/HomePage" || validHistory.length === 0) return null;
 
   const donation = validHistory[currentIndex];

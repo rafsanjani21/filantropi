@@ -1,4 +1,4 @@
-import { ArrowLeft, User, Mail, Heart, Check } from "lucide-react"; // Tambahkan Check
+import { ArrowLeft, User, Mail, Heart, Check, Phone } from "lucide-react"; // Tambahkan Check
 
 type FormWakafViewProps = {
   amount: number | "";
@@ -8,6 +8,8 @@ type FormWakafViewProps = {
   setName: (val: string) => void;
   email: string;
   setEmail: (val: string) => void;
+  phone: string;
+  setPhone: (val: string) => void;
   doa: string;
   setDoa: (val: string) => void;
   onSubmit: () => void;
@@ -24,6 +26,8 @@ export default function FormWakafView({
   setName,
   email,
   setEmail,
+  phone,
+  setPhone,
   doa,
   setDoa,
   onSubmit,
@@ -154,7 +158,7 @@ export default function FormWakafView({
               <User size={16} />
             </div>
             <p className="text-[13px] font-bold text-slate-800">
-              Kontak Anda (Untuk Resi)
+              Kontak Anda (Pengirim)
             </p>
           </div>
           <div className="space-y-3">
@@ -172,13 +176,28 @@ export default function FormWakafView({
             </div>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                <Phone size={18} />
+              </div>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  setPhone(val);
+                }}
+                placeholder="08xxxxxxxxxx"
+                className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+              />
+            </div>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                 <Mail size={18} />
               </div>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Alamat Email Anda"
+                placeholder="user123@example.com"
                 className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
               />
             </div>

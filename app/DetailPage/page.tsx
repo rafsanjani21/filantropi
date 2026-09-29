@@ -176,7 +176,7 @@ function DetailContent() {
         campaign={campaign}
         isCampaignOwner={isCampaignOwner}
         onDonate={() => {
-          // 🔥 Redirect langsung ke FormDonasiPage!
+          //  Redirect langsung ke FormDonasiPage!
           router.push(`/DetailPage/FormDonasiPage?slug=${campaign?.slug}`);
         }}
         onDisburse={() => setShowDisburseConfirmModal(true)}

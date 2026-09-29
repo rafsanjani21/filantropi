@@ -1,4 +1,4 @@
-"use client"; // 🔥 Wajib tambahkan ini
+"use client";
 
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
@@ -745,7 +745,7 @@ no_progress_yet: "No Progress Yet",
   }
 };
 
-// 🔥 PROTEKSI NEXT.JS: Cek agar tidak inisialisasi ulang ganda 🔥
+//  PROTEKSI NEXT.JS: Cek agar tidak inisialisasi ulang ganda
 if (!i18n.isInitialized) {
   i18n
     .use(initReactI18next)

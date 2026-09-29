@@ -199,7 +199,7 @@ export default function CreatorProfilePage() {
   <div className="flex flex-col gap-4">
     {creator.campaigns.map((camp) => {
       
-      // 🔥 Deteksi program Wakaf berdasarkan field is_wakaf atau campaign_code
+      //  Deteksi program Wakaf berdasarkan field is_wakaf atau campaign_code
       const isWakafProgram = 
         camp.is_wakaf === true || 
         camp.is_wakaf === 1 || 
@@ -207,7 +207,7 @@ export default function CreatorProfilePage() {
         String(camp.is_wakaf) === "1" ||
         (camp.campaign_code && camp.campaign_code.toLowerCase().includes("fw"));
 
-      // 🔥 Tentukan URL dinamis
+      //  Tentukan URL dinamis
       const targetUrl = isWakafProgram 
         ? `/WakafDetailPage?slug=${camp.slug}` 
         : `/DetailPage?slug=${camp.slug}`;

@@ -23,7 +23,7 @@ export default function WakafCard({ item }: { item: WakafRecord }) {
     }).format(amount);
   };
 
-  // 🔥 Deteksi apakah ini transaksi Donasi berdasarkan ID
+  //  Deteksi apakah ini transaksi Donasi berdasarkan ID
   const isDonasi = item.id.toUpperCase().includes("DNS");
 
   const renderStatusBadge = (status: string) => {

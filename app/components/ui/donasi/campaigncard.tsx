@@ -2,7 +2,7 @@
 
 import "@/lib/i18n"; 
 import Link from "next/link";
-import { Clock, Infinity } from "lucide-react"; // 🔥 Tambahkan Infinity
+import { Clock, Infinity } from "lucide-react"; 
 import { useState } from "react";
 import { useTranslation } from "react-i18next"; 
 

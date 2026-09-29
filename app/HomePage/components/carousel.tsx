@@ -70,7 +70,7 @@ export default function Carousel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, hover]);
 
-  // 🔥 PERBAIKAN 2: Membaca elemen mana yang paling dekat dengan titik tengah layar
+  //  PERBAIKAN 2: Membaca elemen mana yang paling dekat dengan titik tengah layar
   const handleScroll = () => {
     if (!scrollRef.current) return;
     const container = scrollRef.current;

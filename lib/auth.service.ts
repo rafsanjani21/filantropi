@@ -1,4 +1,3 @@
-// 🔥 UBAH: Tambahkan import BASE_URL dari file api.ts Anda
 import { apiFetch, BASE_URL } from "./api";
 
 export const AuthService = {
@@ -40,7 +39,6 @@ export const AuthService = {
     let access_token = localStorage.getItem("access_token");
 
     const doLogout = async (token: string | null) => {
-      // 🔥 UBAH: Gunakan BASE_URL agar dinamis mengikuti .env
       return fetch(`${BASE_URL}/auth/logout`, {
         method: "POST",
         headers: {
@@ -54,7 +52,6 @@ export const AuthService = {
     let res = await doLogout(access_token);
 
     if (res.status === 401) {
-      // 🔥 UBAH: Gunakan BASE_URL agar dinamis mengikuti .env
       const refreshRes = await fetch(
         `${BASE_URL}/auth/refresh-token`,
         {

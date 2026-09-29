@@ -22,7 +22,7 @@ function MasukContent() {
       const id_token = await result.user.getIdToken();
       const name = result.user.displayName || "User";
       
-      // 🔥 ROLE DIKUNCI LANGSUNG SEBAGAI "user" 🔥
+      //  ROLE DIKUNCI LANGSUNG SEBAGAI "user" 
       await smartAuth(id_token, name, "user");
     } catch (err: any) {
       setMessage(err.message || t("auth_fail_process"));

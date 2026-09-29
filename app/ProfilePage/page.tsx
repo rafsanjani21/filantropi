@@ -135,7 +135,7 @@ export default function ProfilePagePenerima() {
       const cleanBaseUrl = BASE_URL.replace(/\/+$/, "");
       let cleanPhotoUrl = photoUrl.replace(/^\/+/, "");
       
-      // 🔥 LOGIKA BARU: Tambahkan "public/" otomatis jika belum ada
+      //  LOGIKA BARU: Tambahkan "public/" otomatis jika belum ada
       if (!cleanPhotoUrl.startsWith("public/")) {
         cleanPhotoUrl = `public/${cleanPhotoUrl}`;
       }

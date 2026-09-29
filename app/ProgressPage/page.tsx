@@ -3,16 +3,16 @@
 import "@/lib/i18n";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
-import { useTranslation } from "react-i18next"; // 🔥 IMPORT I18N
+import { useTranslation } from "react-i18next"; 
 import { ArrowLeft, Clock, FileText, CheckCircle2, Image as ImageIcon, Banknote, Loader2, CircleDashed, XCircle } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
 function ProgressContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { t } = useTranslation(); // 🔥 INISIALISASI I18N
+  const { t } = useTranslation();
   
-  // 🔥 AMBIL ID DARI URL BUKAN SLUG
+  //  AMBIL ID DARI URL BUKAN SLUG
   const campaignId = searchParams.get("id"); 
   
   const [stepperData, setStepperData] = useState<any[]>([]);
@@ -84,7 +84,7 @@ function ProgressContent() {
           <div className="relative border-l-2 border-gray-200 ml-3 md:ml-4 space-y-8 pb-8 mt-4">
             
             {stepperData.map((step, index) => {
-              // 🔥 LOGIKA STATUS YANG MENDUKUNG "NOT_STARTED" & "REJECTED"
+              //  LOGIKA STATUS YANG MENDUKUNG "NOT_STARTED" & "REJECTED"
               const stepType = String(step.type || "").toUpperCase().trim();
               const stepStatus = String(step.status || "").toUpperCase().trim();
 
