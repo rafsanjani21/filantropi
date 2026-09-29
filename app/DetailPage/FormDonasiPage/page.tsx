@@ -26,7 +26,8 @@ export default function FormDonasiPage() {
   const [amount, setAmount] = useState<number | "">("");
   const [selectedMethod, setSelectedMethod] = useState<any>(null);
   const [name, setName] = useState(user?.full_name || user?.name || "");
-  const [email, setEmail] = useState(user?.email || user?.phone_number || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [phone, setPhone] = useState(user?.phone_number || "");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [doa, setDoa] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -97,7 +98,8 @@ export default function FormDonasiPage() {
         campaign_id: campaign?.id || campaign?.campaign_code,
         campaign_name: campaign?.title || campaign?.name || "Donasi",
         sender_name: finalName,
-        sender_phone: email, 
+        sender_phone: phone,
+        sender_email: email,
         amount: Number(amount),
         transfer_notes: doa || "Tanpa pesan",
         payment_method: apiPaymentMethod 
@@ -176,7 +178,9 @@ export default function FormDonasiPage() {
           amount={amount} 
           selectedMethod={selectedMethod} 
           name={name} 
-          setName={setName} 
+          setName={setName}
+          phone={phone}
+          setPhone={setPhone}
           email={email} 
           setEmail={setEmail} 
           isAnonymous={isAnonymous} 
@@ -196,7 +200,7 @@ export default function FormDonasiPage() {
           qrisData={transactionData} 
           amount={amount} 
           onBack={handleBack} 
-          onCheckStatus={() => router.push("/ProfilePage/HistoryWakafPage")}
+          onCheckStatus={() => router.push("/HomePage")}
         />
       )}
 
@@ -207,7 +211,7 @@ export default function FormDonasiPage() {
           amount={amount} 
           selectedMethod={selectedMethod} 
           onBack={handleBack} 
-          onCheckStatus={() => router.push("/ProfilePage/HistoryWakafPage")} 
+          onCheckStatus={() => router.push("/HomePage")} 
         />
       )}
     </>

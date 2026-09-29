@@ -1,4 +1,4 @@
-import { ArrowLeft, User, Mail, Heart } from "lucide-react";
+import { ArrowLeft, User, Mail, Heart, Phone } from "lucide-react";
 
 type FormViewProps = {
   campaign: any;
@@ -6,6 +6,8 @@ type FormViewProps = {
   selectedMethod: any;
   name: string;
   setName: (v: string) => void;
+  phone: string;
+  setPhone: (v: string) => void;
   email: string;
   setEmail: (v: string) => void;
   isAnonymous: boolean;
@@ -19,7 +21,7 @@ type FormViewProps = {
 };
 
 export default function FormView({
-  campaign, amount, selectedMethod, name, setName, email, setEmail, 
+  campaign, amount, selectedMethod, name, setName, phone, setPhone, email, setEmail, 
   isAnonymous, setIsAnonymous, doa, setDoa, onSubmit, isProcessing, onBack, onChangeMethod
 }: FormViewProps) {
   const formatRp = (num: number) => new Intl.NumberFormat("id-ID").format(num);
@@ -100,12 +102,26 @@ export default function FormView({
           )}
 
           <div className="flex items-center bg-slate-50 rounded-2xl px-4 py-1 border border-slate-100 focus-within:border-[#7C3996] transition-colors">
+            <Phone size={18} className="text-slate-400" />
+            <input 
+              type="tel" 
+              value={phone} 
+              onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  setPhone(val);
+                }} 
+              placeholder="08xxxxxxxxxx" 
+              className="w-full bg-transparent border-none p-3 text-[13px] font-bold text-slate-700 outline-none placeholder-slate-400"
+            />
+          </div>
+
+          <div className="flex items-center bg-slate-50 rounded-2xl px-4 py-1 border border-slate-100 focus-within:border-[#7C3996] transition-colors">
             <Mail size={18} className="text-slate-400" />
             <input 
               type="email" 
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
-              placeholder="Email atau WhatsApp" 
+              placeholder="user@example.com" 
               className="w-full bg-transparent border-none p-3 text-[13px] font-bold text-slate-700 outline-none placeholder-slate-400"
             />
           </div>
