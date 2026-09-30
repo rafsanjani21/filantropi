@@ -69,7 +69,8 @@ export default function FormDonasiPage() {
   const handleSubmitPayment = async () => {
     // Validasi Input
     if (!name && !isAnonymous) return toast.error("Nama wajib diisi");
-    if (!email) return toast.error("Email atau No.HP wajib diisi");
+    if (!email) return toast.error("Email wajib diisi");
+    if (!phone) return toast.error("Nomor telepon wajib diisi");
     if (!amount || amount < 1000) return toast.error("Minimal donasi Rp 1.000");
 
     // Validasi Lapis Dua untuk VA

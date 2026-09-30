@@ -78,6 +78,9 @@ export default function FormWakafPage() {
     // Validasi Form Akhir
     if (!name.trim()) return toast.error("Nama wajib diisi untuk bukti resi");
     if (!email.trim() || !email.includes("@")) return toast.error("Email yang valid wajib diisi");
+    if (!phone.trim()) return toast.error("Nomor telepon wajib diisi");
+    if (!amount) return toast.error("Nominal wakaf wajib diisi");
+    if (!selectedMethod) return toast.error("Metode pembayaran wajib dipilih");
     
     setIsProcessing(true);
     const loadingToast = toast.loading("Memproses ikrar wakaf...");
