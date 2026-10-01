@@ -1,13 +1,10 @@
 "use client";
 
-import "@/lib/i18n"; // Proteksi i18n
+import "@/lib/i18n";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { ethers } from "ethers";
 import { AuthService } from "@/lib/auth.service";
 import { apiFetch } from "@/lib/api";
-import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
@@ -20,8 +17,6 @@ import {
   CheckCircle2,
   AlertCircle,
   BookOpen,
-  Wallet,
-  Lock,
   X,
 } from "lucide-react";
 
@@ -30,7 +25,6 @@ function KelolaProgramContent() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
 
-  const { getProfile } = useAuth();
   const { t } = useTranslation();
 
   const MAX_FILE_SIZE = 1048576; // Batas 1 MB
@@ -38,7 +32,6 @@ function KelolaProgramContent() {
 
   const [loadingData, setLoadingData] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
-  const [beneficiaryType, setBeneficiaryType] = useState<string>("");
   const [toastAlert, setToastAlert] = useState<{
     message: string;
     type: "success" | "error";
@@ -63,7 +56,6 @@ function KelolaProgramContent() {
     end_date: "",
     description: "",
     story: "",
-    wallet_address: "",
   });
 
   useEffect(() => {
@@ -81,11 +73,6 @@ function KelolaProgramContent() {
       }
 
       try {
-        const profile = await getProfile("beneficiary");
-        const type = profile?.beneficiary_type?.toLowerCase() || "";
-        const isIndividual = type === "individu" || type === "individual";
-        setBeneficiaryType(isIndividual ? "individual" : "organization");
-
         const res = await AuthService.getCampaignDetail(id);
         const data = res.data?.data ?? res.data ?? res;
 
@@ -108,8 +95,6 @@ function KelolaProgramContent() {
           end_date: formattedDate,
           description: data.description || "",
           story: data.story || "",
-          wallet_address:
-            data.wallet_address || data.user?.wallet_address || "",
         });
 
         // Parse foto dari API
@@ -207,19 +192,6 @@ function KelolaProgramContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (beneficiaryType === "individual") {
-      if (!ethers.isAddress(form.wallet_address.trim())) {
-        showToast(
-          t(
-            "invalid_wallet_error",
-            "Alamat Wallet tidak valid! Pastikan formatnya 0x...",
-          ),
-          "error",
-        );
-        return;
-      }
-    }
-
     setSubmitLoading(true);
 
     try {
@@ -232,10 +204,6 @@ function KelolaProgramContent() {
       // Tetap kirim string kosong jika target_amount dan end_date kosong (berarti unlimited)
       formData.append("target_amount", form.target_amount);
       formData.append("end_date", form.end_date);
-
-      if (beneficiaryType === "individual") {
-        formData.append("wallet_address", form.wallet_address.trim());
-      }
 
       // Kirim foto lama yang tidak dihapus
       existingImages.forEach((url) =>
@@ -407,27 +375,6 @@ function KelolaProgramContent() {
             )}
             required
           />
-
-          {beneficiaryType === "individual" && (
-            <div className="flex flex-col gap-1.5 w-full">
-              <label className="text-sm font-bold text-gray-700 ml-1">
-                {t("wallet_address_label", "Alamat Wallet")}
-              </label>
-              <div className="flex items-center bg-gray-100 border-2 border-gray-200 rounded-2xl px-4 py-3.5 opacity-80 cursor-not-allowed">
-                <div className="text-gray-400">
-                  <Wallet size={18} />
-                </div>
-                <input
-                  type="text"
-                  value={form.wallet_address}
-                  readOnly
-                  placeholder="Memuat wallet dari profil..."
-                  className="ml-3 w-full bg-transparent outline-none text-gray-600 font-mono text-sm cursor-not-allowed"
-                />
-                <Lock size={16} className="text-gray-400 ml-2 shrink-0" />
-              </div>
-            </div>
-          )}
 
           <div className="flex flex-col gap-1.5 w-full">
             <label className="text-sm font-bold text-gray-700 ml-1">

@@ -5,12 +5,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { ethers } from "ethers";
 import { AuthService } from "@/lib/auth.service";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft, Type, Tag, Calendar, FileText, Send,
-  CheckCircle2, AlertCircle, BookOpen, Wallet, Lock, ShieldAlert,
+  CheckCircle2, AlertCircle, BookOpen, Lock, ShieldAlert,
   Clock, X, Plus, UploadCloud, Gift
 } from "lucide-react";
 import BottomNav from "../components/ui/root/BottomNav";
@@ -44,7 +43,6 @@ export default function GalangPage() {
     end_date: "",
     description: "",
     story: "",
-    wallet_address: "",
     donation_type: "donasi", // Default ke Donasi
   });
 
@@ -66,8 +64,6 @@ export default function GalangPage() {
         setBeneficiaryType(isIndividual ? "individual" : "organization");
 
         if (isIndividual) {
-          setForm(prev => ({ ...prev, wallet_address: profile?.wallet_address || "" }));
-
           const res = await AuthService.getMyCampaigns();
           const rawData = res.data || res;
 
@@ -131,13 +127,6 @@ export default function GalangPage() {
       return;
     }
 
-    if (beneficiaryType === "individual") {
-      if (!ethers.isAddress(form.wallet_address.trim())) {
-        showToast(t("invalid_wallet_error", "Alamat wallet tidak valid!"), "error");
-        return;
-      }
-    }
-
     try {
       const formData = new FormData();
       formData.append("category_id", form.category_id);
@@ -145,7 +134,7 @@ export default function GalangPage() {
       formData.append("description", form.description);
       formData.append("story", form.story);
 
-      //  SESUAI GAMBAR DB: Mengirimkan Text "1" atau "0" ke backend
+      // Mengirimkan Text "1" atau "0" ke backend
       const isWakaf = form.donation_type === "wakaf";
       const isDonasi = form.donation_type === "donasi";
 
@@ -158,12 +147,6 @@ export default function GalangPage() {
 
       if (form.end_date.trim() !== "") {
         formData.append("end_date", form.end_date);
-      }
-
-      if (beneficiaryType === "individual") {
-        formData.append("wallet_address", form.wallet_address.trim());
-      } else {
-        formData.append("wallet_address", "");
       }
 
       selectedFiles.forEach((file) => formData.append("image_banner", file));
@@ -519,29 +502,6 @@ export default function GalangPage() {
               />
             </div>
           </div>
-
-          {beneficiaryType === "individual" && (
-            <div className="flex flex-col gap-1.5 w-full pt-2 border-t border-gray-100">
-              <label className="text-sm font-bold text-gray-700 ml-1">{t("wallet_address_label", "Alamat Pencairan (Wallet / Rekening)")}</label>
-              <div className="flex items-center bg-gray-100 border-2 border-gray-200 rounded-2xl px-4 py-3.5 opacity-80 cursor-not-allowed">
-                <div className="text-gray-400">
-                  <Wallet size={18} />
-                </div>
-                <input
-                  type="text"
-                  value={form.wallet_address}
-                  readOnly
-                  placeholder="Memuat dari profil..."
-                  className="ml-3 w-full bg-transparent outline-none text-gray-600 font-mono text-sm cursor-not-allowed"
-                />
-                <Lock size={16} className="text-gray-400 ml-2 shrink-0" />
-              </div>
-              <p className="text-[10px] text-gray-500 font-medium ml-1 flex items-center gap-1 mt-1">
-                <AlertCircle size={12} className="shrink-0" />
-                {t("wallet_address_locked", "Alamat ini otomatis terhubung dari profil Anda dan tidak dapat diubah di sini.")}
-              </p>
-            </div>
-          )}
 
           <button
             type="submit"
