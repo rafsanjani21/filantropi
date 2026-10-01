@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Heart, HandCoins, User, Lock, X } from "lucide-react";
+import { Home, Heart, Newspaper, User, Lock, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -69,10 +69,10 @@ export default function BottomNav() {
       isLocked: isDonasiLocked,
     },
     {
-      name: "Galang",
-      path: "/GalangPage",
-      icon: HandCoins,
-      isLocked: isGalangLocked,
+      name: "Berita",
+      path: "/BeritaPage",
+      icon: Newspaper,
+      isLocked: false,
     },
     {
       name: "Profil",
