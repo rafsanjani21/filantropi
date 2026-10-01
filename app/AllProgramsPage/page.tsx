@@ -15,7 +15,7 @@ import {
 import { AuthService } from "@/lib/auth.service";
 import { useTranslation } from "react-i18next";
 import BottomNav from "../components/ui/root/BottomNav";
-import CampaignCard from "./components/CampaignCard";
+import CampaignCard from "../components/ui/sharedcomponent/CampaignCard";
 
 // Type definisi
 type Campaign = {
@@ -290,7 +290,7 @@ function ProgramsContent() {
 
       {/* LIST / GRID KAMPANYE */}
       {/* Container ini mengubah layout secara dinamis berdasarkan state isGridView */}
-      <div className={`px-6 pt-6 ${isGridView ? "grid grid-cols-2 gap-4" : "flex flex-col gap-5"}`}>
+      <div className={`px-6 pt-6 ${isGridView ? "grid grid-cols-2 gap-2" : "flex flex-col gap-1"}`}>
         {loading ? (
           [1, 2, 3, 4].map((i) => (
             <div key={i} className={`${isGridView ? "h-56" : "h-64"} rounded-3xl animate-pulse border opacity-10 ${isWakafTheme ? "bg-emerald-600 border-emerald-600" : "bg-[#7C3996] border-[#7C3996]"}`} />
@@ -301,9 +301,7 @@ function ProgramsContent() {
               <CampaignCard 
                 key={campaign.id}
                 campaign={campaign}
-                isWakafTheme={isWakafTheme}
-                theme={theme}
-                isGridView={isGridView}
+                variant={isGridView ? "grid" : "list"} 
                 getCategoryLabel={getCategoryLabel}
                 t={t}
                 IMAGE_BASE_URL={IMAGE_BASE_URL}
