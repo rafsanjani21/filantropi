@@ -11,19 +11,23 @@ export default function PusatBantuanPage() {
   const faqs = [
     {
       question: "Bagaimana cara melakukan donasi/wakaf?",
-      answer: "Pilih program donasi atau wakaf yang Anda inginkan, masukkan nominal, dan pilih metode pembayaran (Transfer Bank). Setelah itu, Anda akan mendapatkan rincian nomor rekening tujuan. Pastikan Anda melengkapi profil Anda sebelum berdonasi."
+      answer: "Pilih program donasi atau wakaf yang Anda inginkan, masukkan nominal, lalu selesaikan pembayaran melalui sistem Payment Gateway kami. Anda dapat memilih berbagai metode pembayaran yang tersedia seperti QRIS, Virtual Account (VA), e-Wallet (Gopay/OVO/Dana), atau transfer bank otomatis."
+    },
+    {
+      question: "Apa keuntungan saya login di platform ini?",
+      answer: "Dengan login di platform ini, Anda akan mendapatkan akses penuh ke semua fitur dan layanan yang kami tawarkan, termasuk riwayat donasi, pengaturan profil, dan kemudahan dalam melakukan transaksi di masa depan."
     },
     {
       question: "Apa perbedaan Donasi dan Wakaf di platform ini?",
       answer: "Donasi sosial (Sedekah) digunakan untuk bantuan langsung habis pakai seperti bencana alam atau pangan. Sedangkan Wakaf (Amal Jariyah) digunakan untuk pembangunan aset permanen seperti masjid atau fasilitas umum yang manfaatnya berkelanjutan."
     },
     {
-      question: "Mengapa saya diarahkan untuk mengisi profil sebelum berdonasi?",
-      answer: "Sebagai bentuk kepatuhan terhadap prinsip transparansi dan regulasi keamanan (KYC), kami mewajibkan donatur untuk melengkapi data dasar seperti Nama, NIK, dan Nomor Rekening. Data ini dijamin kerahasiaannya."
+      question: "Mengapa saya diminta untuk mengisi data sebelum berdonasi?",
+      answer: "Sebagai bentuk kepatuhan terhadap prinsip transparansi dan regulasi keamanan (KYC), kami mewajibkan donatur untuk melengkapi data dasar seperti Nama, Nomor Telepon, dan Email. Data ini dijamin kerahasiaannya."
     },
     {
       question: "Berapa lama proses verifikasi pembayaran?",
-      answer: "Proses verifikasi pembayaran biasanya memakan waktu 1x24 jam hari kerja. Sistem kami akan melakukan pengecekan mutasi bank secara otomatis. Status donasi Anda dapat dilihat di riwayat profil Anda."
+      answer: "Karena kami menggunakan sistem terintegrasi (Payment Gateway), verifikasi pembayaran berjalan secara instan dan otomatis (real-time). Anda tidak perlu melakukan konfirmasi manual. Segera setelah Anda membayar, status donasi akan langsung tercatat berhasil di riwayat Anda."
     },
     {
       question: "Apakah donasi bisa dibatalkan atau dikembalikan?",

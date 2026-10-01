@@ -214,8 +214,7 @@ Karena proyek memakai **App Router**, nama folder = URL halaman.
 | `/ProgressPage?id=...` | `app/ProgressPage/page.tsx` | Progres penyaluran dana |
 | `/WakafDetailPage` | `app/WakafDetailPage/page.tsx` | Detail wakaf |
 | `/WakafDetailPage/FormWakafPage` | `app/WakafDetailPage/FormWakafPage/page.tsx` | Alur wakaf |
-| `/LoginPage` | `app/LoginPage/page.tsx` | Pilih masuk/daftar |
-| `/LoginPage/Masuk` | `app/LoginPage/Masuk/page.tsx` | Form login (Google) |
+| `/LoginPage` | `app/LoginPage/page.tsx` | Form login (Google) |
 | `/ProfilePage` | `app/ProfilePage/page.tsx` | Menu profil |
 | `/ProfilePage/UserPage` | `app/ProfilePage/UserPage/page.tsx` | Form pendaftaran donatur |
 | `/ProfilePage/PagePenerima` | `app/ProfilePage/PagePenerima/page.tsx` | Form penerima manfaat |
@@ -261,7 +260,7 @@ Setiap request ke backend lewat helper `apiFetch()` yang otomatis:
 
 1. Menyisipkan header `Authorization: Bearer <token>` — **kecuali** endpoint publik (`/auth/*`, `GET /campaigns/*` non-`me`, `GET /donations/*`) atau body `FormData`.
 2. Jika server menjawab **401 (token kedaluwarsa)** → memanggil `/auth/refresh-token` lalu **mengulang request** dengan token baru.
-3. Jika refresh gagal / tidak ada refresh token → **force logout**: token dibersihkan dan user dialihkan ke `/LoginPage/Masuk`, **kecuali** sedang di halaman pendaftaran (`/LoginPage`, `/ProfilePage/UserPage`, `/ProfilePage/PagePenerima/Tipe`, dll).
+3. Jika refresh gagal / tidak ada refresh token → **force logout**: token dibersihkan dan user dialihkan ke `/LoginPage`.
 4. `SessionModal` (mount di `layout.tsx`) siap menampilkan dialog sesi habis ketika event `sessionExpired` dikirim.
 
 ### 3. Alur Donasi (Pembayaran)

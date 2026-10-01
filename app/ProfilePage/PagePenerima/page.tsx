@@ -107,7 +107,7 @@ export default function PagePenerima() {
       const token = localStorage.getItem("access_token");
       if (!token) {
         console.warn("Token tidak ditemukan, mengarahkan ke halaman login.");
-        router.replace("/masuk"); 
+        router.replace("/LoginPage"); 
         return;
       }
 
@@ -163,7 +163,7 @@ export default function PagePenerima() {
       // PENAMBAHAN: Redirect ke login jika error 401 Unauthorized
       if (error?.message?.includes("401") || error?.status === 401) {
         showToast("Sesi telah habis, silakan login kembali.", "error");
-        setTimeout(() => router.replace("/masuk"), 1500);
+        setTimeout(() => router.replace("LoginPage"), 1500);
       }
     }
   };

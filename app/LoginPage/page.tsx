@@ -1,28 +1,45 @@
 "use client";
 
 import "@/lib/i18n";
-import { ArrowLeft, UserCircle, Users } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { signInWithPopup } from "firebase/auth";
+import { auth, provider } from "@/lib/firebase";
+import { useAuth } from "@/hooks/useAuth";
+import { AlertCircle, ShieldCheck, HelpCircle } from "lucide-react";
+import NavbarLogin from "@/app/LoginPage/components/login/navbar";
 import { useTranslation } from "react-i18next";
+import Link from "next/link";
 
-export default function LoginPage() {
-  const router = useRouter();
+function MasukContent() {
+  const { smartAuth, loading } = useAuth();
+  const [message, setMessage] = useState("");
   const { t } = useTranslation();
 
-  const handleSelectRole = (role: string) => {
-    sessionStorage.setItem("selected_role", role);
-    router.push(`/LoginPage/Masuk?role=${role}`);
+  const handleGoogleAuth = async () => {
+    setMessage("");
+
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const id_token = await result.user.getIdToken();
+      const name = result.user.displayName || "User";
+      
+      // ROLE DIKUNCI LANGSUNG SEBAGAI "user" 
+      await smartAuth(id_token, name, "user");
+    } catch (err: any) {
+      setMessage(err.message || t("auth_fail_process"));
+    }
   };
 
   return (
-    <div className="relative min-h-screen w-full max-w-lg mx-auto flex flex-col bg-gradient-to-b from-[#3E1854] via-[#6B2E88] to-[#8A45A8] shadow-2xl pb-32 overflow-hidden">
+    <div className="min-h-screen w-full max-w-lg mx-auto flex flex-col bg-gradient-to-b from-[#3E1854] via-[#6B2E88] to-[#8A45A8] shadow-2xl overflow-hidden relative">
+      {/* Background Pattern */}
       <svg
-        className="absolute inset-0 w-full h-full opacity-[0.07] pointer-events-none"
+        className="absolute inset-0 w-full h-full opacity-[0.09] pointer-events-none fixed"
         preserveAspectRatio="xMidYMid slice"
         aria-hidden="true"
       >
         <defs>
-          <pattern id="kawung-profile" width="56" height="56" patternUnits="userSpaceOnUse">
+          <pattern id="kawung" width="56" height="56" patternUnits="userSpaceOnUse">
             <g fill="none" stroke="#F3D48A" strokeWidth="1.1">
               <ellipse cx="14" cy="14" rx="12" ry="8" transform="rotate(45 14 14)" />
               <ellipse cx="42" cy="14" rx="12" ry="8" transform="rotate(-45 42 14)" />
@@ -31,60 +48,72 @@ export default function LoginPage() {
             </g>
           </pattern>
         </defs>
-        <rect width="100%" height="100%" fill="url(#kawung-profile)" />
+        <rect width="100%" height="100%" fill="url(#kawung)" />
       </svg>
+      
+      <NavbarLogin />
 
-      <button
-        onClick={() => router.push("/HomePage")}
-        className="absolute top-6 left-6 flex items-center justify-center w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full text-white transition-all cursor-pointer z-50 border border-white/30"
-      >
-        <ArrowLeft size={18} />
-      </button>
+      <main className="flex-1 flex flex-col items-center justify-center px-6 pb-12 mt-6 z-10">
+        
+        {/* KARTU LOGIN */}
+        <div className="w-full bg-white/90 backdrop-blur-md rounded-[2.5rem] shadow-xl p-8 flex flex-col items-center border border-white/20">
+          <div className="relative mb-6 group">
+            <img src="/logo.png" alt="Logo" className="relative w-28 h-auto drop-shadow-md" />
+          </div>
 
-      <div className="w-full max-w-md flex flex-col mt-20 mx-auto px-6">
-        <h1 className="text-3xl text-white font-bold mb-8 text-center drop-shadow-md">
-          {t("choose_role")}
-        </h1>
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-extrabold text-gray-800 flex items-center justify-center gap-2">
+              <ShieldCheck className="text-purple-600 w-6 h-6" /> {t("auth_title")}
+            </h1>
+            <p className="text-gray-500 text-sm mt-2 font-medium">
+              {t("auth_subtitle")}
+            </p>
+          </div>
 
-        <div className="relative flex justify-center items-center mb-12 mx-auto w-full group">
-          <div className="absolute w-36 h-36 bg-white rounded-full blur-xl animate-pulse"></div>
-          <img
-            src="/logo.png"
-            alt="Logo Filantropi"
-            className="relative z-10 w-48 h-auto object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.3)] group-hover:scale-105 group-hover:-translate-y-1 transition-all duration-300"
-          />
+          {message && (
+            <div className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl mb-6 text-sm bg-red-50 text-red-600 border border-red-100">
+              <AlertCircle size={18} className="shrink-0" />
+              <span className="font-medium">{message}</span>
+            </div>
+          )}
+
+          <button
+            onClick={handleGoogleAuth}
+            disabled={loading}
+            className="group relative w-full flex items-center justify-center gap-4 bg-white border-2 border-gray-100 py-4 px-6 rounded-2xl font-bold text-gray-700 transition-all duration-300 hover:border-purple-500 hover:text-purple-700 hover:-translate-y-1 active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm"
+          >
+            {loading ? (
+              <div className="w-6 h-6 border-3 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <>
+                <img src="/google.png" alt="Google" className="w-6 h-6" />
+                <span className="text-sm md:text-md">{t("continue_with_google")}</span>
+              </>
+            )}
+          </button>
         </div>
 
-        {/* Tombol Penerima Manfaat */}
-        <button
-          onClick={() => handleSelectRole("penerima_manfaat")}
-          className="relative z-10 group flex items-center w-full justify-between bg-white border-2 border-purple-500 p-4 rounded-2xl transition-all duration-200 hover:bg-purple-50 hover:border-purple-600 active:bg-purple-100 active:scale-95 touch-manipulation mb-4 cursor-pointer select-none shadow-lg"
-        >
-          <div className="flex items-center gap-4 pointer-events-none">
-            <div className="bg-purple-100 p-2.5 rounded-xl transition-colors group-hover:bg-purple-200">
-              <UserCircle className="w-7 h-7 text-purple-600" />
-            </div>
-            <span className="font-bold text-lg text-purple-700">
-              {t("beneficiary")}
-            </span>
-          </div>
-        </button>
+        {/* MENU PUSAT BANTUAN */}
+        <div className="mt-8 flex flex-col items-center">
+          <p className="text-purple-200/80 text-xs mb-3 font-medium">Mengalami kendala saat masuk?</p>
+          <Link 
+            href="/ProfilePage/PusatBantuan" 
+            className="inline-flex items-center gap-2 text-white text-sm font-bold bg-white/10 hover:bg-white/20 px-5 py-2.5 rounded-full backdrop-blur-sm border border-white/20 transition-all duration-300 active:scale-95 shadow-md"
+          >
+            <HelpCircle size={18} className="text-[#E8B94A]" />
+            Kunjungi Pusat Bantuan
+          </Link>
+        </div>
 
-        {/* Tombol Pengguna Umum */}
-        <button
-          onClick={() => handleSelectRole("user")}
-          className="relative z-10 group flex items-center w-full justify-between bg-white border-2 border-purple-500 p-4 rounded-2xl transition-all duration-200 hover:bg-purple-50 hover:border-purple-600 active:bg-purple-100 active:scale-95 touch-manipulation cursor-pointer select-none shadow-lg"
-        >
-          <div className="flex items-center gap-4 pointer-events-none">
-            <div className="bg-purple-100 p-2.5 rounded-xl transition-colors group-hover:bg-purple-200">
-              <Users className="w-7 h-7 text-purple-600" />
-            </div>
-            <span className="font-bold text-lg text-purple-700">
-              {t("general_user")}
-            </span>
-          </div>
-        </button>
-      </div>
+      </main>
     </div>
+  );
+}
+
+export default function MasukPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#7C3996]" />}>
+      <MasukContent />
+    </Suspense>
   );
 }

@@ -43,8 +43,7 @@ export async function apiFetch(endpoint: string, options: RequestInit) {
     const forceLogout = () => {
   // 1. DAFTARKAN HALAMAN YANG BOLEH TANPA TOKEN
   const allowedPaths = [
-    "/LoginPage", 
-    "/LoginPage/Masuk", 
+    "/LoginPage",  
     "/ProfilePage/PagePenerima/Tipe", 
     "/ProfilePage/UserPage" 
   ];
@@ -60,7 +59,7 @@ export async function apiFetch(endpoint: string, options: RequestInit) {
   localStorage.removeItem("refresh_token");
   sessionStorage.clear();
 
-  window.location.href = "/LoginPage/Masuk";
+  window.location.href = "/LoginPage";
 };
 
     // Jika tidak ada refresh token sama sekali

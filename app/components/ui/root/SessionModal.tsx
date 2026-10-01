@@ -24,7 +24,7 @@ export default function SessionModal() {
 
   const handleRelogin = () => {
     document.body.style.overflow = "auto";
-    window.location.href = "/LoginPage/Masuk"; // Gunakan window.location agar benar-benar me-refresh state aplikasi
+    window.location.href = "/LoginPage";
   };
 
   return (

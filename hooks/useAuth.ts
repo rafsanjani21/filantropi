@@ -59,7 +59,7 @@ export function useAuth() {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       sessionStorage.clear(); 
-      window.location.href = "/LoginPage/Masuk";
+      window.location.href = "/LoginPage";
     }
   };
 
@@ -70,7 +70,7 @@ export function useAuth() {
     } catch (err: any) {
       if (err.message.toLowerCase().includes("unauthorized")) {
         localStorage.removeItem("access_token");
-        window.location.href = "/LoginPage/Masuk";
+        window.location.href = "/LoginPage";
       }
       throw err;
     }
