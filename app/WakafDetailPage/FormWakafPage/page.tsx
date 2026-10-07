@@ -34,6 +34,7 @@ export default function FormWakafPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [nik, setNik] = useState("");
   const [doa, setDoa] = useState("");
   
   const [isProcessing, setIsProcessing] = useState(false);
@@ -196,6 +197,7 @@ export default function FormWakafPage() {
           email={email} setEmail={setEmail} 
           doa={doa} setDoa={setDoa}
           phone={phone} setPhone={setPhone}
+          nik={nik} setNik={setNik}
           onSubmit={handleSubmitPayment} isProcessing={isProcessing} onBack={handleBack} onChangeMethod={() => setCurrentView("method")}
         />
       )}

@@ -1,4 +1,4 @@
-import { ArrowLeft, User, Mail, Heart, Check, Phone } from "lucide-react"; // Tambahkan Check
+import { ArrowLeft, User, Mail, Heart, Check, Phone, CreditCard } from "lucide-react"; 
 
 type FormWakafViewProps = {
   amount: number | "";
@@ -10,6 +10,8 @@ type FormWakafViewProps = {
   setEmail: (val: string) => void;
   phone: string;
   setPhone: (val: string) => void;
+  nik: string;
+  setNik: (val: string) => void;
   doa: string;
   setDoa: (val: string) => void;
   onSubmit: () => void;
@@ -28,6 +30,8 @@ export default function FormWakafView({
   setEmail,
   phone,
   setPhone,
+  nik,
+  setNik,
   doa,
   setDoa,
   onSubmit,
@@ -198,6 +202,24 @@ export default function FormWakafView({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="user123@example.com"
+                className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+              />
+            </div>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                <CreditCard size={18} />
+              </div>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={nik}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  if (val.length <= 16) {
+                    setNik(val);
+                  }
+                }}
+                placeholder="Nomor NIK (Opsional)"
                 className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
               />
             </div>
