@@ -70,7 +70,7 @@ export default function NominalView({ campaign, amount, setAmount, transactionTy
 
         <div className="mb-8 relative">
           <label className="block text-[12px] font-bold text-slate-500 uppercase tracking-widest mb-3">
-            Nominal {theme.title}
+            Input Nominal (Manual) {theme.title}
           </label>
           <div className="relative flex items-center">
             <span className={`absolute left-0 text-3xl font-black ${amount ? "text-slate-800" : "text-slate-300"} transition-colors`}>
