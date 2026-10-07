@@ -11,8 +11,7 @@ type NominalViewProps = {
 };
 
 export default function NominalView({ campaign, amount, setAmount, transactionType, onNext, onBack }: NominalViewProps) {
-  // 🔥 UPDATE: Pilihan cepat diubah mulai dari 500.000 sampai 5.000.000
-  const PRESET_AMOUNTS = [500000, 1000000, 2000000, 3000000, 4000000, 5000000];
+  const PRESET_AMOUNTS = [50000, 100000, 200000, 500000, 1000000, 3000000];
   
   const uiConfig = {
     donasi: {
