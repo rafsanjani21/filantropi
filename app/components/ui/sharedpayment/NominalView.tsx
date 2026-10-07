@@ -70,7 +70,7 @@ export default function NominalView({ campaign, amount, setAmount, transactionTy
 
         <div className="mb-8 relative">
           <label className="block text-[12px] font-bold text-slate-500 uppercase tracking-widest mb-3">
-            Input Nominal (Manual) {theme.title}
+            Masukkan Nominal {theme.title}
           </label>
           <div className="relative flex items-center">
             <span className={`absolute left-0 text-3xl font-black ${amount ? "text-slate-800" : "text-slate-300"} transition-colors`}>
@@ -88,7 +88,7 @@ export default function NominalView({ campaign, amount, setAmount, transactionTy
         </div>
 
         <div>
-          <p className="text-[12px] font-bold text-slate-500 uppercase tracking-widest mb-4">Pilihan Cepat</p>
+          <p className="text-[12px] font-bold text-slate-500 uppercase tracking-widest mb-4">(Atau) Pilihan Cepat</p>
           <div className="grid grid-cols-2 gap-3">
             {PRESET_AMOUNTS.map((preset) => {
               const isSelected = amount === preset;
