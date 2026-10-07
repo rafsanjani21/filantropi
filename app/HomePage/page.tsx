@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import LatestPrograms from "./components/latestprograms";
+import PartnerWakaf from "./components/PartnerWakaf";
 
 export default function HomePage() {
   const router = useRouter();
@@ -193,7 +194,9 @@ export default function HomePage() {
 
           <div className="mt-5">
             <Carousel />
+            <PartnerWakaf />
           </div>
+          
         </div>
 
         {/*  SHORTCUT MENU (DONASI VS WAKAF)  */}

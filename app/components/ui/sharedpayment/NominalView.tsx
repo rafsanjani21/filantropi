@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Award } from "lucide-react";
 import toast from "react-hot-toast";
 
 type NominalViewProps = {
@@ -11,7 +11,8 @@ type NominalViewProps = {
 };
 
 export default function NominalView({ campaign, amount, setAmount, transactionType, onNext, onBack }: NominalViewProps) {
-  const PRESET_AMOUNTS = [10000, 25000, 50000, 100000, 200000, 500000];
+  // 🔥 UPDATE: Pilihan cepat diubah mulai dari 500.000 sampai 5.000.000
+  const PRESET_AMOUNTS = [500000, 1000000, 2000000, 3000000, 4000000, 5000000];
   
   const uiConfig = {
     donasi: {
@@ -106,6 +107,17 @@ export default function NominalView({ campaign, amount, setAmount, transactionTy
               );
             })}
           </div>
+          
+          {/* 🔥 UPDATE: Keterangan Sertifikat Khusus Wakaf */}
+          {transactionType === "wakaf" && (
+            <div className="mt-5 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-start gap-3 shadow-sm">
+              <Award size={22} className="text-emerald-600 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-emerald-700 leading-relaxed">
+                <span className="font-bold block text-[13px] mb-1">Sertifikat Wakaf</span>
+                Dapatkan sertifikat resmi untuk partisipasi wakaf dengan nominal minimal <span className="font-bold">Rp 1.000.000</span>.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

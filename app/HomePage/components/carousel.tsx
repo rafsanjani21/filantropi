@@ -6,34 +6,35 @@ import Image from "next/image";
 const items = [
   {
     id: 1,
+    src: "/gwi.png",
+    title: "Gerakan Wakaf Indonesia",
+    subtitle: "Wakaf untuk pahala abadi",
+  },
+  {
+    id: 2,
     src: "/bandang.jpg",
     title: "Bantu Korban Bencana",
     subtitle: "Ringankan beban mereka hari ini",
   },
   {
-    id: 2,
+    id: 3,
     src: "/donate.jpg",
     title: "Sedekah Setiap Hari",
     subtitle: "Mulai dari Rp1.000",
   },
   {
-    id: 3,
+    id: 4,
     src: "/banjir.jpg",
     title: "Peduli Sesama",
     subtitle: "Kebaikanmu memberi harapan",
   },
   {
-    id: 4,
+    id: 5,
     src: "/donasi.jpg",
     title: "Filantropi Indonesia",
     subtitle: "Mari berbagi bersama",
   },
-  {
-    id: 5,
-    src: "/gwi.png",
-    title: "Gerakan Wakaf Indonesia",
-    subtitle: "Wakaf untuk pahala abadi",
-  },
+  
 ];
 
 export default function Carousel() {
