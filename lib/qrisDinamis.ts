@@ -11,8 +11,16 @@
 export function generateDynamicQris(qrisStatic: string, nominal: number): string {
   if (!qrisStatic) return "";
 
+  // Validasi nominal: harus bilangan bulat positif (mencegah payload EMVCo invalid)
+  if (!Number.isFinite(nominal) || !Number.isInteger(nominal) || nominal <= 0) {
+    throw new Error("Nominal QRIS harus bilangan bulat positif");
+  }
+
   // 1. Ubah Point of Initiation Method: "010211" (Static) menjadi "010212" (Dynamic)
-  let qris = qrisStatic.replace("010211", "010212");
+  //    Hanya ganti tag 01 di awal payload ("000201010211"), bukan substring di mana pun
+  let qris = qrisStatic.startsWith("000201010211")
+    ? qrisStatic.replace("000201010211", "000201010212")
+    : qrisStatic;
 
   // 2. Buang CRC lama (Tag 6304 + 4 karakter di akhir) -> Total 8 karakter terakhir
   const qrisWithoutCrc = qris.slice(0, -8);

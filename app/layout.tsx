@@ -27,6 +27,9 @@ const rubik = Rubik({
 export const metadata: Metadata = {
   title: "Filantropi",
   description: "Website donasi dan wakaf untuk berbagai program sosial dan kemanusiaan.",
+};
+
+export const viewport = {
   colorScheme: "light",
 };
 

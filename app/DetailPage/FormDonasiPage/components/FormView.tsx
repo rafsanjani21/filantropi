@@ -1,4 +1,5 @@
 import { ArrowLeft, User, Mail, Heart, Phone } from "lucide-react";
+import { safeRp } from "@/lib/format";
 
 type FormViewProps = {
   campaign: any;
@@ -24,14 +25,12 @@ export default function FormView({
   campaign, amount, selectedMethod, name, setName, phone, setPhone, email, setEmail, 
   isAnonymous, setIsAnonymous, doa, setDoa, onSubmit, isProcessing, onBack, onChangeMethod
 }: FormViewProps) {
-  const formatRp = (num: number) => new Intl.NumberFormat("id-ID").format(num);
-
   return (
     <div className="w-full max-w-md mx-auto bg-slate-50 min-h-screen flex flex-col relative animate-in slide-in-from-right-4 duration-300">
       
       {/* HEADER */}
       <div className="bg-white/80 backdrop-blur-md px-5 py-4 flex items-center gap-4 sticky top-0 z-20 border-b border-slate-100">
-        <button onClick={onBack} className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200 transition-colors">
+        <button onClick={onBack} disabled={isProcessing} className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200 transition-colors disabled:opacity-50">
           <ArrowLeft size={18} />
         </button>
         <h1 className="font-bold text-slate-800 text-[15px] tracking-wide">Konfirmasi Donasi</h1>
@@ -44,7 +43,7 @@ export default function FormView({
           <div className="absolute -right-10 -top-10 bg-white/10 w-32 h-32 rounded-full opacity-50 blur-2xl"></div>
           
           <p className="text-white/80 text-[12px] font-medium uppercase tracking-wider mb-1 relative z-10">Total Donasi</p>
-          <p className="text-3xl font-black mb-6 relative z-10">Rp {formatRp(Number(amount))}</p>
+          <p className="text-3xl font-black mb-6 relative z-10">Rp {safeRp(amount)}</p>
           
           {/* AREA METODE PEMBAYARAN & LOGO */}
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 flex items-center justify-between border border-white/20 relative z-10">
@@ -68,7 +67,8 @@ export default function FormView({
             
             <button 
               onClick={onChangeMethod} 
-              className="text-[11px] font-bold bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition-colors shrink-0"
+              disabled={isProcessing}
+              className="text-[11px] font-bold bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition-colors shrink-0 disabled:opacity-50"
             >
               UBAH
             </button>
@@ -145,7 +145,7 @@ export default function FormView({
       <div className="fixed bottom-0 w-full max-w-md bg-white p-5 rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.08)] z-30">
         <div className="flex justify-between items-center mb-4 px-2">
           <span className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">Total Pembayaran</span>
-          <span className="font-black text-xl text-[#7C3996]">Rp {formatRp(Number(amount))}</span>
+          <span className="font-black text-xl text-[#7C3996]">Rp {safeRp(amount)}</span>
         </div>
         <button 
           onClick={onSubmit} 

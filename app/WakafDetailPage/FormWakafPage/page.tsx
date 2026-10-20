@@ -4,13 +4,13 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { useCampaignDetail } from "../../DetailPage/hooks/useCampaignDetail";
-import { generateDynamicQris } from "@/lib/qrisDinamis";
+import { useTransactionSubmit } from "@/hooks/useTransactionSubmit";
 
 import NameSelectionView from "./components/NameSelectionView";
 import PledgeView from "./components/PledgeView";
 import NominalView from "../../components/ui/sharedpayment/NominalView";
 import FormWakafView from "./components/FormView";
-import VaView from "../../components/ui/sharedpayment/VaView"; 
+import VaView from "../../components/ui/sharedpayment/VaView";
 import QrisSementara from "../../components/ui/sharedpayment/QrisSementara";
 
 // ⚠️ CARA KEMBALI KE PAYMENT GATEWAY: Buka comment di bawah ini
@@ -24,7 +24,8 @@ export default function FormWakafPage() {
 
   const { campaign, loading, error, user } = useCampaignDetail(slug);
 
-  const QRIS_YAYASAN_STATIS = "00020101021126570011ID.DANA.WWW011893600915348406432302094840643230303UMI51440014ID.CO.QRIS.WWW0215ID10232809145820303UMI5204839853033605802ID5918www.filantropi.net6015Kota Jakarta Ti61051322063049E94";
+  // Logika transaksi (guard, validasi, QRIS, pencatatan gateway) — lihat hooks/useTransactionSubmit.ts
+  const { isProcessing, qrisString, transactionData, submit, resetProcessing } = useTransactionSubmit();
 
   // ⚠️ CARA KEMBALI KE PAYMENT GATEWAY: Pastikan ada opsi "method"
   const [currentView, setCurrentView] = useState<"name" | "nominal" | "pledge" | "method" | "form" | "qris" | "va">("name");
@@ -32,7 +33,7 @@ export default function FormWakafPage() {
   const [wakafFor, setWakafFor] = useState<"self" | "other">("self");
   const [representativeName, setRepresentativeName] = useState("");
   const [amount, setAmount] = useState<number | "">("");
-  
+
   // ⚠️ CARA KEMBALI KE PAYMENT GATEWAY: Ubah nilai default ini jadi null
   const [selectedMethod, setSelectedMethod] = useState<any>({
     id: "QRIS", name: "QRIS Dinamis", logo: "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg"
@@ -43,10 +44,6 @@ export default function FormWakafPage() {
   const [phone, setPhone] = useState("");
   const [nik, setNik] = useState("");
   const [doa, setDoa] = useState("");
-  
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [qrisString, setQrisString] = useState<string>("");
-  const [transactionData, setTransactionData] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
@@ -67,99 +64,26 @@ export default function FormWakafPage() {
     // else if (currentView === "method") setCurrentView("pledge");
     // else if (currentView === "form") setCurrentView("method");
     else if (currentView === "form") setCurrentView("pledge");
-    else if (currentView === "qris" || currentView === "va") setCurrentView("form");
+    else if (currentView === "qris" || currentView === "va") {
+      resetProcessing();
+      setCurrentView("form");
+    }
   };
 
-  const handleSubmitPayment = async () => {
-    if (!name.trim()) return toast.error("Nama wajib diisi");
-    if (!email.trim() || !email.includes("@")) return toast.error("Email wajib diisi");
-    if (!phone.trim()) return toast.error("Nomor telepon wajib diisi");
-    if (!amount) return toast.error("Nominal wajib diisi");
-    
-    setIsProcessing(true);
-    const loadingToast = toast.loading("Memproses ikrar wakaf...");
-
-    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") || sessionStorage.getItem("access_token") : null;
-    const GATEWAY_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081";
-    const idempotencyKey = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `idemp-${Date.now()}`;
-    const finalSenderName = wakafFor === "other" && representativeName.trim() !== "" ? representativeName : name;
-
-    try {
-      /* ====================================================================
-         ⚠️ CARA KEMBALI KE PAYMENT GATEWAY (HAPUS COMMENT BLOK INI, HAPUS BLOK MANUAL DI BAWAHNYA)
-         ====================================================================
-      const isRetailOrQR = ["QRIS", "ASTRAPAY", "INDOMARET", "AKULAKU"].includes(selectedMethod.id);
-      const apiPaymentMethod = isRetailOrQR ? selectedMethod.id : `${selectedMethod.id}_VA`;
-
-      const payload = {
-        campaign_id: campaign?.id || campaign?.campaign_code,
-        campaign_name: campaign?.title || campaign?.name || "Wakaf",
-        sender_name: finalSenderName,
-        sender_email: email,
-        sender_phone: phone, 
-        nik: nik || "",
-        amount: Number(amount),
-        transfer_notes: doa || "Semoga berkah", 
-        payment_method: apiPaymentMethod 
-      };
-
-      const response = await fetch(`${GATEWAY_URL}/campaigns/create/v2/transaction-wakaf`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Idempotency-Key": idempotencyKey,
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-      if (!response.ok || result.error) throw new Error(result.message || "Gagal membuat transaksi Wakaf");
-
-      toast.success("Checkout Wakaf berhasil!", { id: loadingToast });
-      setTransactionData(result.data);
-      setCurrentView(selectedMethod.id === "QRIS" ? "qris" : "va");
-      ==================================================================== */
-
-      // ====================================================================
-      // 🔥 LOGIKA SEMENTARA: QRIS DINAMIS MANUAL
-      // ====================================================================
-      const dynamicQris = generateDynamicQris(QRIS_YAYASAN_STATIS, Number(amount));
-      setQrisString(dynamicQris);
-
-      const payloadManual = {
-        campaign_id: campaign?.id || campaign?.campaign_code,
-        campaign_name: campaign?.title || campaign?.name || "Wakaf",
-        sender_name: finalSenderName,
-        sender_email: email,
-        sender_phone: phone, 
-        nik: nik || "",
-        amount: Number(amount),
-        transfer_notes: doa || "Semoga berkah", 
-        payment_method: "QRIS",
-        payment_code: dynamicQris, 
-      };
-
-      await fetch(`${GATEWAY_URL}/campaigns/create/v2/transaction-wakaf`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Idempotency-Key": idempotencyKey,
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(payloadManual),
-      }).catch((err) => console.warn("Pencatatan background gagal", err));
-
-      setCurrentView("qris");
-      toast.success("Berhasil! Silakan scan QRIS", { id: loadingToast });
-      // ====================================================================
-
-    } catch (err: any) {
-      console.error("Payment Error:", err);
-      toast.error(err.message || "Terjadi kesalahan sistem", { id: loadingToast });
-    } finally {
-      setIsProcessing(false);
-    }
+  const handleSubmitPayment = () => {
+    submit({
+      transactionType: "wakaf",
+      campaignId: campaign?.id || campaign?.campaign_code,
+      campaignName: campaign?.title || campaign?.name || "Wakaf",
+      senderName: wakafFor === "other" && representativeName.trim() !== "" ? representativeName : name,
+      email,
+      phone,
+      amount,
+      transferNotes: doa,
+      extraPayload: { nik: nik || "" },
+      validateExtra: () => (!name.trim() ? "Nama wajib diisi" : null),
+      onShowQris: () => setCurrentView("qris"),
+    });
   };
 
   return (
@@ -167,7 +91,7 @@ export default function FormWakafPage() {
       {currentView === "name" && (
         <NameSelectionView wakafFor={wakafFor} setWakafFor={setWakafFor} representativeName={representativeName} setRepresentativeName={setRepresentativeName} name={name} setName={setName} onNext={() => { if (wakafFor === "self" && !name.trim()) return toast.error("Nama lengkap wajib diisi"); if (wakafFor === "other" && !representativeName.trim()) return toast.error("Nama almarhum/keluarga wajib diisi"); setCurrentView("nominal"); }} onBack={handleBack} />
       )}
-      
+
       {currentView === "nominal" && (
         <NominalView transactionType="wakaf" amount={amount} setAmount={setAmount} onNext={() => { if (!amount || amount < 1000) return toast.error("Minimal wakaf Rp 1.000"); setCurrentView("pledge"); }} onBack={handleBack} />
       )}
@@ -176,16 +100,16 @@ export default function FormWakafPage() {
         // ⚠️ CARA KEMBALI KE PAYMENT GATEWAY: Ubah onNext menjadi setCurrentView("method")
         <PledgeView userName={name || "Hamba Allah"} wakafFor={wakafFor} representativeName={representativeName} onNext={() => setCurrentView("form")} onBack={handleBack} />
       )}
-      
+
       {/* ⚠️ CARA KEMBALI KE PAYMENT GATEWAY: Buka comment MethodView */}
       {/* {currentView === "method" && (
         <MethodView transactionType="wakaf" amount={amount} selectedMethod={selectedMethod} onSelectMethod={(m) => { setSelectedMethod(m); setCurrentView("form"); }} onBack={handleBack} />
       )} */}
-      
+
       {currentView === "form" && (
-        <FormWakafView amount={amount} selectedMethod={selectedMethod} wakafName={wakafFor === "other" && representativeName ? representativeName : (name || "Hamba Allah")} name={name} setName={setName} email={email} setEmail={setEmail} doa={doa} setDoa={setDoa} phone={phone} setPhone={setPhone} nik={nik} setNik={setNik} onSubmit={handleSubmitPayment} isProcessing={isProcessing} onBack={handleBack} 
+        <FormWakafView amount={amount} selectedMethod={selectedMethod} wakafName={wakafFor === "other" && representativeName ? representativeName : (name || "Hamba Allah")} name={name} setName={setName} email={email} setEmail={setEmail} doa={doa} setDoa={setDoa} phone={phone} setPhone={setPhone} nik={nik} setNik={setNik} onSubmit={handleSubmitPayment} isProcessing={isProcessing} onBack={handleBack}
           // ⚠️ CARA KEMBALI KE PAYMENT GATEWAY: Ubah menjadi () => setCurrentView("method")
-          onChangeMethod={() => toast.success("Saat ini kami hanya menerima QRIS sementara.")} 
+          onChangeMethod={() => toast.success("Saat ini kami hanya menerima QRIS sementara.")}
         />
       )}
 

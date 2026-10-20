@@ -1,4 +1,5 @@
 import { ArrowLeft, User, Mail, Heart, Check, Phone, CreditCard } from "lucide-react"; 
+import { safeRp } from "@/lib/format";
 
 type FormWakafViewProps = {
   amount: number | "";
@@ -39,7 +40,6 @@ export default function FormWakafView({
   onBack,
   onChangeMethod,
 }: FormWakafViewProps) {
-  const formatRp = (num: number) => new Intl.NumberFormat("id-ID").format(num);
   const defaultQrisLogo =
     "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg";
 
@@ -114,7 +114,7 @@ export default function FormWakafView({
             Total Penyaluran
           </p>
           <p className="text-3xl font-black mb-6 relative z-10">
-            Rp {formatRp(Number(amount))}
+            Rp {safeRp(amount)}
           </p>
 
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 flex items-center justify-between border border-white/20 relative z-10">
@@ -214,10 +214,9 @@ export default function FormWakafView({
                 inputMode="numeric"
                 value={nik}
                 onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, "");
-                  if (val.length <= 16) {
-                    setNik(val);
-                  }
+                  // Digit saja, di-truncate maksimal 16 karakter (NIK Indonesia)
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 16);
+                  setNik(val);
                 }}
                 placeholder="Nomor NIK (Opsional)"
                 className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"

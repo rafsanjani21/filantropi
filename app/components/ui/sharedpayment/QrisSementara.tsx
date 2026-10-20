@@ -1,6 +1,6 @@
 //dipakai saat payment gateway bermasalah
 
-import { ArrowLeft, ShieldCheck, Wallet, Scan, CheckCircle2, Download, Timer } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Wallet, Scan, CheckCircle2, Download } from "lucide-react";
 import QRCode from "react-qr-code";
 import toast from "react-hot-toast";
 
