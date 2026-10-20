@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans, Rubik } from "next/font/google"; 
 import "./globals.css";
-import I18nProvider from "./I18nProvider"; 
+import I18nProvider from "@/components/providers/I18nProvider";
 import { Toaster } from "react-hot-toast";
-import AuthProvider from "./components/ui/root/AuthProvider";
-import WhatsAppButton from "./components/ui/root/WhatsAppButton";
-
-import GlobalLiveDonationBlink from "./components/ui/root/GlobalLiveDonationBlink";
-import SessionModal from "./components/ui/root/SessionModal";
+import AuthProvider from "@/components/layout/AuthProvider";
+import WhatsAppButton from "@/components/layout/WhatsAppButton";
+import GlobalLiveDonationBlink from "@/components/layout/GlobalLiveDonationBlink";
+import SessionModal from "@/components/layout/SessionModal";
 
 const inter = Inter({
   subsets: ["latin"],

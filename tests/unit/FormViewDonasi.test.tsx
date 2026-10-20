@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import FormView from "@/app/DetailPage/FormDonasiPage/components/FormView";
+import FormView from "@/app/(main)/programs/[slug]/donate/_components/FormView";
 
 const baseProps = {
   campaign: { id: 1, title: "Program Tes" },

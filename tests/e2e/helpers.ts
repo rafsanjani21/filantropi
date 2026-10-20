@@ -71,5 +71,5 @@ export async function mockCampaignApis(
 }
 
 export const SLUG = "program-tes-qa";
-export const DONASI_URL = `/DetailPage/FormDonasiPage?slug=${SLUG}`;
-export const WAKAF_URL = `/WakafDetailPage/FormWakafPage?slug=${SLUG}`;
+export const DONASI_URL = `/programs/${SLUG}/donate`;
+export const WAKAF_URL = `/wakaf/${SLUG}/donate`;

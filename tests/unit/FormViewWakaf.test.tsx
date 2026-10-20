@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import FormWakafView from "@/app/WakafDetailPage/FormWakafPage/components/FormView";
+import FormWakafView from "@/app/(main)/wakaf/[slug]/donate/_components/FormView";
 
 const baseProps = {
   amount: 1000000 as number | "",

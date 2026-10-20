@@ -35,9 +35,9 @@ export function useAuth() {
       sessionStorage.setItem("temp_name", name); 
       
       if (fallbackRole && fallbackRole.toLowerCase().includes("penerima")) {
-         router.replace("/ProfilePage/PagePenerima/Tipe"); 
+         router.replace("/profile/beneficiary/type"); 
       } else {
-         router.replace("/ProfilePage/UserPage");
+         router.replace("/profile/user");
       }
     } finally {
       setLoading(false);
@@ -59,7 +59,7 @@ export function useAuth() {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       sessionStorage.clear(); 
-      window.location.href = "/LoginPage";
+      window.location.href = "/login";
     }
   };
 
@@ -70,7 +70,7 @@ export function useAuth() {
     } catch (err: any) {
       if (err.message.toLowerCase().includes("unauthorized")) {
         localStorage.removeItem("access_token");
-        window.location.href = "/LoginPage";
+        window.location.href = "/login";
       }
       throw err;
     }

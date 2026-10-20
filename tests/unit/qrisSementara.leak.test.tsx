@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import path from "path";
 import { render, screen } from "@testing-library/react";
-import QrisSementara from "@/app/components/ui/sharedpayment/QrisSementara";
+import QrisSementara from "@/components/payment/QrisSementara";
 
 /**
  * QA: QrisSementara — tidak ada masa berlaku/countdown QRIS.
@@ -10,7 +10,7 @@ import QrisSementara from "@/app/components/ui/sharedpayment/QrisSementara";
  */
 describe("QrisSementara — tanpa masa berlaku", () => {
   const source = readFileSync(
-    path.resolve(__dirname, "../../app/components/ui/sharedpayment/QrisSementara.tsx"),
+    path.resolve(__dirname, "../../components/payment/QrisSementara.tsx"),
     "utf-8",
   );
 
