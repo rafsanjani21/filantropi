@@ -1,3 +1,12 @@
+/**
+ * app/(main)/profile/history/page.tsx
+ *
+ * Fungsi   : Riwayat transaksi wakaf/donasi pengguna dari endpoint /user/profile/history.
+ * Ekspor   : default HistoryWakafPage
+ * Dipakai  : Route /profile/history; merender WakafCard, LoadingSkeleton, EmptyState
+ * Catatan  : "use client"; fetch saat mount dan filter kode transaksi fw/WKF/DNS
+ */
+
 "use client";
 
 import { useState, useEffect } from "react";

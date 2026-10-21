@@ -1,3 +1,12 @@
+/**
+ * app/(main)/berita/page.tsx
+ *
+ * Fungsi   : Daftar berita dengan lazy scroll; saat ini data berita masih kosong (empty state).
+ * Ekspor   : default BeritaPage
+ * Dipakai  : Route /berita; merender NewsCard dan BottomNav
+ * Catatan  : "use client"; IntersectionObserver menambah visibleCount
+ */
+
 "use client";
 
 import { Newspaper, ArrowLeft } from "lucide-react";

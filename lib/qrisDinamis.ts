@@ -1,3 +1,11 @@
+/**
+ * lib/qrisDinamis.ts
+ *
+ * Fungsi   : Mengubah QRIS Statis menjadi QRIS Dinamis dengan menyisipkan Tag 54 (nominal) dan menghitung ulang CRC16 CCITT-FALSE.
+ * Ekspor   : generateDynamicQris
+ * Dipakai  : hooks/useTransactionSubmit.ts, tests/unit/qrisDinamis.test.ts
+ * Catatan  : Mengembalikan string kosong jika QRIS statis kosong dan melempar error untuk nominal non-bulat/negatif/nol.
+ */
 // Dipakai saat payment gateway bermasalah, untuk mengubah QRIS Statis menjadi QRIS Dinamis dengan menyematkan nominal donasi/wakaf.
 
 /**

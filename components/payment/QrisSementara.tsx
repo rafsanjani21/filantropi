@@ -1,3 +1,11 @@
+/**
+ * components/payment/QrisSementara.tsx
+ *
+ * Fungsi   : Tampilan QRIS lokal (react-qr-code) sebagai fallback saat payment gateway bermasalah, dengan unduh QR ke PNG.
+ * Ekspor   : default QrisSementara
+ * Dipakai  : app/(main)/programs/[slug]/donate/page.tsx, app/(main)/wakaf/[slug]/donate/page.tsx, tests/unit/qrisSementara.leak.test.tsx
+ * Catatan  : Tidak ada countdown/timer; tombol unduh nonaktif bila qrisString kosong.
+ */
 //dipakai saat payment gateway bermasalah
 
 import { ArrowLeft, ShieldCheck, Wallet, Scan, CheckCircle2, Download } from "lucide-react";

@@ -1,3 +1,11 @@
+/**
+ * components/campaign/CampaignStory.tsx
+ *
+ * Fungsi   : Merender cerita/tujuan penggalangan dana dengan format baris baru dipertahankan.
+ * Ekspor   : default CampaignStory
+ * Dipakai  : app/(main)/wakaf/[slug]/page.tsx, app/(main)/programs/[slug]/page.tsx
+ * Catatan  : Menampilkan "Belum ada cerita." bila story kosong.
+ */
 export default function CampaignStory({ story }: { story: string }) {
   return (
     <div className="p-6">

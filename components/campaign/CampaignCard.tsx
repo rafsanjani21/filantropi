@@ -1,3 +1,12 @@
+/**
+ * components/campaign/CampaignCard.tsx
+ *
+ * Fungsi   : Kartu kampanye dengan tiga varian (list, carousel, grid), progress dana, sisa hari, dan tema warna donasi/wakaf.
+ * Ekspor   : default CampaignCard
+ * Dipakai  : components/home/LatestPrograms.tsx, app/(main)/programs/page.tsx
+ * Catatan  : Status non-aktif ditampilkan "Sedang ditinjau"; target kosong/0 dianggap tanpa batas.
+ */
+import Image from "next/image";
 import Link from "next/link";
 import { Clock, Infinity, BookOpen, Gift } from "lucide-react";
 
@@ -57,8 +66,8 @@ export default function CampaignCard({
   const banner = Array.isArray(campaign.image_banner) ? campaign.image_banner[0] : campaign.image_banner;
   const imageUrl =
     typeof banner === "string" && banner.trim() !== ""
-      ? banner.startsWith("http") ? banner : `${IMAGE_BASE_URL}/${banner.replace(/^\/+/, "")}?t=${Date.now()}`
-      : "/placeholder.png";
+      ? banner.startsWith("http") ? banner : `${IMAGE_BASE_URL}/${banner.replace(/^\/+/, "")}`
+      : "/bencana.webp";
 
   const targetUrl = isWakafProgram
     ? `/wakaf/${campaign.slug || campaign.id}`
@@ -68,14 +77,14 @@ export default function CampaignCard({
   const theme = isWakafProgram
     ? {
         textMain: "text-emerald-700",
-        textHover: "group-hover:text-emerald-600",
+        textHover: "group-hover:text-emerald-700",
         bgProgress: "bg-emerald-100",
         fillProgress: "from-emerald-400 to-emerald-600",
         badgeBg: "bg-emerald-50",
         badgeText: "text-emerald-700",
         badgeBorder: "border-emerald-200",
         shadowHover: "hover:shadow-[0_8px_25px_-6px_rgba(16,185,129,0.25)]",
-        iconColor: "text-emerald-500",
+        iconColor: "text-emerald-700",
         checkBg: "bg-emerald-500",
       }
     : {
@@ -97,7 +106,7 @@ export default function CampaignCard({
       <div className="bg-white border-b border-gray-100 last:border-b-0 overflow-hidden flex flex-col group transition-colors hover:bg-slate-50/50">
         <Link href={targetUrl} className="flex flex-row p-3 gap-3.5 items-center">
           <div className="relative w-[130px] h-[85px] shrink-0 rounded-xl overflow-hidden">
-            <img src={imageUrl} alt={campaign.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 bg-gray-100" />
+            <Image src={imageUrl} alt={campaign.title} fill sizes="130px" loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-500 bg-gray-100" />
           </div>
           <div className="flex flex-col flex-1 min-w-0 py-0.5">
             <h3 className={`text-[13px] font-bold line-clamp-2 leading-snug text-[#2A1B33] mb-1 ${theme.textHover} transition-colors`}>{campaign.title}</h3>
@@ -114,11 +123,11 @@ export default function CampaignCard({
                 )}
                 <div className="flex justify-between items-end">
                   <div className="flex flex-col">
-                    <span className="text-[9px] text-gray-400 mb-0.5">{t("collected_label", "Terkumpul")}</span>
+                    <span className="text-[9px] text-gray-500 mb-0.5">{t("collected_label", "Terkumpul")}</span>
                     <span className="text-[11px] font-bold text-gray-800">Rp {collected.toLocaleString("id-ID")}</span>
                   </div>
                   <div className="flex flex-col items-end">
-                    <span className="text-[9px] text-gray-400 mb-0.5">{isUnlimitedTime ? "" : "Sisa hari"}</span>
+                    <span className="text-[9px] text-gray-500 mb-0.5">{isUnlimitedTime ? "" : "Sisa hari"}</span>
                     <span className="text-[11px] font-bold text-gray-800">{isUnlimitedTime ? "Selamanya" : safeDaysLeft > 0 ? safeDaysLeft : "0"}</span>
                   </div>
                 </div>
@@ -135,10 +144,10 @@ export default function CampaignCard({
   // VARIANT 2: CAROUSEL
   if (variant === "carousel") {
     return (
-      <Link href={targetUrl} className={`w-[75vw] max-w-[280px] shrink-0 snap-center bg-white rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.06)] border border-gray-100 overflow-hidden flex flex-col group transition-shadow ${theme.shadowHover} cursor-pointer`}>
+      <Link href={targetUrl} className={`w-[75vw] max-w-[280px] min-h-[330px] shrink-0 snap-center bg-white rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.06)] border border-gray-100 overflow-hidden flex flex-col group transition-shadow ${theme.shadowHover} cursor-pointer`}>
         {/* Gambar tanpa label kategori */}
         <div className="relative w-full h-[130px] shrink-0 overflow-hidden bg-gray-100">
-          <img src={imageUrl} alt={campaign.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <Image src={imageUrl} alt={campaign.title} fill sizes="(max-width: 768px) 75vw, 280px" loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-500" />
         </div>
         
         <div className="p-4 flex flex-col justify-between flex-1 relative z-20 bg-white">
@@ -156,7 +165,7 @@ export default function CampaignCard({
               )}
             </div>
             
-            <div className="flex items-center gap-1.5 text-gray-400 text-[11px] mb-1.5">
+            <div className="flex items-center gap-1.5 text-gray-500 text-[11px] mb-1.5">
               <span className="font-medium text-gray-600 truncate max-w-[150px]">{campaign.full_name || t("beneficiary", "Penerima Manfaat")}</span>
               <div className={`w-3 h-3 rounded-full flex items-center justify-center text-white text-[7px] shrink-0 ${theme.checkBg}`}>✓</div>
             </div>
@@ -165,7 +174,7 @@ export default function CampaignCard({
           <div className="mt-4 pt-3 border-t border-slate-50">
             <div className="flex justify-between items-end mb-1.5">
               <div className="flex flex-col">
-                <span className="text-[10px] text-gray-400 font-medium mb-0.5">{t("collected_label", "Terkumpul")}</span>
+                <span className="text-[10px] text-gray-500 font-medium mb-0.5">{t("collected_label", "Terkumpul")}</span>
                 <span className={`text-[13px] font-bold ${theme.textMain}`}>Rp {collected.toLocaleString("id-ID")}</span>
               </div>
               {!isUnlimitedTarget && <span className={`text-[11px] font-black ${theme.badgeText} ${theme.badgeBg} px-1.5 py-0.5 rounded border ${theme.badgeBorder}`}>{progress}%</span>}
@@ -176,12 +185,12 @@ export default function CampaignCard({
               </div>
             )}
             <div className="flex justify-between items-center mt-3">
-              <span className="text-[10px] text-gray-400 font-medium">{t("time_limit", "Batas Waktu")}</span>
+              <span className="text-[10px] text-gray-500 font-medium">{t("time_limit", "Batas Waktu")}</span>
               <div className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#FBF8F3] text-gray-600 border border-gray-100">
                 {isUnlimitedTime ? (
                   <><Infinity size={10} className={theme.iconColor} /><span className={theme.iconColor}>{t("unlimited_time", "Tanpa Batas")}</span></>
                 ) : (
-                  <><Clock size={10} className={safeDaysLeft <= 5 && safeDaysLeft > 0 ? "text-red-500" : "text-gray-400"} />
+                  <><Clock size={10} className={safeDaysLeft <= 5 && safeDaysLeft > 0 ? "text-red-500" : "text-gray-500"} />
                   {(safeDaysLeft as number) > 0 ? `${t("remaining", "Sisa")} ${safeDaysLeft} ${t("days", "Hari")}` : t("has_ended", "Berakhir")}</>
                 )}
               </div>
@@ -197,7 +206,7 @@ export default function CampaignCard({
     <div className={`bg-white rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.06)] border border-gray-100 overflow-hidden flex flex-col group transition-all duration-300 h-full ${theme.shadowHover}`}>
       <Link href={targetUrl} className="block cursor-pointer flex-1 flex flex-col h-full">
         <div className="relative h-28 w-full shrink-0">
-          <img src={imageUrl} alt={campaign.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 bg-gray-100" />
+          <Image src={imageUrl} alt={campaign.title} fill sizes="(max-width: 768px) 50vw, 240px" loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-500 bg-gray-100" />
         </div>
         <div className="flex flex-col flex-1 p-3">
           <div className="flex flex-wrap items-center gap-1 mb-1.5">
@@ -223,7 +232,7 @@ export default function CampaignCard({
                     <div className={`h-full rounded-full transition-all duration-1000 bg-gradient-to-r ${theme.fillProgress}`} style={{ width: `${progress}%` }} />
                   </div>
                 )}
-                <div className="mt-2 text-[9px] font-medium text-gray-400 flex items-center gap-1">
+                <div className="mt-2 text-[9px] font-medium text-gray-500 flex items-center gap-1">
                   {isUnlimitedTime ? (
                     <><Infinity size={10} className={theme.iconColor}/> <span className={theme.iconColor}>Selamanya</span></>
                   ) : (

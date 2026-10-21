@@ -1,3 +1,11 @@
+/**
+ * lib/auth.service.ts
+ *
+ * Fungsi   : Kumpulan panggilan API autentikasi, profil pengguna, dan CRUD campaign melalui apiFetch.
+ * Ekspor   : AuthService
+ * Dipakai  : hooks/useAuth.ts, hooks/useCampaignDetail.ts, store/useAuthStore.ts, components/home/LatestPrograms.tsx, components/layout/GlobalLiveDonationBlink.tsx, app/(main)/programs/page.tsx, app/(main)/programs/new/page.tsx, app/(main)/programs/manage/page.tsx, app/(main)/programs/manage/[id]/edit/page.tsx
+ * Catatan  : Logout memakai fetch langsung (bukan apiFetch) agar bisa refresh token sekali saat 401.
+ */
 import { apiFetch, BASE_URL } from "./api";
 
 export const AuthService = {

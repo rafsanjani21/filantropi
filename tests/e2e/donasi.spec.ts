@@ -1,3 +1,11 @@
+/**
+ * tests/e2e/donasi.spec.ts
+ *
+ * Fungsi   : Skenario E2E Donasi dari pilih nominal, isi form, sampai QRIS tampil, termasuk validasi, Back, dan error state.
+ * Ekspor   : -
+ * Dipakai  : Dijalankan oleh Playwright saat `npx playwright test`
+ * Catatan  : Menguji happy path, nominal < Rp 1.000, minus ditolak, email/nama invalid, anonim, fallback POST 500/timeout, anti double-submit, dan campaign error.
+ */
 import { test, expect } from "@playwright/test";
 import { mockCampaignApis, DONASI_URL } from "./helpers";
 

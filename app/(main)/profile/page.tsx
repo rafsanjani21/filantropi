@@ -1,3 +1,12 @@
+/**
+ * app/(main)/profile/page.tsx
+ *
+ * Fungsi   : Halaman profil pengguna dengan menu akun, aktivitas, bantuan, dan logout.
+ * Ekspor   : default ProfilePagePenerima
+ * Dipakai  : Route /profile; menuju /profile/user, /profile/beneficiary, /profile/history, /profile/help, /profile/terms
+ * Catatan  : "use client"; memuat profil donor/beneficiary dan merender BottomNav
+ */
+
 "use client";
 
 import "@/lib/i18n";

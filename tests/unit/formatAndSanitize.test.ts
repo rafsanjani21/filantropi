@@ -1,3 +1,11 @@
+/**
+ * tests/unit/formatAndSanitize.test.ts
+ *
+ * Fungsi   : Unit test format uang, sanitasi input telepon/nominal/NIK, dan validasi email/telepon/nominal.
+ * Ekspor   : -
+ * Dipakai  : Dijalankan oleh Vitest saat `npm test` / `npx vitest`
+ * Catatan  : Mencakup perilaku formatRp/safeRp, penolakan minus/huruf, truncate NIK 16 digit, dan aturan validasi Donasi/Wakaf.
+ */
 import { describe, it, expect } from "vitest";
 import { isValidEmail, isValidPhone, isValidAmount } from "@/lib/validation";
 

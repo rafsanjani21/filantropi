@@ -1,3 +1,11 @@
+/**
+ * hooks/useCampaignDetail.ts
+ *
+ * Fungsi   : Mengambil detail campaign berdasarkan slug dan riwayat transaksi terbaru, lalu menghitung total terkumpul serta wallet penerima.
+ * Ekspor   : useCampaignDetail
+ * Dipakai  : app/(main)/programs/[slug]/page.tsx, app/(main)/programs/[slug]/donate/page.tsx, app/(main)/wakaf/[slug]/page.tsx, app/(main)/wakaf/[slug]/donate/page.tsx
+ * Catatan  : Riwayat hanya dimuat jika campaign.id tersedia; kegagalan riwayat cukup dicatat ke console tanpa menggagalkan halaman.
+ */
 import { useState, useEffect } from "react";
 import { AuthService } from "@/lib/auth.service";
 import { apiFetch } from "@/lib/api";

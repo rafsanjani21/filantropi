@@ -1,3 +1,12 @@
+/**
+ * app/(main)/wakaf/[slug]/donate/_components/PledgeView.tsx
+ *
+ * Fungsi   : Menampilkan ikrar wakaf (lafal Bismillah dan pernyataan) sesuai niat diri sendiri/orang lain sebelum ke pembayaran.
+ * Ekspor   : default PledgeView
+ * Dipakai  : app/(main)/wakaf/[slug]/donate/page.tsx
+ * Catatan  : Tanpa "use client"; hanya presentational, lanjut ke form lewat onNext.
+ */
+
 import { ArrowLeft, Quote } from "lucide-react";
 
 type PledgeViewProps = {

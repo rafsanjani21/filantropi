@@ -1,3 +1,12 @@
+/**
+ * app/(main)/programs/[slug]/_components/DisbursementModal.tsx
+ *
+ * Fungsi   : Modal konfirmasi pengajuan pencairan dana tahap tertentu dengan tombol Batal/Ajukan dan indikator loading.
+ * Ekspor   : default DisbursementModal
+ * Dipakai  : app/(main)/programs/[slug]/page.tsx
+ * Catatan  : "use client"; render null saat `isOpen` false; proses submit ditangani parent.
+ */
+
 "use client";
 
 import { Banknote } from "lucide-react";

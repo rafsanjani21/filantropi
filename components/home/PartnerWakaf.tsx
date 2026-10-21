@@ -1,6 +1,15 @@
+/**
+ * components/home/PartnerWakaf.tsx
+ *
+ * Fungsi   : Menampilkan daftar mitra wakaf resmi beserta logo dan tautan eksternal.
+ * Ekspor   : default PartnerWakaf
+ * Dipakai  : app/(main)/page.tsx
+ * Catatan  : "use client"; data partner masih statis di dalam komponen.
+ */
 "use client";
 
-import { ShieldCheck, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function PartnerWakaf() {
@@ -9,7 +18,7 @@ export default function PartnerWakaf() {
       id: 1,
       name: "Gerakan Wakaf Indonesia",
       // Ganti URL logo ini dengan file asli Anda nantinya
-      logo: "gwi.png",
+      logo: "/gwi-logo.webp",
       url: "https://gerakanwakaf.id/tentang-kami/",
       description: "Mitra resmi pengelolaan wakaf",
     },
@@ -36,9 +45,12 @@ export default function PartnerWakaf() {
             >
               {/* Logo Partner */}
               <div className="w-[70px] h-[45px] shrink-0 flex items-center justify-center transition-all duration-300">
-                <img
+                <Image
                   src={partner.logo}
                   alt={partner.name}
+                  width={70}
+                  height={45}
+                  sizes="70px"
                   className="w-full h-full object-contain"
                   loading="lazy"
                 />

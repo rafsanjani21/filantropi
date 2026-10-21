@@ -1,3 +1,12 @@
+/**
+ * app/(main)/wakaf/[slug]/_components/WakafBottomBar.tsx
+ *
+ * Fungsi   : Bar aksi bawah detail wakaf: tombol share dan "Tunaikan Wakaf" yang disabled bila status bukan active atau waktu habis.
+ * Ekspor   : default WakafBottomBar
+ * Dipakai  : app/(main)/wakaf/[slug]/page.tsx
+ * Catatan  : "use client"; props bertipe `any`; share memakai navigator.share.
+ */
+
 "use client";
 
 import { Share2, BookOpen } from "lucide-react";

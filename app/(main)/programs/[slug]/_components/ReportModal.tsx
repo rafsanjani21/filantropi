@@ -1,3 +1,12 @@
+/**
+ * app/(main)/programs/[slug]/_components/ReportModal.tsx
+ *
+ * Fungsi   : Modal laporan penggunaan dana dengan deskripsi wajib dan minimal satu foto bukti, plus pratinjau dan penghapusan file.
+ * Ekspor   : default ReportModal
+ * Dipakai  : app/(main)/programs/[slug]/page.tsx
+ * Catatan  : "use client"; validasi memakai toast; onSubmit(description, files) diteruskan ke parent.
+ */
+
 "use client";
 
 import { X, FileText, UploadCloud, Trash2 } from "lucide-react";

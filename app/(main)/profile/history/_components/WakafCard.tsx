@@ -1,3 +1,11 @@
+/**
+ * app/(main)/profile/history/_components/WakafCard.tsx
+ *
+ * Fungsi   : Kartu satu transaksi yang membedakan wakaf/donasi serta status pembayaran.
+ * Ekspor   : default WakafCard, type WakafRecord
+ * Dipakai  : app/(main)/profile/history/page.tsx (import default dan type WakafRecord)
+ */
+
 import {
   Clock,
   CheckCircle2,

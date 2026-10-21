@@ -1,5 +1,15 @@
+/**
+ * app/layout.tsx
+ *
+ * Fungsi   : Root layout: metadata, font, provider Auth/I18n/Toaster, dan komponen global.
+ * Ekspor   : metadata, viewport, default RootLayout
+ * Dipakai  : File khusus Next.js, membungkus seluruh route di app/.
+ * Catatan  : Server component; preconnect ke origin aset dari environment.
+ */
+
 import type { Metadata } from "next";
-import { Inter, Plus_Jakarta_Sans, Rubik } from "next/font/google"; 
+import { preconnect } from "react-dom";
+import { Plus_Jakarta_Sans, Rubik } from "next/font/google";
 import "./globals.css";
 import I18nProvider from "@/components/providers/I18nProvider";
 import { Toaster } from "react-hot-toast";
@@ -7,11 +17,6 @@ import AuthProvider from "@/components/layout/AuthProvider";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import GlobalLiveDonationBlink from "@/components/layout/GlobalLiveDonationBlink";
 import SessionModal from "@/components/layout/SessionModal";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter", 
-});
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -37,8 +42,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const assetOrigins = [
+    process.env.NEXT_PUBLIC_IMAGE_BASE_URL,
+    process.env.NEXT_PUBLIC_API_BASE_URL,
+  ].filter(Boolean) as string[];
+
+  for (const origin of new Set(assetOrigins.map((url) => new URL(url).origin))) {
+    preconnect(origin);
+  }
+
   return (
-    <html lang="en" style={{ colorScheme: "light" }} className={`${inter.variable} ${jakarta.variable} ${rubik.variable} h-full antialiased`}>
+    <html lang="id" style={{ colorScheme: "light" }} className={`${jakarta.variable} ${rubik.variable} h-full antialiased`}>
       <body className={`${rubik.className} min-h-full flex flex-col`}>
         <Toaster position="top-right" reverseOrder={false} />
         <AuthProvider>

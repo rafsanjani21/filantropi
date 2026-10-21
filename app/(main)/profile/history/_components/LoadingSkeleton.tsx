@@ -1,3 +1,11 @@
+/**
+ * app/(main)/profile/history/_components/LoadingSkeleton.tsx
+ *
+ * Fungsi   : Skeleton loading berbentuk tiga kartu transaksi.
+ * Ekspor   : default LoadingSkeleton
+ * Dipakai  : app/(main)/profile/history/page.tsx
+ */
+
 export default function LoadingSkeleton() {
   return (
     <div className="space-y-4">

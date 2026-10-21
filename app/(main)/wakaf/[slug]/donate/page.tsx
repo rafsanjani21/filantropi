@@ -1,3 +1,12 @@
+/**
+ * app/(main)/wakaf/[slug]/donate/page.tsx
+ *
+ * Fungsi   : Alur wakaf bertahap (niat/nama -> nominal -> ikrar -> form -> QRIS/VA) dengan validasi nama dan minimal Rp 1.000.
+ * Ekspor   : default FormWakafPage
+ * Dipakai  : Route /wakaf/[slug]/donate; dari tombol WakafBottomBar pada halaman detail wakaf.
+ * Catatan  : "use client"; mengirim extraPayload NIK; MethodView dinonaktifkan sehingga QRIS menjadi default.
+ */
+
 "use client";
 
 import { useState, useEffect } from "react";

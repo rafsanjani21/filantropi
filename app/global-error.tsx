@@ -1,3 +1,12 @@
+/**
+ * app/global-error.tsx
+ *
+ * Fungsi   : Error boundary global yang merender html dan body sendiri.
+ * Ekspor   : default GlobalError
+ * Dipakai  : File khusus Next.js, menangani error di root layout.
+ * Catatan  : "use client"; wajib menyediakan elemen html dan body.
+ */
+
 "use client";
 
 export default function GlobalError({

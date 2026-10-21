@@ -1,3 +1,12 @@
+/**
+ * app/(main)/progress/[id]/page.tsx
+ *
+ * Fungsi   : Timeline progres penyaluran dana per tahap (pencairan/laporan) dengan status, deskripsi otomatis, dan lampiran bukti.
+ * Ekspor   : default ProgressPage; internal ProgressContent.
+ * Dipakai  : Route /progress/[id]; URL legacy /ProgressPage?id=...; tidak ditemukan tautan internal langsung.
+ * Catatan  : "use client"; GET /campaigns/stepper/:id; urut phase lalu PENCAIRAN sebelum laporan.
+ */
+
 "use client";
 
 import "@/lib/i18n";

@@ -1,3 +1,12 @@
+/**
+ * app/(main)/programs/manage/[id]/edit/page.tsx
+ *
+ * Fungsi   : Form edit program (judul, kategori, target, tanggal, deskripsi, cerita) dengan unggah/hapus maks. 5 foto berukuran 1 MB dan submit multipart PUT.
+ * Ekspor   : default KelolaProgramPage; internal KelolaProgramContent dan InputField.
+ * Dipakai  : Route /programs/manage/[id]/edit; ditautkan dari programs/manage dan redirect lama /ProgramPage/EditProgram.
+ * Catatan  : "use client"; validasi ID; objectURL di-revoke saat foto dihapus; target/tanggal kosong berarti unlimited.
+ */
+
 "use client";
 
 import "@/lib/i18n";

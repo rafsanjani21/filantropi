@@ -1,3 +1,11 @@
+/**
+ * components/layout/SessionModal.tsx
+ *
+ * Fungsi   : Modal peringatan sesi berakhir yang muncul dari event global "sessionExpired" dan mengarahkan ke /login.
+ * Ekspor   : default SessionModal
+ * Dipakai  : app/layout.tsx
+ * Catatan  : "use client"; mengunci scroll body saat modal terbuka.
+ */
 "use client";
 
 import { useEffect, useState } from "react";

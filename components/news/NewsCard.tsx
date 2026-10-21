@@ -1,3 +1,12 @@
+/**
+ * components/news/NewsCard.tsx
+ *
+ * Fungsi   : Kartu berita dengan gambar, kategori, tanggal, ringkasan, dan tautan ke halaman detail.
+ * Ekspor   : default NewsCard
+ * Dipakai  : app/(main)/berita/page.tsx
+ * Catatan  : Fallback gambar "/bencana.webp" bila imageUrl kosong.
+ */
+import Image from "next/image";
 import Link from "next/link";
 import { Calendar, ChevronRight } from "lucide-react";
 
@@ -17,10 +26,13 @@ export default function NewsCard({ title, excerpt, date, category, imageUrl, slu
       className="bg-white rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-[0_8px_25px_-6px_rgba(124,57,150,0.15)]"
     >
       <div className="relative h-40 w-full overflow-hidden">
-        <img 
-          src={imageUrl} 
-          alt={title} 
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 bg-slate-100"
+        <Image
+          src={imageUrl || "/bencana.webp"}
+          alt={title}
+          fill
+          sizes="(max-width: 768px) 100vw, 50vw"
+          loading="lazy"
+          className="object-cover group-hover:scale-105 transition-transform duration-500 bg-slate-100"
         />
         <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[#7C3996] text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider shadow-sm">
           {category}

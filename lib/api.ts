@@ -1,3 +1,11 @@
+/**
+ * lib/api.ts
+ *
+ * Fungsi   : Wrapper fetch API dengan penyisipan token, penanganan 401 + refresh token, retry request, dan force logout.
+ * Ekspor   : BASE_URL, apiFetch
+ * Dipakai  : lib/auth.service.ts, hooks/useCampaignDetail.ts, components/layout/GlobalLiveDonationBlink.tsx, app/(main)/progress/[id]/page.tsx, app/(main)/programs/[slug]/page.tsx, app/(main)/programs/manage/page.tsx, app/(main)/programs/manage/[id]/edit/page.tsx
+ * Catatan  : Token diambil dari localStorage/sessionStorage; endpoint baca publik dan auth tidak memakai Authorization.
+ */
 
 export const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 

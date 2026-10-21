@@ -1,3 +1,12 @@
+/**
+ * app/(main)/programs/[slug]/donate/page.tsx
+ *
+ * Fungsi   : Mengatur alur donasi (nominal -> form -> QRIS/VA) dan mengirim transaksi lewat useTransactionSubmit dengan validasi minimal Rp 1.000.
+ * Ekspor   : default FormDonasiPage
+ * Dipakai  : Route /programs/[slug]/donate; dari halaman detail program dan alur auto-open donasi.
+ * Catatan  : "use client"; MethodView dinonaktifkan sehingga metode default QRIS; kembali dari QRIS memanggil resetProcessing.
+ */
+
 "use client";
 
 import { useState } from "react";

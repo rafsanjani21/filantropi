@@ -1,3 +1,12 @@
+/**
+ * app/(main)/programs/[slug]/_components/BottomActionBar.tsx
+ *
+ * Fungsi   : Bar aksi bawah detail program: tombol share, tombol Donasi (disabled bila status bukan active atau waktu habis), atau Cairkan/Laporan untuk pemilik campaign.
+ * Ekspor   : default BottomActionBar
+ * Dipakai  : app/(main)/programs/[slug]/page.tsx
+ * Catatan  : Presentational, props bertipe `any`; status tombol dihitung dari `campaign.status` dan `end_date`.
+ */
+
 import { Share2, Heart } from "lucide-react";
 
 export default function BottomActionBar({ campaign, isCampaignOwner, onDonate, onDisburse, onReport }: any) {

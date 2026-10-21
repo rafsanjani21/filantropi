@@ -1,3 +1,12 @@
+/**
+ * app/(main)/creator/[id]/page.tsx
+ *
+ * Fungsi   : Profil penggalang dana beserta daftar kampanye donasi/wakaf miliknya.
+ * Ekspor   : default CreatorProfilePage
+ * Dipakai  : Route /creator/[id]
+ * Catatan  : "use client"; fetch GET /user/profile/campaign-creator/[id] saat mount
+ */
+
 "use client";
 
 import { useEffect, useState } from "react";

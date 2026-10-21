@@ -1,3 +1,12 @@
+/**
+ * app/(main)/programs/manage/page.tsx
+ *
+ * Fungsi   : Daftar program milik pengguna dengan status, progres dana, pembatasan akun individu (maks. 1 program), serta modal verifikasi/limit.
+ * Ekspor   : default ProgramPage
+ * Dipakai  : Route /programs/manage; dari profile/page.tsx, programs/new, halaman edit, dan redirect lama /ProgramPage.
+ * Catatan  : "use client"; wajib token (redirect /login); total donasi per wallet diambil via /donations/in/:wallet.
+ */
+
 "use client";
 
 import "@/lib/i18n";

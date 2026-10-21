@@ -1,3 +1,11 @@
+/**
+ * tests/unit/FormViewWakaf.test.tsx
+ *
+ * Fungsi   : Unit test rendering dan interaksi FormWakafView (nama wakif, telepon, NIK, tombol, dan total).
+ * Ekspor   : -
+ * Dipakai  : Dijalankan oleh Vitest saat `npm test` / `npx vitest`
+ * Catatan  : Memverifikasi sanitasi telepon, NIK dihapus huruf dan di-truncate 16 digit, disabled saat isProcessing, dan safeRp amount negatif.
+ */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";

@@ -1,3 +1,11 @@
+/**
+ * components/payment/MethodView.tsx
+ *
+ * Fungsi   : Menampilkan pilihan metode pembayaran (instan, virtual account, gerai) dengan tema donasi/wakaf.
+ * Ekspor   : default MethodView
+ * Dipakai  : Tidak ditemukan pemakai aktif saat ini; hanya dirujuk dalam komentar di app/(main)/programs/[slug]/donate/page.tsx dan app/(main)/wakaf/[slug]/donate/page.tsx
+ * Catatan  : Metode non-instan terkunci bila nominal < Rp 10.000 dan memunculkan toast.
+ */
 import { ArrowLeft, CheckCircle2, Lock } from "lucide-react";
 import toast from "react-hot-toast";
 

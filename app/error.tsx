@@ -1,3 +1,12 @@
+/**
+ * app/error.tsx
+ *
+ * Fungsi   : UI error boundary segmen route app dengan tombol reset.
+ * Ekspor   : default Error
+ * Dipakai  : File khusus Next.js, dipakai otomatis oleh App Router.
+ * Catatan  : "use client" wajib karena memakai prop reset dan onClick.
+ */
+
 "use client";
 
 import { AlertCircle } from "lucide-react";

@@ -1,3 +1,11 @@
+/**
+ * app/(main)/profile/history/_components/EmptyState.tsx
+ *
+ * Fungsi   : Tampilan kosong saat pengguna belum memiliki riwayat wakaf/donasi.
+ * Ekspor   : default EmptyState
+ * Dipakai  : app/(main)/profile/history/page.tsx
+ */
+
 import { Receipt } from "lucide-react";
 
 export default function EmptyState({ onAction }: { onAction: () => void }) {

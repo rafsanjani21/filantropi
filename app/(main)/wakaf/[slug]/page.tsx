@@ -1,3 +1,12 @@
+/**
+ * app/(main)/wakaf/[slug]/page.tsx
+ *
+ * Fungsi   : Detail program wakaf publik (guest checkout) dengan banner, cerita, riwayat donasi, dan tombol menuju form wakaf.
+ * Ekspor   : default WakafDetailPage; internal WakafDetailContent.
+ * Dipakai  : Route /wakaf/[slug]; dari CampaignCard, creator/[id], dan redirect lama /WakafDetailPage.
+ * Catatan  : "use client"; tanpa proteksi login; tombol mengarah ke /wakaf/[slug]/donate.
+ */
+
 "use client";
 
 import "@/lib/i18n";

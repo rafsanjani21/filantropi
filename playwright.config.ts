@@ -1,3 +1,11 @@
+/**
+ * playwright.config.ts
+ *
+ * Fungsi   : Konfigurasi Playwright untuk E2E di tests/e2e dengan server dev lokal dan satu worker.
+ * Ekspor   : default defineConfig
+ * Dipakai  : Dijalankan oleh `npx playwright test`
+ * Catatan  : baseURL http://localhost:3000, locale id-ID, trace retain-on-failure, dan webServer `npm run dev` dengan reuseExistingServer.
+ */
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({

@@ -1,3 +1,12 @@
+/**
+ * app/(main)/profile/user/page.tsx
+ *
+ * Fungsi   : Form profil donatur (data diri, domisili, bank, foto, dan KTP).
+ * Ekspor   : default UserPage
+ * Dipakai  : Route /profile/user; ditautkan dari halaman /profile
+ * Catatan  : "use client"; getProfile/updateProfile, kamera, dan API wilayah emsifa.com
+ */
+
 "use client";
 
 import "@/lib/i18n";

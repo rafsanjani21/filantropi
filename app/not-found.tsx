@@ -1,3 +1,11 @@
+/**
+ * app/not-found.tsx
+ *
+ * Fungsi   : Halaman 404 kustom dengan tautan kembali ke beranda.
+ * Ekspor   : default NotFound
+ * Dipakai  : File khusus Next.js, dirender untuk route yang tidak ditemukan.
+ */
+
 import Link from "next/link";
 
 export default function NotFound() {

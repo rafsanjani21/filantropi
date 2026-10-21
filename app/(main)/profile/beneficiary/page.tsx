@@ -1,3 +1,12 @@
+/**
+ * app/(main)/profile/beneficiary/page.tsx
+ *
+ * Fungsi   : Form profil penerima manfaat (perorangan/organisasi), termasuk unggah foto dan KTP.
+ * Ekspor   : default PagePenerima
+ * Dipakai  : Route /profile/beneficiary; dipanggil dari /profile/beneficiary/type
+ * Catatan  : "use client"; getProfile/updateProfile, validasi NIK, telepon, NPWP, dan TnC
+ */
+
 "use client";
 
 import "@/lib/i18n"; // Proteksi i18n

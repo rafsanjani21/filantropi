@@ -1,3 +1,11 @@
+/**
+ * components/layout/navbar/LogoNavbar.tsx
+ *
+ * Fungsi   : Navbar dengan logo Filantropi yang menaut ke beranda dan tombol kembali opsional.
+ * Ekspor   : default LogoNavbar
+ * Dipakai  : app/(main)/page.tsx, app/(main)/profile/page.tsx, app/(main)/profile/user/page.tsx, app/(main)/profile/beneficiary/page.tsx
+ * Catatan  : Tombol kembali hanya tampil jika prop backHref diisi.
+ */
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";

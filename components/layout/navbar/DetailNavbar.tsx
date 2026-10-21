@@ -1,3 +1,11 @@
+/**
+ * components/layout/navbar/DetailNavbar.tsx
+ *
+ * Fungsi   : Navbar detail kampanye yang transparan lalu memutih setelah scroll 80px, dengan tombol kembali dan judul.
+ * Ekspor   : default NavbarDetail (nama file DetailNavbar)
+ * Dipakai  : app/(main)/wakaf/[slug]/page.tsx, app/(main)/programs/[slug]/page.tsx
+ * Catatan  : "use client"; memakai Web Share API bila tersedia; listener scroll dibersihkan saat unmount.
+ */
 "use client";
 
 import "@/lib/i18n";

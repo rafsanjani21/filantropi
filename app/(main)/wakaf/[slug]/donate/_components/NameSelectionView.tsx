@@ -1,3 +1,12 @@
+/**
+ * app/(main)/wakaf/[slug]/donate/_components/NameSelectionView.tsx
+ *
+ * Fungsi   : Langkah pertama wakaf untuk memilih niat (diri sendiri/orang lain) dan mengisi nama wakif serta nama yang diwakafkan.
+ * Ekspor   : default NameSelectionView
+ * Dipakai  : app/(main)/wakaf/[slug]/donate/page.tsx
+ * Catatan  : Tanpa "use client"; validasi nama dilakukan di parent (toast) sebelum lanjut.
+ */
+
 import { ArrowLeft, User, Users } from "lucide-react";
 
 type NameSelectionViewProps = {

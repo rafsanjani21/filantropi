@@ -1,15 +1,39 @@
+/**
+ * components/layout/GlobalLiveDonationBlink.tsx
+ *
+ * Fungsi   : Menampilkan notifikasi donasi terbaru secara bergilir, hanya di beranda.
+ * Ekspor   : default GlobalLiveDonationBlink
+ * Dipakai  : app/layout.tsx
+ * Catatan  : "use client"; fetch via AuthService/apiFetch setelah idle, refresh 10 menit; timer animasi dibersihkan.
+ */
 "use client";
 
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { AuthService } from "@/lib/auth.service";
 //  1. Import usePathname dari Next.js
 import { usePathname } from "next/navigation";
+
+type CampaignTx = {
+  sender_name?: string;
+  amount?: string | number;
+  mutation_date?: string;
+};
+
+type LiveDonation = {
+  from_to: string;
+  amount: string;
+  date: string;
+};
+
+const MAX_CAMPAIGNS = 5;
+const MAX_DONATIONS = 10;
 
 export default function GlobalLiveDonationBlink() {
   const pathname = usePathname(); // 2. Inisialisasi usePathname
 
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<LiveDonation[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -20,28 +44,89 @@ export default function GlobalLiveDonationBlink() {
 
     const fetchGlobalHistory = async () => {
       try {
-        const res = await apiFetch(`/campaigns/transactions`, {
-          method: "GET",
-        });
-        const apiData = res?.data || [];
+        // Endpoint ringkasan global (/campaigns/transactions) selalu kosong,
+        // jadi ambil donasi terbaru dari beberapa campaign aktif.
+        const campaignsRes = await AuthService.getCampaigns();
+        const campaigns = Array.isArray(campaignsRes?.data)
+          ? campaignsRes.data
+          : Array.isArray(campaignsRes)
+            ? campaignsRes
+            : [];
 
-        if (Array.isArray(apiData)) {
-          const mappedHistory = apiData.map((tx: any) => ({
-            from_to: tx.sender_name || "Donatur",
-            amount: String(tx.amount ?? 0),
-          }));
+        const activeIds: string[] = campaigns
+          .filter(
+            (campaign: { id?: string; status?: string }) =>
+              campaign?.id && campaign.status === "active",
+          )
+          .slice(0, MAX_CAMPAIGNS)
+          .map((campaign: { id: string }) => campaign.id);
 
-          setHistory(mappedHistory);
+        const responses = await Promise.allSettled(
+          activeIds.map((id) =>
+            apiFetch(`/campaigns/transactions/latest/${id}`, { method: "GET" }),
+          ),
+        );
+
+        const merged: LiveDonation[] = [];
+
+        for (const response of responses) {
+          if (response.status !== "fulfilled") continue;
+
+          const list = response.value?.data;
+          if (!Array.isArray(list)) continue;
+
+          for (const tx of list as CampaignTx[]) {
+            merged.push({
+              from_to: tx.sender_name?.trim() || "Donatur",
+              amount: String(tx.amount ?? 0),
+              date: tx.mutation_date ?? "",
+            });
+          }
         }
+
+        const seen = new Set<string>();
+        const latest = merged
+          .filter((tx) => Number(tx.amount) > 0)
+          .sort(
+            (a, b) =>
+              new Date(b.date.replace(" ", "T")).getTime() -
+              new Date(a.date.replace(" ", "T")).getTime(),
+          )
+          .filter((tx) => {
+            const key = `${tx.from_to}|${tx.amount}|${tx.date}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          })
+          .slice(0, MAX_DONATIONS);
+
+        setHistory(latest);
       } catch (err) {
         console.error("Gagal memuat donasi live global:", err);
       }
     };
 
-    fetchGlobalHistory();
-    const interval = setInterval(fetchGlobalHistory, 600000);
+    // Tunda fetch agar tidak berebut bandwidth/main thread dengan LCP
+    let interval: ReturnType<typeof setInterval> | undefined;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    let idleId: number | undefined;
 
-    return () => clearInterval(interval);
+    const start = () => {
+      fetchGlobalHistory();
+      interval = setInterval(fetchGlobalHistory, 600000);
+    };
+
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      idleId = window.requestIdleCallback(start, { timeout: 4000 });
+    } else {
+      timeout = setTimeout(start, 2500);
+    }
+
+    return () => {
+      if (idleId !== undefined) window.cancelIdleCallback(idleId);
+      if (timeout) clearTimeout(timeout);
+      if (interval) clearInterval(interval);
+    };
   }, [pathname]);
 
   const validHistory = history.filter((tx) => Number(tx.amount) > 0);

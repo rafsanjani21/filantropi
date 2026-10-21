@@ -1,3 +1,12 @@
+/**
+ * app/(main)/profile/help/page.tsx
+ *
+ * Fungsi   : Pusat bantuan berisi kontak dan daftar FAQ yang dapat dibuka-tutup.
+ * Ekspor   : default PusatBantuanPage
+ * Dipakai  : Route /profile/help; ditautkan dari halaman /profile
+ * Catatan  : "use client"; data FAQ statis di dalam komponen
+ */
+
 "use client";
 
 import { useState } from "react";

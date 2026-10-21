@@ -1,3 +1,11 @@
+/**
+ * hooks/useAuth.ts
+ *
+ * Fungsi   : Hook autentikasi Google (id_token) yang memilih redirect donor/penerima, plus logout dan operasi profil/kampanye.
+ * Ekspor   : useAuth
+ * Dipakai  : app/(auth)/login/page.tsx, app/(main)/page.tsx, app/(main)/profile/page.tsx, app/(main)/profile/user/page.tsx, app/(main)/profile/beneficiary/page.tsx, app/(main)/programs/new/page.tsx, app/(main)/programs/manage/page.tsx, components/layout/BottomNav.tsx
+ * Catatan  : Menyimpan token di localStorage/sessionStorage, memakai useAuthStore.checkAuth, dan fallback ke halaman pendaftaran jika user belum terdaftar.
+ */
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthService } from "@/lib/auth.service";

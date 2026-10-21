@@ -1,3 +1,11 @@
+/**
+ * app/(main)/profile/user/_components/InputField.tsx
+ *
+ * Fungsi   : Komponen input teks dengan label, ikon, dan pesan error.
+ * Ekspor   : default InputField
+ * Dipakai  : Tidak terpakai; profile/user/page.tsx memakai InputField lokal
+ */
+
 import React from "react";
 
 interface InputFieldProps {

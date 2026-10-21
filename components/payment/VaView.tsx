@@ -1,3 +1,11 @@
+/**
+ * components/payment/VaView.tsx
+ *
+ * Fungsi   : Menampilkan nomor Virtual Account, total pembayaran, hitung mundur 1 jam, dan instruksi per bank.
+ * Ekspor   : default VaView
+ * Dipakai  : app/(main)/programs/[slug]/donate/page.tsx, app/(main)/wakaf/[slug]/donate/page.tsx
+ * Catatan  : Countdown setInterval dibersihkan; tombol salin memakai navigator.clipboard.
+ */
 import { useState, useEffect } from "react";
 import { ArrowLeft, Clock, Copy, CheckCircle2, ChevronDown, ChevronUp, Wallet, Landmark } from "lucide-react";
 import toast from "react-hot-toast";

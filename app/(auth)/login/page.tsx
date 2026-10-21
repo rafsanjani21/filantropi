@@ -1,14 +1,22 @@
+/**
+ * app/(auth)/login/page.tsx
+ *
+ * Fungsi   : Halaman login Google; menukar id_token Firebase lewat smartAuth.
+ * Ekspor   : default MasukPage
+ * Dipakai  : Route /login; ditautkan dari BottomNav, SessionModal, programs/manage, profile/beneficiary.
+ * Catatan  : "use client"; Firebase diimpor dinamis saat tombol diklik.
+ */
+
 "use client";
 
 import "@/lib/i18n";
 import { useState, Suspense } from "react";
-import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "@/lib/firebase";
 import { useAuth } from "@/hooks/useAuth";
 import { AlertCircle, ShieldCheck, HelpCircle } from "lucide-react";
 import AuthNavbar from "@/components/layout/navbar/AuthNavbar";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
+import Image from "next/image";
 
 function MasukContent() {
   const { smartAuth, loading } = useAuth();
@@ -19,6 +27,12 @@ function MasukContent() {
     setMessage("");
 
     try {
+      // Firebase di-load hanya saat tombol diklik agar tidak membebani halaman lain
+      const [{ signInWithPopup }, { auth, provider }] = await Promise.all([
+        import("firebase/auth"),
+        import("@/lib/firebase"),
+      ]);
+
       const result = await signInWithPopup(auth, provider);
       const id_token = await result.user.getIdToken();
       const name = result.user.displayName || "User";
@@ -58,7 +72,14 @@ function MasukContent() {
         {/* KARTU LOGIN */}
         <div className="w-full bg-white/90 backdrop-blur-md rounded-[2.5rem] shadow-xl p-8 flex flex-col items-center border border-white/20">
           <div className="relative mb-6 group">
-            <img src="/logo.png" alt="Logo" className="relative w-28 h-auto drop-shadow-md" />
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              width={112}
+              height={112}
+              priority
+              className="relative w-28 h-auto drop-shadow-md"
+            />
           </div>
 
           <div className="text-center mb-8">
@@ -86,7 +107,7 @@ function MasukContent() {
               <div className="w-6 h-6 border-3 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
             ) : (
               <>
-                <img src="/google.png" alt="Google" className="w-6 h-6" />
+                <Image src="/google.png" alt="Google" width={24} height={24} className="w-6 h-6" />
                 <span className="text-sm md:text-md">{t("continue_with_google")}</span>
               </>
             )}

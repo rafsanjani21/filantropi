@@ -1,4 +1,13 @@
+/**
+ * components/campaign/CampaignBanner.tsx
+ *
+ * Fungsi   : Menampilkan banner program berupa slider gambar horizontal (scroll-snap) dengan indikator titik aktif.
+ * Ekspor   : default CampaignBanner
+ * Dipakai  : app/(main)/wakaf/[slug]/page.tsx, app/(main)/programs/[slug]/page.tsx
+ * Catatan  : Gambar tanpa URL di-prefix NEXT_PUBLIC_IMAGE_BASE_URL; fallback "/bencana.webp"; gambar pertama priority.
+ */
 import { useState } from "react";
+import Image from "next/image";
 
 export default function CampaignBanner({ images }: { images: string | string[] }) {
   const [activeImage, setActiveImage] = useState(0);
@@ -8,7 +17,7 @@ export default function CampaignBanner({ images }: { images: string | string[] }
     .filter(Boolean)
     .map((img: string) => img.startsWith("http") ? img : `${IMAGE_BASE_URL}/${img.replace(/^\/+/, "")}`);
     
-  if (campaignImages.length === 0) campaignImages.push("/bencana.png");
+  if (campaignImages.length === 0) campaignImages.push("/bencana.webp");
 
   return (
     <div className="relative w-full h-72 bg-[#2A1B33]">
@@ -17,7 +26,16 @@ export default function CampaignBanner({ images }: { images: string | string[] }
         onScroll={(e) => setActiveImage(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}
       >
         {campaignImages.map((img: string, i: number) => (
-          <img key={i} src={img} alt="Banner" className="w-full h-full object-cover shrink-0 snap-center min-w-full" />
+          <div key={i} className="relative w-full h-full shrink-0 snap-center min-w-full">
+            <Image
+              src={img}
+              alt={`Banner program ${i + 1}`}
+              fill
+              sizes="100vw"
+              priority={i === 0}
+              className="object-cover"
+            />
+          </div>
         ))}
       </div>
       <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#2A1B33]/60 to-transparent pointer-events-none" />

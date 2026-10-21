@@ -1,3 +1,12 @@
+/**
+ * app/(main)/payment/failed/page.tsx
+ *
+ * Fungsi   : Halaman status pembayaran gagal/kadaluarsa beserta ID transaksi.
+ * Ekspor   : default PaymentFailedPage
+ * Dipakai  : Route /payment/failed; redirect permanen dari /Payment/Failed.
+ * Catatan  : "use client"; useSearchParams dibungkus Suspense.
+ */
+
 "use client";
 
 import { Suspense } from "react";

@@ -1,3 +1,11 @@
+/**
+ * tests/unit/qrisDinamis.test.ts
+ *
+ * Fungsi   : Unit test generateDynamicQris untuk perubahan tag statis/dinamis, penyisipan Tag 54, dan validitas CRC16.
+ * Ekspor   : -
+ * Dipakai  : Dijalankan oleh Vitest saat `npm test` / `npx vitest`
+ * Catatan  : Memverifikasi CRC16 CCITT-FALSE dengan implementasi pembanding, penolakan nominal tidak valid, dan keamanan replace tag 01.
+ */
 import { describe, it, expect } from "vitest";
 import { generateDynamicQris } from "@/lib/qrisDinamis";
 

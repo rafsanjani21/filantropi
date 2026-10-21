@@ -1,3 +1,11 @@
+/**
+ * tests/e2e/wakaf.spec.ts
+ *
+ * Fungsi   : Skenario E2E Wakaf dari niat/ikrar, pilih nominal, isi form, sampai QRIS tampil.
+ * Ekspor   : -
+ * Dipakai  : Dijalankan oleh Playwright saat `npx playwright test`
+ * Catatan  : Menguji happy path, nama/almarhum wajib, nominal minimum, NIK 16 digit, sanitasi telepon, email invalid, Back, fallback POST 500/timeout, dan anti double-submit.
+ */
 import { test, expect } from "@playwright/test";
 import { mockCampaignApis, WAKAF_URL } from "./helpers";
 

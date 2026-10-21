@@ -1,3 +1,12 @@
+/**
+ * app/(main)/page.tsx
+ *
+ * Fungsi   : Halaman beranda: sapaan pengguna, pintasan Donasi/Wakaf, dan program terbaru.
+ * Ekspor   : default HomePage
+ * Dipakai  : Route /; merender LogoNavbar, Carousel, PartnerWakaf, LatestPrograms, BottomNav
+ * Catatan  : "use client"; cek role via useAuth dan localStorage saat mount
+ */
+
 "use client";
 
 import "@/lib/i18n";
@@ -90,7 +99,7 @@ export default function HomePage() {
   const renderGreetingName = () => {
     if (isCheckingAuth) {
       return (
-        <span className="inline-block w-32 h-6 bg-white/20 rounded-md animate-pulse"></span>
+        <span className="inline-block w-32 h-[38px] align-bottom bg-white/20 rounded-md animate-pulse"></span>
       );
     }
     return (
@@ -264,7 +273,7 @@ export default function HomePage() {
               </div>
 
               <div className="relative z-10">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-[#C9971F]">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-[#8A5A0B]">
                   Sedekah &amp; Donasi
                 </span>
                 <h3 className="font-jakarta font-extrabold text-gray-800 text-[14px] tracking-tight mt-0.5 group-hover:text-[#7C3996] transition-colors">
@@ -338,7 +347,7 @@ export default function HomePage() {
               </div>
 
               <div className="relative z-10">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-600">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-700">
                   Amal Jariyah
                 </span>
                 <h3 className="font-jakarta font-extrabold text-gray-800 text-[14px] tracking-tight mt-0.5 group-hover:text-emerald-600 transition-colors">

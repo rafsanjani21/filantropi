@@ -1,3 +1,11 @@
+/**
+ * tests/unit/qrisSementara.leak.test.tsx
+ *
+ * Fungsi   : Memastikan QrisSementara tidak memakai setInterval/setTimeout dan tidak menampilkan countdown/masa berlaku.
+ * Ekspor   : -
+ * Dipakai  : Dijalankan oleh Vitest saat `npm test` / `npx vitest`
+ * Catatan  : Membaca source komponen secara statis untuk cek potensi memory leak timer, lalu merender QRIS tanpa elemen hitung mundur.
+ */
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import path from "path";

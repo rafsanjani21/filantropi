@@ -1,3 +1,12 @@
+/**
+ * app/(main)/programs/[slug]/_components/LiveDonationBlink.tsx
+ *
+ * Fungsi   : Notifikasi melayang bergiliran yang menampilkan donasi terbaru bernominal lebih dari 0 selama sekitar 3,5 detik.
+ * Ekspor   : default LiveDonationBlink
+ * Dipakai  : Tidak ditemukan importer; kemungkinan legacy (aplikasi memakai components/layout/GlobalLiveDonationBlink.tsx).
+ * Catatan  : "use client"; timer bersarang (hide/next) tidak dibersihkan saat unmount sehingga berpotensi memory leak.
+ */
+
 "use client";
 
 import { useEffect, useState } from "react";

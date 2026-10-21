@@ -1,3 +1,11 @@
+/**
+ * app/loading.tsx
+ *
+ * Fungsi   : UI loading fallback global berupa spinner.
+ * Ekspor   : default Loading
+ * Dipakai  : File khusus Next.js, tampil otomatis saat route memuat.
+ */
+
 export default function Loading() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#FBF8F3]">

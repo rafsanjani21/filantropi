@@ -1,3 +1,11 @@
+/**
+ * lib/validation.ts
+ *
+ * Fungsi   : Validasi bersama alur Donasi/Wakaf untuk email, nomor telepon, dan nominal transaksi.
+ * Ekspor   : EMAIL_REGEX, isValidEmail, isValidPhone, isValidAmount
+ * Dipakai  : hooks/useTransactionSubmit.ts, tests/unit/formatAndSanitize.test.ts
+ * Catatan  : Telepon disaring menjadi digit lalu wajib 9-15 digit; nominal wajib bilangan bulat minimal Rp 1.000.
+ */
 /** Utilitas validasi bersama untuk alur Donasi & Wakaf. */
 
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;

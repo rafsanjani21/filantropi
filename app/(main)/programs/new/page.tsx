@@ -1,3 +1,12 @@
+/**
+ * app/(main)/programs/new/page.tsx
+ *
+ * Fungsi   : Form pembuatan program (donasi/wakaf) dengan unggah maks. 5 foto, target/tanggal opsional, serta pengecekan verifikasi dan limit akun individu.
+ * Ekspor   : default GalangPage; internal InputField.
+ * Dipakai  : Route /programs/new; dari programs/manage; redirect lama /GalangPage.
+ * Catatan  : "use client"; memblokir akun belum terverifikasi dan individu dengan minimal 1 campaign; createCampaign via useAuth.
+ */
+
 "use client";
 
 import "@/lib/i18n";

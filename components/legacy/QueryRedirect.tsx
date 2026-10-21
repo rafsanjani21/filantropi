@@ -1,3 +1,11 @@
+/**
+ * components/legacy/QueryRedirect.tsx
+ *
+ * Fungsi   : Membaca query param lalu mengalihkan ke URL tujuan (prefix + nilai + suffix) atau fallback.
+ * Ekspor   : default QueryRedirect
+ * Dipakai  : app/(legacy)/DetailPage/page.tsx, app/(legacy)/DetailPage/FormDonasiPage/page.tsx, app/(legacy)/WakafDetailPage/page.tsx, app/(legacy)/WakafDetailPage/FormWakafPage/page.tsx, app/(legacy)/ProgressPage/page.tsx, app/(legacy)/ProgramPage/EditProgram/page.tsx
+ * Catatan  : "use client"; useSearchParams dibungkus Suspense; redirect memakai router.replace.
+ */
 "use client";
 
 import { Suspense, useEffect } from "react";

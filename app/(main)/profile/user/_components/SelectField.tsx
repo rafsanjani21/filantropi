@@ -1,3 +1,11 @@
+/**
+ * app/(main)/profile/user/_components/SelectField.tsx
+ *
+ * Fungsi   : Dropdown kustom dengan label, ikon, dan daftar opsi.
+ * Ekspor   : default SelectField
+ * Dipakai  : Tidak terpakai; profile/user/page.tsx memakai SelectField lokal
+ */
+
 import React, { useState } from "react";
 
 interface SelectFieldProps {

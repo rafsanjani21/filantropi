@@ -1,3 +1,12 @@
+/**
+ * app/(main)/wakaf/[slug]/donate/_components/FormView.tsx
+ *
+ * Fungsi   : Form konfirmasi wakaf: ringkasan total/metode, nama wakif (read-only), kontak pengirim, NIK 16 digit opsional, dan doa.
+ * Ekspor   : default FormWakafView
+ * Dipakai  : app/(main)/wakaf/[slug]/donate/page.tsx dan tests/unit/FormViewWakaf.test.tsx
+ * Catatan  : Tanpa "use client"; NIK disaring non-digit dan dipotong 16 karakter; submit disabled saat isProcessing.
+ */
+
 import { ArrowLeft, User, Mail, Heart, Check, Phone, CreditCard } from "lucide-react"; 
 import { safeRp } from "@/lib/format";
 

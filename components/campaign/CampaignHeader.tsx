@@ -1,3 +1,11 @@
+/**
+ * components/campaign/CampaignHeader.tsx
+ *
+ * Fungsi   : Menampilkan identitas program, badge status/kategori, nominal terkumpul, progress bar, dan sisa waktu.
+ * Ekspor   : default CampaignHeader
+ * Dipakai  : app/(main)/wakaf/[slug]/page.tsx, app/(main)/programs/[slug]/page.tsx
+ * Catatan  : Kategori disembunyikan untuk program wakaf; memakai hook useTranslation dari react-i18next.
+ */
 import { CheckCircle2, Clock, XCircle, Infinity } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import Link from "next/link"; 

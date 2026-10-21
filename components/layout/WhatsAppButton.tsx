@@ -1,3 +1,11 @@
+/**
+ * components/layout/WhatsAppButton.tsx
+ *
+ * Fungsi   : Tombol mengambang WhatsApp yang membuka menu pilihan CS Gerakan Wakaf Indonesia atau Filantropi.
+ * Ekspor   : default WhatsAppButton
+ * Dipakai  : app/layout.tsx
+ * Catatan  : "use client"; tautan wa.me dibuka di tab baru; aria-expanded pada tombol utama.
+ */
 "use client";
 
 import { useState } from "react";
@@ -24,6 +32,7 @@ export default function WhatsAppButton() {
             </span>
             <button
               onClick={() => setIsOpen(false)}
+              aria-label="Tutup menu bantuan"
               className="text-emerald-700 hover:text-emerald-900 transition-colors"
             >
               <X size={16} strokeWidth={3} />
@@ -67,6 +76,8 @@ export default function WhatsAppButton() {
       {/* UTAMA */}
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-label={isOpen ? "Tutup menu bantuan" : "Buka menu bantuan WhatsApp"}
+        aria-expanded={isOpen}
         className="pointer-events-auto relative flex items-center justify-center w-14 h-14 bg-[#25D366] text-white rounded-full shadow-xl hover:bg-[#20bd5a] hover:scale-110 active:scale-95 transition-all duration-300 group"
       >
         {!isOpen && (

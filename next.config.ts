@@ -1,10 +1,35 @@
+/**
+ * next.config.ts
+ *
+ * Fungsi   : Konfigurasi Next.js untuk allowedDevOrigins, images, redirect legacy, dan rewrite proxy API lokal.
+ * Ekspor   : default nextConfig
+ * Dipakai  : Dijalankan otomatis oleh Next.js saat dev/build/start
+ * Catatan  : images memakai dangerouslyAllowLocalIP dan remotePatterns dari NEXT_PUBLIC_IMAGE_BASE_URL; rewrite /api-proxy memakai API_PROXY_TARGET.
+ */
 import type { NextConfig } from "next";
 
 const apiProxyTarget =
   process.env.API_PROXY_TARGET ?? "http://192.168.110.29:8080/api";
 
+const imageBaseUrl = new URL(
+  process.env.NEXT_PUBLIC_IMAGE_BASE_URL ?? "http://192.168.111.129:8081",
+);
+
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["http://localhost:3000", "192.168.111.184"],
+
+  images: {
+    dangerouslyAllowLocalIP: true,
+    remotePatterns: [
+      {
+        protocol: imageBaseUrl.protocol === "https:" ? "https" : "http",
+        hostname: imageBaseUrl.hostname,
+        port: imageBaseUrl.port || undefined,
+        pathname: "/**",
+      },
+    ],
+    formats: ["image/avif", "image/webp"],
+  },
 
   async redirects() {
     return [

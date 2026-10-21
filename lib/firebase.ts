@@ -1,3 +1,11 @@
+/**
+ * lib/firebase.ts
+ *
+ * Fungsi   : Inisialisasi Firebase App sekali dan menyediakan instance Auth serta GoogleAuthProvider untuk login.
+ * Ekspor   : auth, provider
+ * Dipakai  : app/(auth)/login/page.tsx (dynamic import saat proses login Google)
+ * Catatan  : Membaca env NEXT_PUBLIC_FIREBASE_API_KEY, AUTH_DOMAIN, PROJECT_ID, STORAGE_BUCKET, MESSAGING_SENDER_ID, dan APP_ID.
+ */
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 

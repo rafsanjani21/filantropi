@@ -1,3 +1,12 @@
+/**
+ * app/(main)/programs/[slug]/donate/_components/FormView.tsx
+ *
+ * Fungsi   : Form konfirmasi donasi: ringkasan nominal/metode, data donatur, toggle anonim, nomor telepon (digit saja), email, dan doa.
+ * Ekspor   : default FormView
+ * Dipakai  : app/(main)/programs/[slug]/donate/page.tsx dan tests/unit/FormViewDonasi.test.tsx
+ * Catatan  : Tanpa "use client" (state dari parent); nama disembunyikan saat anonim; submit disabled saat isProcessing.
+ */
+
 import { ArrowLeft, User, Mail, Heart, Phone } from "lucide-react";
 import { safeRp } from "@/lib/format";
 

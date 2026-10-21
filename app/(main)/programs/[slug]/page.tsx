@@ -1,3 +1,12 @@
+/**
+ * app/(main)/programs/[slug]/page.tsx
+ *
+ * Fungsi   : Detail program: memuat campaign via useCampaignDetail lalu menampilkan banner, header, cerita, riwayat donasi, serta modal pencairan dan laporan.
+ * Ekspor   : default DetailPage; internal DetailContent.
+ * Dipakai  : Route /programs/[slug]; dari CampaignCard, programs/manage, creator/[id], dan redirect lama /DetailPage.
+ * Catatan  : "use client"; auto-open donasi via sessionStorage `auto_open_donate`; POST /campaigns/disbursements/:id dan /campaigns/report/:id.
+ */
+
 "use client";
 
 import "@/lib/i18n";

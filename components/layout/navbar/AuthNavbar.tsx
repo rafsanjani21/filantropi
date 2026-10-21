@@ -1,3 +1,11 @@
+/**
+ * components/layout/navbar/AuthNavbar.tsx
+ *
+ * Fungsi   : Navbar halaman autentikasi dengan judul di tengah dan tombol kembali di kiri.
+ * Ekspor   : default AuthNavbar
+ * Dipakai  : app/(auth)/login/page.tsx
+ * Catatan  : Menerima props title dan backHref.
+ */
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 

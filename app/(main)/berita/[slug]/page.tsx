@@ -1,3 +1,12 @@
+/**
+ * app/(main)/berita/[slug]/page.tsx
+ *
+ * Fungsi   : Halaman detail berita; menampilkan judul dari slug dan placeholder konten.
+ * Ekspor   : default BeritaDetailPage (async)
+ * Dipakai  : Route /berita/[slug]; tautan kembali ke /berita
+ * Catatan  : Server Component; parameter slug di-decode sebagai judul sementara
+ */
+
 import Link from "next/link";
 import { ArrowLeft, Newspaper } from "lucide-react";
 

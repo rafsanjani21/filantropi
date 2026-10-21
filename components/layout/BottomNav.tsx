@@ -1,3 +1,11 @@
+/**
+ * components/layout/BottomNav.tsx
+ *
+ * Fungsi   : Navigasi bawah empat menu dengan tombol aktif mengambang; mendeteksi role donatur/penerima manfaat/tamu.
+ * Ekspor   : default BottomNav
+ * Dipakai  : app/(main)/page.tsx, app/(main)/berita/page.tsx, app/(main)/programs/page.tsx, app/(main)/programs/new/page.tsx, app/(main)/profile/page.tsx
+ * Catatan  : "use client"; menu terkunci memunculkan toast; tamu diarahkan ke /login untuk Profil.
+ */
 "use client";
 
 import { Home, Heart, Newspaper, User, Lock, X } from "lucide-react";
@@ -194,6 +202,7 @@ export default function BottomNav() {
                   key={menu.name}
                   href={menu.isLocked ? "#" : targetPath}
                   onClick={handleClick}
+                  prefetch={menu.requiresAuth ? false : undefined}
                   className="relative flex flex-col items-center justify-center"
                 >
                   {/* Icon biasa */}

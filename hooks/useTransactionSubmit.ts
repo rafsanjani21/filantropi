@@ -1,3 +1,11 @@
+/**
+ * hooks/useTransactionSubmit.ts
+ *
+ * Fungsi   : Alur submit Donasi/Wakaf bersama: guard anti double-submit, validasi input, pembuatan QRIS Dinamis lokal, dan pencatatan gateway fire-and-forget.
+ * Ekspor   : useTransactionSubmit, tipe TransactionType
+ * Dipakai  : app/(main)/programs/[slug]/donate/page.tsx, app/(main)/wakaf/[slug]/donate/page.tsx
+ * Catatan  : Membaca NEXT_PUBLIC_API_BASE_URL dan NEXT_PUBLIC_QRIS_STATIS; QRIS lokal tetap tampil walau POST gateway gagal/timeout.
+ */
 // Hook bersama alur submit transaksi Donasi & Wakaf (QRIS Dinamis manual).
 // Menangani: guard anti double-submit, validasi umum, generate QRIS, dan
 // pencatatan gateway fire-and-forget — agar logika tidak drift antar flow.

@@ -1,3 +1,12 @@
+/**
+ * app/(main)/payment/success/page.tsx
+ *
+ * Fungsi   : Halaman status pembayaran berhasil; fetch detail transaksi via trx_id.
+ * Ekspor   : default PaymentSuccessPage
+ * Dipakai  : Route /payment/success; redirect permanen dari /Payment/Success.
+ * Catatan  : "use client"; fetch /transactions/:id di dalam Suspense.
+ */
+
 "use client";
 
 import { useEffect, useState, Suspense } from "react";

@@ -39,7 +39,7 @@ Filantropi adalah aplikasi web yang menghubungkan **donatur** dengan **penggalan
 | 🧾 **Riwayat donasi & wakaf** | `/profile/history` menampilkan riwayat transaksi (kode `DNS`/`WKF`) dari endpoint `/user/profile/history`. |
 | 🪙 **Keterlacakan dana (wallet)** | Alamat wallet penggalang dibaca dari backend untuk menampilkan riwayat donasi (`/donations/in/{wallet}`) dan pengecekan pemilik program. |
 | ⏰ **Sesi & keamanan** | `SessionModal` di root layout untuk dialog kedaluwarsa sesi, plus force-logout otomatis dari `apiFetch()`. |
-| 🌍 **Dua bahasa (i18n)** | Indonesia (default) & Inggris, kamus di `lib/i18n.ts`. |
+| 🌍 **Bahasa Indonesia (i18n)** | Single-locale `id`, kamus di `lib/i18n.ts`. |
 | 🔔 **Live donation blink** | Notifikasi donasi masuk di beranda (`GlobalLiveDonationBlink`) + notifikasi per halaman detail. |
 | 📱 **Mobile-first UI** | Bottom navigation 4 menu (Beranda, Kampanye, Berita, Profil) dengan tombol *floating* aktif. |
 
@@ -117,17 +117,18 @@ filantropi/
 │   │   ├── berita/          → Daftar berita + detail [slug] (placeholder)
 │   │   ├── progress/[id]/   → Progres penyaluran dana
 │   │   ├── profile/         → Profil & submenu (user, beneficiary, history, help, terms)
-│   │   └── creator/[id]/    → Profil publik penggalang dana
-│   ├── payment/             → Hasil pembayaran: success/ dan failed/
-│   └── (redirect lama)      → DetailPage/, WakafDetailPage/, ProgressPage/,
-│                              ProgramPage/EditProgram/ (kompatibilitas URL lama)
+│   │   ├── creator/[id]/    → Profil publik penggalang dana
+│   │   └── payment/         → Hasil pembayaran: success/ dan failed/
+│   └── (legacy)/            → Redirect kompatibilitas URL lama (URL tidak berubah):
+│                              DetailPage/, WakafDetailPage/, ProgressPage/,
+│                              ProgramPage/EditProgram/
 │
 ├── lib/                     🔧 UTILITAS & LAYANAN INTI
 │   ├── api.ts               → apiFetch(): auto Authorization, refresh token 401,
 │   │                          force logout (dengan daftar halaman yang dikecualikan)
 │   ├── auth.service.ts      → Login, register, logout, profil, CRUD campaign
 │   ├── firebase.ts          → Inisialisasi Firebase & provider Google
-│   └── i18n.ts              → Kamus teks bahasa Indonesia & Inggris (~726 baris)
+│   └── i18n.ts              → Kamus teks bahasa Indonesia (single-locale)
 │
 ├── hooks/                   🪝 HOOK KUSTOM
 │   └── useAuth.ts           → smartAuth (login sekali klik), logout, getProfile, createCampaign
@@ -214,10 +215,10 @@ Karena proyek memakai **App Router**, nama folder = URL halaman.
 | `/profile/help` | `app/(main)/profile/help/page.tsx` | Pusat bantuan |
 | `/profile/terms` | `app/(main)/profile/terms/page.tsx` | Syarat & ketentuan |
 | `/creator/[id]` | `app/(main)/creator/[id]/page.tsx` | Profil penggalang dana |
-| `/payment/success` | `app/payment/success/page.tsx` | Halaman pembayaran berhasil |
-| `/payment/failed` | `app/payment/failed/page.tsx` | Halaman pembayaran gagal |
+| `/payment/success` | `app/(main)/payment/success/page.tsx` | Halaman pembayaran berhasil |
+| `/payment/failed` | `app/(main)/payment/failed/page.tsx` | Halaman pembayaran gagal |
 
-> URL lama (`/HomePage`, `/AllProgramsPage`, `/DetailPage?slug=...`, `/ProfilePage/...`, `/Payment/Success`, dll.) tetap didukung melalui `redirects()` di `next.config.ts`.
+> URL lama (`/HomePage`, `/AllProgramsPage`, `/DetailPage?slug=...`, `/ProfilePage/...`, `/Payment/Success`, dll.) tetap didukung melalui `redirects()` di `next.config.ts` serta shim redirect di `app/(legacy)/`.
 
 ---
 
@@ -292,10 +293,11 @@ Frontend **bukan** dompet kripto dan **tidak lagi memakai `ethers.js`**:
   - menampilkan alamat terpotong di halaman "Program Saya".
 - `NEXT_PUBLIC_CONTRACT_ADDRESS` & `NEXT_PUBLIC_RPC_URL` masih disediakan di `.env` untuk kebutuhan kontrak di masa depan (saat ini belum dirujuk kode frontend).
 
-### 6. Multi-bahasa (i18n)
+### 6. Bahasa (i18n)
 
-- Kamus ada di `lib/i18n.ts`, bahasa default **Indonesia**, cadangan **Inggris**.
+- Aplikasi **hanya memakai bahasa Indonesia** (`id`); kamus ada di `lib/i18n.ts`.
 - Komponen memakai `const { t } = useTranslation()` lalu `t("judul_kunci")`.
+- Tidak ada language switcher maupun penyimpanan `app_lang`; `i18next` dipertahankan agar pemanggilan `t()` tetap konsisten dan mudah ditambah locale lain di masa depan.
 - Beberapa halaman mengimpor `"@/lib/i18n"` langsung sebagai proteksi agar inisialisasi tidak ganda.
 
 ---

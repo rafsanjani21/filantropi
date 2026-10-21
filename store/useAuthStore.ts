@@ -1,3 +1,11 @@
+/**
+ * store/useAuthStore.ts
+ *
+ * Fungsi   : Store Zustand untuk menyimpan user, role, status login, dan status inisialisasi autentikasi.
+ * Ekspor   : useAuthStore
+ * Dipakai  : hooks/useAuth.ts, hooks/useCampaignDetail.ts, components/layout/AuthProvider.tsx
+ * Catatan  : checkAuth mencoba profil donor lalu beneficiary, dan fallback ke guest; isInitialized mencegah UI berkedip.
+ */
 import { create } from "zustand";
 import { AuthService } from "@/lib/auth.service";
 

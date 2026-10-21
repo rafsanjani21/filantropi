@@ -1,3 +1,11 @@
+/**
+ * components/campaign/DonationHistory.tsx
+ *
+ * Fungsi   : Menampilkan daftar dana masuk terbaru beserta nominal dan tanggal donasi.
+ * Ekspor   : default DonationHistory
+ * Dipakai  : app/(main)/wakaf/[slug]/page.tsx, app/(main)/programs/[slug]/page.tsx
+ * Catatan  : Hanya 5 transaksi pertama yang dirender.
+ */
 import { History, ArrowDownRight } from "lucide-react";
 
 export default function DonationHistory({ history }: { history: any[] }) {

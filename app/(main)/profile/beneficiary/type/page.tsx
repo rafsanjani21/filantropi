@@ -1,3 +1,12 @@
+/**
+ * app/(main)/profile/beneficiary/type/page.tsx
+ *
+ * Fungsi   : Memilih tipe penerima manfaat (perorangan atau organisasi).
+ * Ekspor   : default PilihTipePenerima
+ * Dipakai  : Route /profile/beneficiary/type; lanjut ke /profile/beneficiary
+ * Catatan  : "use client"; pilihan disimpan di sessionStorage (tipe_penerima)
+ */
+
 "use client";
 
 import "@/lib/i18n"; // Proteksi i18n

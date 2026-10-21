@@ -1,3 +1,12 @@
+/**
+ * app/(main)/programs/page.tsx
+ *
+ * Fungsi   : Daftar semua program dengan filter tipe (donasi/wakaf dari query `type`), pencarian, sortir, toggle grid/list, dan infinite scroll 6 item.
+ * Ekspor   : default AllProgramsPage (dibungkus Suspense); internal ProgramsContent.
+ * Dipakai  : Route /programs?type=donasi|wakaf; ditautkan dari app/(main)/page.tsx dan components/home/LatestPrograms.tsx; redirect lama /AllProgramsPage.
+ * Catatan  : "use client"; memakai useSearchParams sehingga wajib Suspense; data campaign di-cache sessionStorage 3 menit.
+ */
+
 "use client";
 
 import "@/lib/i18n";

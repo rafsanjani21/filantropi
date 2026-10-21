@@ -1,3 +1,11 @@
+/**
+ * components/payment/QrisView.tsx
+ *
+ * Fungsi   : Tampilan QRIS dinamis dengan hitung mundur 1 jam, unduh QR, dan instruksi pembayaran.
+ * Ekspor   : default QrisView
+ * Dipakai  : Tidak ditemukan pemakai aktif saat ini; hanya dirujuk dalam komentar di app/(main)/programs/[slug]/donate/page.tsx dan app/(main)/wakaf/[slug]/donate/page.tsx
+ * Catatan  : Countdown setInterval 1 detik dan selalu dibersihkan; QR kedaluwarsa saat waktu habis.
+ */
 import { useState, useEffect } from "react";
 import { ArrowLeft, Clock, AlertCircle, Download, CheckCircle2, ChevronRight } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";

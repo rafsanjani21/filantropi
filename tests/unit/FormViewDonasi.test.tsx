@@ -1,3 +1,11 @@
+/**
+ * tests/unit/FormViewDonasi.test.tsx
+ *
+ * Fungsi   : Unit test rendering dan interaksi FormView Donasi (nominal, anonim, sanitasi telepon, tombol).
+ * Ekspor   : -
+ * Dipakai  : Dijalankan oleh Vitest saat `npm test` / `npx vitest`
+ * Catatan  : Memverifikasi toggle anonim, penghapusan huruf telepon, disabled saat isProcessing, dan safeRp untuk amount negatif.
+ */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";

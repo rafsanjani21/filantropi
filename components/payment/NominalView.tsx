@@ -1,3 +1,11 @@
+/**
+ * components/payment/NominalView.tsx
+ *
+ * Fungsi   : Halaman input nominal dengan preset cepat; hanya menerima digit dan menolak nominal di bawah Rp 1.000.
+ * Ekspor   : default NominalView
+ * Dipakai  : app/(main)/programs/[slug]/donate/page.tsx, app/(main)/wakaf/[slug]/donate/page.tsx
+ * Catatan  : Menampilkan info sertifikat wakaf untuk nominal minimal Rp 1.000.000.
+ */
 import { ArrowLeft, Award } from "lucide-react";
 import toast from "react-hot-toast";
 

@@ -1,3 +1,11 @@
+/**
+ * tests/e2e/helpers.ts
+ *
+ * Fungsi   : Menyediakan data campaign dummy, tipe perilaku POST, dan mockCampaignApis untuk mencegat request /api/campaigns/**.
+ * Ekspor   : CAMPAIGN_MOCK, PostBehavior, mockCampaignApis, SLUG, DONASI_URL, WAKAF_URL
+ * Dipakai  : tests/e2e/donasi.spec.ts, tests/e2e/wakaf.spec.ts
+ * Catatan  : Mendukung respons POST sukses, status error, delay-abort (timeout), dan delay-ok agar E2E tidak butuh backend.
+ */
 import type { Page } from "@playwright/test";
 
 export const CAMPAIGN_MOCK = {

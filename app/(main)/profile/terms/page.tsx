@@ -1,3 +1,12 @@
+/**
+ * app/(main)/profile/terms/page.tsx
+ *
+ * Fungsi   : Halaman Syarat & Ketentuan platform donasi dan wakaf.
+ * Ekspor   : default SyaratKetentuanPage
+ * Dipakai  : Route /profile/terms; ditautkan dari halaman /profile
+ * Catatan  : "use client"; konten statis dan tombol kembali via router.back()
+ */
+
 "use client";
 
 import { useRouter } from "next/navigation";
