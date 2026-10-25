@@ -88,9 +88,9 @@ describe("useTransactionSubmit", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("menampilkan QRIS lokal dan menandai transaksi recorded saat gateway sukses", async () => {
+  it("menunggu respons gateway dan menampilkan QRIS dari backend saat sukses", async () => {
     fetchMock.mockImplementation(() =>
-      Promise.resolve(jsonResponse({ data: { id: 123 } })),
+      Promise.resolve(jsonResponse({ data: { id: 123, qris_url: "000201-EMVCO-MOCK" } })),
     );
     const { result } = renderHook(() => useTransactionSubmit());
 
@@ -98,17 +98,16 @@ describe("useTransactionSubmit", () => {
       result.current.submit(baseArgs);
     });
 
-    expect(baseArgs.onShowQris).toHaveBeenCalledWith("QRIS-DYNAMIC");
-    expect(result.current.qrisString).toBe("QRIS-DYNAMIC");
-
     await waitFor(() => {
       expect(result.current.recordStatus).toBe("recorded");
+      expect(baseArgs.onShowQris).toHaveBeenCalledWith("000201-EMVCO-MOCK");
+      expect(result.current.qrisString).toBe("000201-EMVCO-MOCK");
     });
     expect(result.current.transactionId).toBe(123);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("tetap menampilkan QRIS dan menandai failed saat gateway 500", async () => {
+  it("tidak menampilkan QRIS dan menandai failed saat gateway 500", async () => {
     fetchMock.mockImplementation(() =>
       Promise.resolve(jsonResponse({ message: "Gateway down" }, 500)),
     );
@@ -120,9 +119,10 @@ describe("useTransactionSubmit", () => {
 
     await waitFor(() => {
       expect(result.current.recordStatus).toBe("failed");
+      expect(result.current.recordError).toMatch(/Gateway down/);
+      expect(baseArgs.onShowQris).not.toHaveBeenCalled();
+      expect(result.current.qrisString).toBe("");
     });
-    expect(result.current.recordError).toMatch(/Gateway down/);
-    expect(result.current.qrisString).toBe("QRIS-DYNAMIC");
   });
 
   it("menandai failed saat pencatatan melewati batas waktu (timeout)", async () => {
