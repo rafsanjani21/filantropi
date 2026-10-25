@@ -12,7 +12,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Clock3, Receipt, RefreshCw, AlertTriangle } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { formatRp } from "@/lib/format";
-import { hasRefreshToken } from "@/lib/authTokens";
 
 const POLL_INTERVAL_MS = 5_000;
 const MAX_ATTEMPTS = 24;
@@ -42,12 +41,6 @@ function PendingContent() {
 
   const [state, setState] = useState<PendingState>(trxId ? "polling" : "manual");
   const [detail, setDetail] = useState<string>("");
-
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   useEffect(() => {
     if (!trxId) return;
