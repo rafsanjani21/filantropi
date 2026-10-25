@@ -11,7 +11,7 @@
 import "@/lib/i18n";
 
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Share2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -30,16 +30,6 @@ export default function NavbarDetail() {
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          url: window.location.href,
-        });
-      } catch {}
-    }
-  };
 
   return (
     <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-lg z-50 pointer-events-none">

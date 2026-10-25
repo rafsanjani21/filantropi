@@ -21,7 +21,7 @@ async function isiFormWakafDasar(page: import("@playwright/test").Page) {
 test.describe("E2E Alur WAKAF (QRIS Dinamis fallback)", () => {
   test("HAPPY PATH: nama -> nominal -> ikrar -> form -> QRIS", async ({ page }) => {
     let postCount = 0;
-    await page.route("**/api/campaigns/**", async (route) => {
+    await page.route("**/campaigns/**", async (route) => {
       const req = route.request();
       if (req.method() === "GET") {
         if (req.url().includes("/campaigns/transactions/")) {
@@ -70,7 +70,7 @@ test.describe("E2E Alur WAKAF (QRIS Dinamis fallback)", () => {
     await expect(page.getByText("Pembayaran QRIS")).toBeVisible({ timeout: 20000 });
     await expect(page.locator("#qris-container svg")).toBeVisible();
     await expect(page.getByText("Rp 1.000.000")).toBeVisible();
-    expect(postCount).toBe(1);
+    await expect.poll(() => postCount).toBe(1);
   });
 
   test("UNHAPPY: nama kosong pada layar Niat Wakaf ditolak", async ({ page }) => {
@@ -143,7 +143,9 @@ test.describe("E2E Alur WAKAF (QRIS Dinamis fallback)", () => {
     await page.getByPlaceholder("08xxxxxxxxxx").fill("08123456789");
     await page.getByRole("button", { name: "Lanjutkan Pembayaran" }).click();
 
-    await expect(page.getByText("Format email tidak valid")).toBeVisible();
+    await expect(page.locator("#wakaf-email-error")).toHaveText(
+      "Format email tidak valid",
+    );
     await expect(page.getByText("Pembayaran QRIS")).not.toBeVisible();
   });
 
@@ -157,7 +159,9 @@ test.describe("E2E Alur WAKAF (QRIS Dinamis fallback)", () => {
     await page.getByRole("button", { name: "Lanjutkan Pembayaran" }).click();
 
     // Setelah perbaikan: "a@" tidak lolos lagi
-    await expect(page.getByText("Format email tidak valid")).toBeVisible();
+    await expect(page.locator("#wakaf-email-error")).toHaveText(
+      "Format email tidak valid",
+    );
     await expect(page.getByText("Pembayaran QRIS")).not.toBeVisible();
   });
 

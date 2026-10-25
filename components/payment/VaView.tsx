@@ -9,20 +9,22 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, Clock, Copy, CheckCircle2, ChevronDown, ChevronUp, Wallet, Landmark } from "lucide-react";
 import toast from "react-hot-toast";
+import type { PaymentMethod, VaData } from "@/types";
 
 type VaViewProps = {
-  vaData: any; 
+  vaData: VaData | null; 
   amount: number | "";
-  selectedMethod: any;
+  selectedMethod: PaymentMethod | null;
   transactionType: "donasi" | "wakaf";
   onBack: () => void;
   onCheckStatus: () => void;
 };
 
 export default function VaView({ vaData, amount, selectedMethod, transactionType, onBack, onCheckStatus }: VaViewProps) {
-  const [timeLeft, setTimeLeft] = useState(3600); // 1 Jam
+  const [timeLeft, setTimeLeft] = useState(86400);
   const [isCopied, setIsCopied] = useState(false);
   const [showInstructions, setShowInstructions] = useState(true);
+  const [mountedAt] = useState(() => Date.now());
 
   // KONFIGURASI TEMA DINAMIS (Donasi: Ungu, Wakaf: Emerald)
   const uiConfig = {
@@ -76,7 +78,7 @@ export default function VaView({ vaData, amount, selectedMethod, transactionType
   };
 
   const getDeadlineDate = () => {
-    const date = new Date(Date.now() + timeLeft * 1000);
+    const date = new Date(mountedAt + timeLeft * 1000);
     return new Intl.DateTimeFormat("id-ID", {
       weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short"
     }).format(date).replace("pukul", "").trim();
@@ -131,7 +133,10 @@ export default function VaView({ vaData, amount, selectedMethod, transactionType
               <span className={`w-2 h-6 ${theme.bgMain} rounded-full`}></span>
               {selectedMethod?.name || "Virtual Account"}
             </h2>
-            {selectedMethod?.logo && <img src={selectedMethod.logo} alt="bank logo" className="h-6 object-contain" />}
+            {selectedMethod?.logo && (
+              // eslint-disable-next-line @next/next/no-img-element -- logo bank dari host dinamis
+              <img src={selectedMethod.logo} alt="bank logo" className="h-6 object-contain" />
+            )}
           </div>
 
           <div className="mb-6 relative z-10">
@@ -182,7 +187,7 @@ export default function VaView({ vaData, amount, selectedMethod, transactionType
       {/* BOTTOM ACTION */}
       <div className="fixed bottom-0 w-full max-w-md bg-white/80 backdrop-blur-xl p-5 border-t border-slate-100 z-30 shadow-[0_-20px_40px_-20px_rgba(0,0,0,0.05)]">
         <button onClick={onCheckStatus} className={`w-full ${theme.bgMain} text-white font-bold text-[15px] py-4 rounded-full shadow-lg ${theme.btnHover} active:scale-95 transition-all`}>
-          Selesai & Kembali ke Beranda
+          Cek Status
         </button>
       </div>
 

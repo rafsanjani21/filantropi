@@ -11,6 +11,7 @@
 import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { safeHref } from "@/lib/safeUrl";
 
 export default function PartnerWakaf() {
   const partners = [
@@ -37,10 +38,12 @@ export default function PartnerWakaf() {
       {/* Daftar Logo Partner (Mode List Vertikal) */}
       <div className="flex flex-col gap-3 px-6 w-full">
         {partners.map((partner) => {
+          const partnerUrl = safeHref(partner.url);
+
           const CardContent = (
             <div
               className={`bg-white rounded-2xl border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] flex items-center gap-4 p-4 group transition-all duration-300 hover:border-emerald-200 hover:shadow-[0_8px_20px_-4px_rgba(16,185,129,0.15)] ${
-                partner.url ? "cursor-pointer" : "cursor-default"
+                partnerUrl ? "cursor-pointer" : "cursor-default"
               }`}
             >
               {/* Logo Partner */}
@@ -69,7 +72,7 @@ export default function PartnerWakaf() {
               </div>
 
               {/* Ikon Panah/Link */}
-              {partner.url && (
+              {partnerUrl && (
                 <div className="text-gray-300 group-hover:text-emerald-500 transition-colors shrink-0">
                   <ExternalLink size={18} />
                 </div>
@@ -77,10 +80,10 @@ export default function PartnerWakaf() {
             </div>
           );
 
-          return partner.url ? (
+          return partnerUrl ? (
             <Link
               key={partner.id}
-              href={partner.url}
+              href={partnerUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="block w-full"

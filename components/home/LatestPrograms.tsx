@@ -13,21 +13,8 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { AuthService } from "@/lib/auth.service";
 import { useTranslation } from "react-i18next";
-import CampaignCard from "@/components/campaign/CampaignCard"; 
-
-type Campaign = {
-  id: string | number;
-  slug?: string;
-  title: string;
-  full_name?: string;
-  category_id: number;
-  target_amount?: number | null;
-  current_amount?: number | null;
-  end_date?: string | null;
-  status?: string;
-  image_banner?: string | string[];
-  is_wakaf?: string | number | boolean;
-};
+import CampaignCard from "@/components/campaign/CampaignCard";
+import type { Campaign } from "@/types";
 
 export default function LatestPrograms() {
   const { t } = useTranslation();
@@ -65,7 +52,7 @@ export default function LatestPrograms() {
         const data = res.data || res;
 
         if (Array.isArray(data)) {
-          const activeData = data
+          const activeData = (data as Campaign[])
             .filter((campaign) => {
               const daysLeft = calculateDaysLeft(campaign.end_date);
               const isUnlimitedTime = daysLeft === null;
@@ -148,7 +135,7 @@ export default function LatestPrograms() {
           : campaigns.map((campaign) => (
               <CampaignCard 
                 key={campaign.id}
-                campaign={campaign as any}
+                campaign={campaign}
                 variant="carousel"
                 getCategoryLabel={getCategoryName}
                 t={t}

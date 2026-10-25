@@ -6,31 +6,21 @@
  * Dipakai  : components/home/LatestPrograms.tsx, app/(main)/programs/page.tsx
  * Catatan  : Status non-aktif ditampilkan "Sedang ditinjau"; target kosong/0 dianggap tanpa batas.
  */
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { Clock, Infinity, BookOpen, Gift } from "lucide-react";
-
-type Campaign = {
-  id: string | number;
-  slug?: string;
-  title: string;
-  campaign_code?: string;
-  status?: string;
-  target_amount?: number | null;
-  current_amount?: number | null;
-  end_date?: string | null;
-  created_at?: string | null;
-  image_banner?: string | string[];
-  full_name?: string;
-  category_id?: number;
-  is_wakaf?: string | number | boolean;
-};
+import type { TFunction } from "i18next";
+import type { Campaign } from "@/types";
+import { safeImageUrl } from "@/lib/safeUrl";
 
 type CampaignCardProps = {
   campaign: Campaign;
   variant: "list" | "grid" | "carousel";
   getCategoryLabel: (id: number) => string;
-  t: any;
+  t: TFunction;
   IMAGE_BASE_URL?: string;
 };
 
@@ -41,6 +31,8 @@ export default function CampaignCard({
   t,
   IMAGE_BASE_URL,
 }: CampaignCardProps) {
+  const [now] = useState(() => Date.now());
+
   // 1. LOGIKA STATUS & PERHITUNGAN
   const isWakafProgram =
     campaign.is_wakaf === true ||
@@ -57,17 +49,20 @@ export default function CampaignCard({
 
   let daysLeft: number | null = null;
   if (campaign.end_date) {
-    const diff = new Date(campaign.end_date).getTime() - Date.now();
+    const diff = new Date(campaign.end_date).getTime() - now;
     daysLeft = diff > 0 ? Math.ceil(diff / (1000 * 60 * 60 * 24)) : 0;
   }
   const isUnlimitedTime = daysLeft === null;
   const safeDaysLeft = daysLeft ?? 0;
 
   const banner = Array.isArray(campaign.image_banner) ? campaign.image_banner[0] : campaign.image_banner;
-  const imageUrl =
+  const rawImageUrl =
     typeof banner === "string" && banner.trim() !== ""
-      ? banner.startsWith("http") ? banner : `${IMAGE_BASE_URL}/${banner.replace(/^\/+/, "")}`
-      : "/bencana.webp";
+      ? banner.startsWith("http")
+        ? banner
+        : `${IMAGE_BASE_URL}/${banner.replace(/^\/+/, "")}`
+      : "";
+  const imageUrl = safeImageUrl(rawImageUrl, "/bencana.webp");
 
   const targetUrl = isWakafProgram
     ? `/wakaf/${campaign.slug || campaign.id}`
@@ -106,7 +101,7 @@ export default function CampaignCard({
       <div className="bg-white border-b border-gray-100 last:border-b-0 overflow-hidden flex flex-col group transition-colors hover:bg-slate-50/50">
         <Link href={targetUrl} className="flex flex-row p-3 gap-3.5 items-center">
           <div className="relative w-[130px] h-[85px] shrink-0 rounded-xl overflow-hidden">
-            <Image src={imageUrl} alt={campaign.title} fill sizes="130px" loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-500 bg-gray-100" />
+            <Image src={imageUrl} alt={campaign.title || "Program"} fill sizes="130px" loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-500 bg-gray-100" />
           </div>
           <div className="flex flex-col flex-1 min-w-0 py-0.5">
             <h3 className={`text-[13px] font-bold line-clamp-2 leading-snug text-[#2A1B33] mb-1 ${theme.textHover} transition-colors`}>{campaign.title}</h3>
@@ -147,7 +142,7 @@ export default function CampaignCard({
       <Link href={targetUrl} className={`w-[75vw] max-w-[280px] min-h-[330px] shrink-0 snap-center bg-white rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.06)] border border-gray-100 overflow-hidden flex flex-col group transition-shadow ${theme.shadowHover} cursor-pointer`}>
         {/* Gambar tanpa label kategori */}
         <div className="relative w-full h-[130px] shrink-0 overflow-hidden bg-gray-100">
-          <Image src={imageUrl} alt={campaign.title} fill sizes="(max-width: 768px) 75vw, 280px" loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-500" />
+          <Image src={imageUrl} alt={campaign.title || "Program"} fill sizes="(max-width: 768px) 75vw, 280px" loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-500" />
         </div>
         
         <div className="p-4 flex flex-col justify-between flex-1 relative z-20 bg-white">
@@ -206,7 +201,7 @@ export default function CampaignCard({
     <div className={`bg-white rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.06)] border border-gray-100 overflow-hidden flex flex-col group transition-all duration-300 h-full ${theme.shadowHover}`}>
       <Link href={targetUrl} className="block cursor-pointer flex-1 flex flex-col h-full">
         <div className="relative h-28 w-full shrink-0">
-          <Image src={imageUrl} alt={campaign.title} fill sizes="(max-width: 768px) 50vw, 240px" loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-500 bg-gray-100" />
+          <Image src={imageUrl} alt={campaign.title || "Program"} fill sizes="(max-width: 768px) 50vw, 240px" loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-500 bg-gray-100" />
         </div>
         <div className="flex flex-col flex-1 p-3">
           <div className="flex flex-wrap items-center gap-1 mb-1.5">

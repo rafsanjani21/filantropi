@@ -1,8 +1,8 @@
 /**
  * tests/e2e/helpers.ts
  *
- * Fungsi   : Menyediakan data campaign dummy, tipe perilaku POST, dan mockCampaignApis untuk mencegat request /api/campaigns/**.
- * Ekspor   : CAMPAIGN_MOCK, PostBehavior, mockCampaignApis, SLUG, DONASI_URL, WAKAF_URL
+ * Fungsi   : Menyediakan data campaign dummy, tipe perilaku POST, dan mockCampaignApis untuk mencegat request /campaigns/**.
+ * Ekspor   : CAMPAIGN_MOCK, PostBehavior, mockCampaignApis, mockTransactionDetail, SLUG, DONASI_URL, WAKAF_URL
  * Dipakai  : tests/e2e/donasi.spec.ts, tests/e2e/wakaf.spec.ts
  * Catatan  : Mendukung respons POST sukses, status error, delay-abort (timeout), dan delay-ok agar E2E tidak butuh backend.
  */
@@ -30,7 +30,7 @@ export type PostBehavior =
   | { kind: "delay-ok"; delayMs: number };
 
 /**
- * Mencegat SELURUH request ke /api/campaigns/... :
+ * Mencegat SELURUH request ke /campaigns/... (tanpa bergantung prefix /api):
  * - GET  /campaigns/transactions/...  -> riwayat kosong
  * - GET  /campaigns/{slug}            -> data campaign dummy (useCampaignDetail)
  * - POST /campaigns/create/v2/...     -> perilaku bisa dikonfigurasi (ok/500/timeout)
@@ -39,7 +39,7 @@ export async function mockCampaignApis(
   page: Page,
   post: PostBehavior = { kind: "ok" },
 ) {
-  await page.route("**/api/campaigns/**", async (route) => {
+  await page.route("**/campaigns/**", async (route) => {
     const req = route.request();
     const url = req.url();
 
@@ -59,7 +59,10 @@ export async function mockCampaignApis(
         await new Promise((r) => setTimeout(r, post.delayMs));
         return route.fulfill({
           status: 200,
-          json: { error: false, data: { payment_code: "MOCK-QRIS" } },
+          json: {
+            error: false,
+            data: { id: 123, status: "pending", payment_code: "MOCK-QRIS" },
+          },
         });
       }
       if (post.kind === "status") {
@@ -70,11 +73,50 @@ export async function mockCampaignApis(
       }
       return route.fulfill({
         status: 200,
-        json: { error: false, data: { payment_code: "MOCK-QRIS" } },
+        json: {
+          error: false,
+          data: { id: 123, status: "pending", payment_code: "MOCK-QRIS" },
+        },
       });
     }
 
     return route.fallback();
+  });
+}
+
+/**
+ * Mencegat GET /transactions/:id untuk halaman pending/success.
+ * Status dikembalikan berurutan; entri terakhir diulang untuk polling berikutnya.
+ */
+export async function mockTransactionDetail(
+  page: Page,
+  statuses: string[],
+  trxId = "123",
+) {
+  let call = 0;
+
+  await page.route("**/transactions/**", async (route) => {
+    if (route.request().method() !== "GET") return route.fallback();
+
+    const status = statuses[Math.min(call, statuses.length - 1)];
+    call += 1;
+
+    if (route.request().url().includes(`/transactions/${trxId}`)) {
+      return route.fulfill({
+        json: {
+          data: {
+            id: Number(trxId),
+            transaction_code: `TRX-${trxId}`,
+            status,
+            amount: 50_000,
+            campaign_name: "Program Tes QA",
+            sender_name: "Budi QA",
+          },
+        },
+      });
+    }
+
+    return route.fulfill({ json: { data: [] } });
   });
 }
 

@@ -25,23 +25,7 @@ import { AuthService } from "@/lib/auth.service";
 import { useTranslation } from "react-i18next";
 import BottomNav from "@/components/layout/BottomNav";
 import CampaignCard from "@/components/campaign/CampaignCard";
-
-// Type definisi
-type Campaign = {
-  id: string | number;
-  slug?: string;
-  title: string;
-  campaign_code?: string;
-  status?: string;
-  target_amount?: number | null;
-  current_amount?: number | null;
-  end_date?: string | null;
-  created_at?: string | null;
-  image_banner?: string | string[];
-  full_name?: string;
-  category_id?: number;
-  is_wakaf?: string | number | boolean; 
-};
+import type { Campaign } from "@/types";
 
 function ProgramsContent() {
   const { t } = useTranslation();
@@ -61,6 +45,7 @@ function ProgramsContent() {
   const [isGridView, setIsGridView] = useState(true);
 
   const observerTarget = useRef<HTMLDivElement>(null);
+  const [now] = useState(() => Date.now());
   const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
 
   const theme = {
@@ -96,7 +81,7 @@ function ProgramsContent() {
         const data = res.data || res;
 
         if (Array.isArray(data)) {
-          setCampaigns(data);
+          setCampaigns(data as Campaign[]);
           sessionStorage.setItem("cache_all_campaigns", JSON.stringify(data));
           sessionStorage.setItem("cache_all_campaigns_time", now.toString());
         }
@@ -112,7 +97,7 @@ function ProgramsContent() {
 
   const filteredCampaigns = useMemo(() => {
     const keyword = deferredSearch.toLowerCase();
-    const currentTime = Date.now();
+    const currentTime = now;
     const ONE_DAY_MS = 1000 * 60 * 60 * 24;
 
     const getCategoryName = (id?: number) => {
@@ -126,7 +111,7 @@ function ProgramsContent() {
       return id && categoryMap[id] ? categoryMap[id] : t("cat_general", "Umum");
     };
 
-    let result = campaigns
+    const result = campaigns
       .filter((campaign) => {
         const isWakafProgram = 
           campaign.is_wakaf === true || 
@@ -180,7 +165,7 @@ function ProgramsContent() {
     });
 
     return result.map((item) => item.campaign);
-  }, [campaigns, deferredSearch, sortOption, typeFilter, isWakafTheme, t]);
+  }, [campaigns, deferredSearch, sortOption, typeFilter, isWakafTheme, t, now]);
 
   const displayedCampaigns = filteredCampaigns.slice(0, visibleCount);
 
@@ -193,9 +178,10 @@ function ProgramsContent() {
       },
       { threshold: 0.1 }, 
     );
-    if (observerTarget.current) observer.observe(observerTarget.current);
+    const target = observerTarget.current;
+    if (target) observer.observe(target);
     return () => {
-      if (observerTarget.current) observer.unobserve(observerTarget.current);
+      if (target) observer.unobserve(target);
     };
   }, [observerTarget, displayedCampaigns.length]);
 

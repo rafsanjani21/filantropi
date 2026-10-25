@@ -4,16 +4,21 @@
  * Fungsi   : Form konfirmasi donasi: ringkasan nominal/metode, data donatur, toggle anonim, nomor telepon (digit saja), email, dan doa.
  * Ekspor   : default FormView
  * Dipakai  : app/(main)/programs/[slug]/donate/page.tsx dan tests/unit/FormViewDonasi.test.tsx
- * Catatan  : Tanpa "use client" (state dari parent); nama disembunyikan saat anonim; submit disabled saat isProcessing.
+ * Catatan  : Nama disembunyikan saat anonim; submit disabled saat isProcessing; logo metode di-fallback ke label jika gagal dimuat.
  */
 
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
 import { ArrowLeft, User, Mail, Heart, Phone } from "lucide-react";
 import { safeRp } from "@/lib/format";
+import type { FieldErrors } from "@/hooks/useTransactionSubmit";
+import type { PaymentMethod } from "@/types";
 
 type FormViewProps = {
-  campaign: any;
   amount: number | "";
-  selectedMethod: any;
+  selectedMethod: PaymentMethod | null;
   name: string;
   setName: (v: string) => void;
   phone: string;
@@ -28,18 +33,28 @@ type FormViewProps = {
   isProcessing: boolean;
   onBack: () => void;
   onChangeMethod: () => void;
+  errors?: FieldErrors;
 };
 
 export default function FormView({
-  campaign, amount, selectedMethod, name, setName, phone, setPhone, email, setEmail, 
-  isAnonymous, setIsAnonymous, doa, setDoa, onSubmit, isProcessing, onBack, onChangeMethod
+  amount, selectedMethod, name, setName, phone, setPhone, email, setEmail, 
+  isAnonymous, setIsAnonymous, doa, setDoa, onSubmit, isProcessing, onBack, onChangeMethod,
+  errors,
 }: FormViewProps) {
+  const [failedLogo, setFailedLogo] = useState<string | null>(null);
+  const logoSrc = selectedMethod?.logo || "/logo/qris.svg";
+
   return (
     <div className="w-full max-w-md mx-auto bg-slate-50 min-h-screen flex flex-col relative animate-in slide-in-from-right-4 duration-300">
       
       {/* HEADER */}
       <div className="bg-white/80 backdrop-blur-md px-5 py-4 flex items-center gap-4 sticky top-0 z-20 border-b border-slate-100">
-        <button onClick={onBack} disabled={isProcessing} className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200 transition-colors disabled:opacity-50">
+        <button
+          onClick={onBack}
+          disabled={isProcessing}
+          aria-label="Kembali"
+          className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200 transition-colors disabled:opacity-50"
+        >
           <ArrowLeft size={18} />
         </button>
         <h1 className="font-bold text-slate-800 text-[15px] tracking-wide">Konfirmasi Donasi</h1>
@@ -52,7 +67,12 @@ export default function FormView({
           <div className="absolute -right-10 -top-10 bg-white/10 w-32 h-32 rounded-full opacity-50 blur-2xl"></div>
           
           <p className="text-white/80 text-[12px] font-medium uppercase tracking-wider mb-1 relative z-10">Total Donasi</p>
-          <p className="text-3xl font-black mb-6 relative z-10">Rp {safeRp(amount)}</p>
+          <p className="text-3xl font-black mb-2 relative z-10">Rp {safeRp(amount)}</p>
+          {errors?.amount && (
+            <p id="donation-amount-error" role="alert" className="relative z-10 mb-4 text-[12px] font-medium text-rose-100">
+              {errors.amount}
+            </p>
+          )}
           
           {/* AREA METODE PEMBAYARAN & LOGO */}
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 flex items-center justify-between border border-white/20 relative z-10">
@@ -60,15 +80,21 @@ export default function FormView({
               
               {/* LOGO METODE PEMBAYARAN */}
               <div className="w-14 h-9 bg-white rounded-lg flex items-center justify-center p-1.5 shrink-0 shadow-inner">
-                <img 
-                  src={selectedMethod?.logo || "/logo/qris.png"} 
-                  alt={selectedMethod?.name || "QRIS"} 
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement!.innerHTML = `<span class="text-[10px] font-black text-slate-400 tracking-tighter">${selectedMethod?.id || "QRIS"}</span>`;
-                  }}
-                />
+                {failedLogo === logoSrc ? (
+                  <span className="text-[10px] font-black text-slate-400 tracking-tighter">
+                    {selectedMethod?.id || "QRIS"}
+                  </span>
+                ) : (
+                  <Image
+                    src={logoSrc}
+                    alt={selectedMethod?.name || "QRIS"}
+                    width={56}
+                    height={36}
+                    unoptimized
+                    className="w-full h-full object-contain"
+                    onError={() => setFailedLogo(logoSrc)}
+                  />
+                )}
               </div>
               
               <span className="font-bold text-[13px] truncate">{selectedMethod?.name || "QRIS Pay"}</span>
@@ -92,47 +118,89 @@ export default function FormView({
           <div className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-100">
             <span className="text-[12px] font-bold text-slate-600">Sembunyikan nama (Anonim)</span>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" checked={isAnonymous} onChange={(e) => setIsAnonymous(e.target.checked)} className="sr-only peer" />
+              <input
+                type="checkbox"
+                checked={isAnonymous}
+                onChange={(e) => setIsAnonymous(e.target.checked)}
+                aria-label="Sembunyikan nama (Anonim)"
+                className="sr-only peer"
+              />
               <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#7C3996]"></div>
             </label>
           </div>
 
           {!isAnonymous && (
-            <div className="flex items-center bg-slate-50 rounded-2xl px-4 py-1 border border-slate-100 focus-within:border-[#7C3996] transition-colors">
-              <User size={18} className="text-slate-400" />
-              <input 
-                type="text" 
-                value={name} 
-                onChange={(e) => setName(e.target.value)} 
-                placeholder="Nama Lengkap" 
-                className="w-full bg-transparent border-none p-3 text-[13px] font-bold text-slate-700 outline-none placeholder-slate-400"
-              />
+            <div>
+              <div className={`flex items-center bg-slate-50 rounded-2xl px-4 py-1 border transition-colors ${errors?.name ? "border-rose-300" : "border-slate-100 focus-within:border-[#7C3996]"}`}>
+                <User size={18} className="text-slate-400" />
+                <input 
+                  type="text" 
+                  value={name} 
+                  onChange={(e) => setName(e.target.value)} 
+                  placeholder="Nama Lengkap" 
+                  name="name"
+                  autoComplete="name"
+                  aria-label="Nama Lengkap"
+                  aria-invalid={errors?.name ? true : undefined}
+                  aria-describedby={errors?.name ? "donation-name-error" : undefined}
+                  className="w-full bg-transparent border-none p-3 text-[13px] font-bold text-slate-700 outline-none placeholder-slate-400"
+                />
+              </div>
+              {errors?.name && (
+                <p id="donation-name-error" role="alert" className="mt-1.5 px-2 text-[11px] font-semibold text-rose-600">
+                  {errors.name}
+                </p>
+              )}
             </div>
           )}
 
-          <div className="flex items-center bg-slate-50 rounded-2xl px-4 py-1 border border-slate-100 focus-within:border-[#7C3996] transition-colors">
-            <Phone size={18} className="text-slate-400" />
-            <input 
-              type="tel" 
-              value={phone} 
-              onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, "");
-                  setPhone(val);
-                }} 
-              placeholder="08xxxxxxxxxx" 
-              className="w-full bg-transparent border-none p-3 text-[13px] font-bold text-slate-700 outline-none placeholder-slate-400"
-            />
+          <div>
+            <div className={`flex items-center bg-slate-50 rounded-2xl px-4 py-1 border transition-colors ${errors?.phone ? "border-rose-300" : "border-slate-100 focus-within:border-[#7C3996]"}`}>
+              <Phone size={18} className="text-slate-400" />
+              <input 
+                type="tel" 
+                value={phone} 
+                onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "");
+                    setPhone(val);
+                  }} 
+                placeholder="08xxxxxxxxxx" 
+                name="phone"
+                autoComplete="tel"
+                aria-label="Nomor telepon"
+                aria-invalid={errors?.phone ? true : undefined}
+                aria-describedby={errors?.phone ? "donation-phone-error" : undefined}
+                className="w-full bg-transparent border-none p-3 text-[13px] font-bold text-slate-700 outline-none placeholder-slate-400"
+              />
+            </div>
+            {errors?.phone && (
+              <p id="donation-phone-error" role="alert" className="mt-1.5 px-2 text-[11px] font-semibold text-rose-600">
+                {errors.phone}
+              </p>
+            )}
           </div>
 
-          <div className="flex items-center bg-slate-50 rounded-2xl px-4 py-1 border border-slate-100 focus-within:border-[#7C3996] transition-colors">
-            <Mail size={18} className="text-slate-400" />
-            <input 
-              type="email" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              placeholder="user@example.com" 
-              className="w-full bg-transparent border-none p-3 text-[13px] font-bold text-slate-700 outline-none placeholder-slate-400"
-            />
+          <div>
+            <div className={`flex items-center bg-slate-50 rounded-2xl px-4 py-1 border transition-colors ${errors?.email ? "border-rose-300" : "border-slate-100 focus-within:border-[#7C3996]"}`}>
+              <Mail size={18} className="text-slate-400" />
+              <input 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                placeholder="user@example.com" 
+                name="email"
+                autoComplete="email"
+                aria-label="Email"
+                aria-invalid={errors?.email ? true : undefined}
+                aria-describedby={errors?.email ? "donation-email-error" : undefined}
+                className="w-full bg-transparent border-none p-3 text-[13px] font-bold text-slate-700 outline-none placeholder-slate-400"
+              />
+            </div>
+            {errors?.email && (
+              <p id="donation-email-error" role="alert" className="mt-1.5 px-2 text-[11px] font-semibold text-rose-600">
+                {errors.email}
+              </p>
+            )}
           </div>
         </div>
 
@@ -156,6 +224,11 @@ export default function FormView({
           <span className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">Total Pembayaran</span>
           <span className="font-black text-xl text-[#7C3996]">Rp {safeRp(amount)}</span>
         </div>
+        {errors?.form && (
+          <p role="alert" className="mb-3 px-2 text-[11px] font-semibold text-rose-600">
+            {errors.form}
+          </p>
+        )}
         <button 
           onClick={onSubmit} 
           disabled={isProcessing} 

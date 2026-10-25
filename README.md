@@ -55,7 +55,7 @@ Filantropi adalah aplikasi web yang menghubungkan **donatur** dengan **penggalan
 | State Management | **Zustand** |
 | Autentikasi | **Firebase Auth** (Google) + JWT backend |
 | HTTP Client | `fetch` dibungkus helper `apiFetch()` |
-| QR Pembayaran | **qrcode.react** (render QRIS; `react-qr-code` terpasang tapi belum dipakai) |
+| QR Pembayaran | **qrcode.react** (`QrisView`) + **react-qr-code** (`QrisSementara` fallback lokal) |
 | Internasionalisasi | **i18next** + **react-i18next** |
 | Notifikasi | **react-hot-toast** |
 | Ikon | **Lucide React** |
@@ -118,20 +118,25 @@ filantropi/
 │   │   ├── progress/[id]/   → Progres penyaluran dana
 │   │   ├── profile/         → Profil & submenu (user, beneficiary, history, help, terms)
 │   │   ├── creator/[id]/    → Profil publik penggalang dana
-│   │   └── payment/         → Hasil pembayaran: success/ dan failed/
-│   └── (legacy)/            → Redirect kompatibilitas URL lama (URL tidak berubah):
-│                              DetailPage/, WakafDetailPage/, ProgressPage/,
-│                              ProgramPage/EditProgram/
+│   │   └── payment/         → Status pembayaran: pending/, success/, failed/
+│   │
+│   └── (URL lama)           → Dialihkan terpusat via redirects() di next.config.ts
 │
 ├── lib/                     🔧 UTILITAS & LAYANAN INTI
-│   ├── api.ts               → apiFetch(): auto Authorization, refresh token 401,
-│   │                          force logout (dengan daftar halaman yang dikecualikan)
+│   ├── api.ts               → apiFetch(): auto Authorization, allowlist publik, timeout 20 dtk,
+│   │                          refresh single-flight, force logout
+│   ├── authTokens.ts        → Access token di memori, refresh token di sessionStorage, migrasi legacy
 │   ├── auth.service.ts      → Login, register, logout, profil, CRUD campaign
 │   ├── firebase.ts          → Inisialisasi Firebase & provider Google
+│   ├── firebaseSession.ts   → Session persistence & sign out Firebase
+│   ├── safeUrl.ts           → Sanitasi URL href/gambar (blokir javascript/data/ftp)
 │   └── i18n.ts              → Kamus teks bahasa Indonesia (single-locale)
 │
 ├── hooks/                   🪝 HOOK KUSTOM
-│   └── useAuth.ts           → smartAuth (login sekali klik), logout, getProfile, createCampaign
+│   ├── useAuth.ts           → smartAuth (login sekali klik), logout, getProfile, createCampaign
+│   ├── useTransactionSubmit.ts → submit Donasi/Wakaf, guard double-submit, QRIS lokal,
+│   │                          status pencatatan gateway, idempotency key per payload
+│   └── useCampaignDetail.ts → fetch detail campaign (dipakai halaman donasi/wakaf)
 │
 ├── store/                   🗄️ STATE GLOBAL
 │   └── useAuthStore.ts      → Zustand: simpan user, peran, status login
@@ -140,8 +145,12 @@ filantropi/
 │   └── logo/                → Ikon pembayaran (AstraPay, BNI, BSS, Permata, dll.)
 │
 ├── .github/workflows/
-│   └── deploy.yml           → Otomatis deploy ke VPS setiap push ke branch main
+│   ├── quality.yml          → Quality gate: audit, lint, typecheck, unit, E2E, build
+│   └── deploy.yml           → Deploy ke VPS setelah quality gate lulus (push ke main)
 │
+├── tests/
+│   ├── unit/                → Vitest: validasi, QRIS, hook submit, apiFetch, FormView
+│   └── e2e/                 → Playwright: alur Donasi/Wakaf + API mocking (tanpa backend)
 ├── .env / .env.example      → Konfigurasi rahasia (API, Firebase, slot contract)
 ├── next.config.ts           → Konfigurasi Next.js (rewrite proxy /api-proxy → backend)
 ├── tsconfig.json            → Konfigurasi TypeScript (path alias "@/")
@@ -153,14 +162,13 @@ filantropi/
 
 | Folder | Isi | Dipakai Untuk |
 |---|---|---|
-| `layout/` | `AuthProvider`, `BottomNav`, `GlobalLiveDonationBlink`, `SessionModal`, `WhatsAppButton` | Elemen global yang muncul di semua halaman |
+| `layout/` | `BottomNav`, `GlobalLiveDonationBlink`, `SessionModal`, `WhatsAppButton` | Elemen global yang muncul di semua halaman |
 | `layout/navbar/` | `LogoNavbar`, `AuthNavbar`, `DetailNavbar` | Navigasi atas (beranda, auth/daftar, detail) |
 | `payment/` | `NominalView`, `MethodView`, `QrisView`, `QrisSementara`, `VaView` | Alur pembayaran donasi & wakaf (dipakai ulang) |
 | `campaign/` | `CampaignCard`, `CampaignBanner`, `CampaignHeader`, `CampaignStory`, `DonationHistory` | Kartu & detail program |
 | `news/` | `NewsCard` | Kartu berita |
 | `home/` | `Carousel`, `LatestPrograms`, `PartnerWakaf` | Beranda |
-| `providers/` | `I18nProvider` | Pembungkus i18n di root layout |
-| `legacy/` | `QueryRedirect` | Redirect halaman lama berbasis query string |
+| `providers/` | `AuthProvider`, `I18nProvider` | Pembungkus auth & i18n di root layout |
 
 ### Rincian folder halaman besar
 
@@ -215,10 +223,13 @@ Karena proyek memakai **App Router**, nama folder = URL halaman.
 | `/profile/help` | `app/(main)/profile/help/page.tsx` | Pusat bantuan |
 | `/profile/terms` | `app/(main)/profile/terms/page.tsx` | Syarat & ketentuan |
 | `/creator/[id]` | `app/(main)/creator/[id]/page.tsx` | Profil penggalang dana |
+| `/payment/pending` | `app/(main)/payment/pending/page.tsx` | Menunggu pembayaran + polling status transaksi |
 | `/payment/success` | `app/(main)/payment/success/page.tsx` | Halaman pembayaran berhasil |
 | `/payment/failed` | `app/(main)/payment/failed/page.tsx` | Halaman pembayaran gagal |
 
-> URL lama (`/HomePage`, `/AllProgramsPage`, `/DetailPage?slug=...`, `/ProfilePage/...`, `/Payment/Success`, dll.) tetap didukung melalui `redirects()` di `next.config.ts` serta shim redirect di `app/(legacy)/`.
+> URL lama (`/HomePage`, `/AllProgramsPage`, `/DetailPage?slug=...`, `/ProfilePage/...`, dll.) tetap didukung melalui `redirects()` di `next.config.ts` — termasuk pemetaan query `?slug=` dan `?id=`.
+>
+> ⚠️ Redirect `/Payment/Success` dan `/Payment/Failed` **dihapus** karena pencocokan path Next.js bersifat case-insensitive sehingga keduanya memicu loop `ERR_TOO_MANY_REDIRECTS`. Gunakan path lowercase.
 
 ---
 
@@ -236,7 +247,7 @@ Firebase Auth (signInWithPopup)  ──►  mendapat id_token
 POST /auth/login  ──►  backend menerbitkan access_token + refresh_token
         │
         ▼
-Disimpan di localStorage / sessionStorage
+Access token disimpan di memori; refresh token di sessionStorage
         │
         ▼
 useAuth / useAuthStore  ──►  coba ambil profil sebagai "donor";
@@ -252,10 +263,11 @@ Kode utama: `hooks/useAuth.ts` (`smartAuth`), `lib/auth.service.ts`, `store/useA
 
 Setiap request ke backend lewat helper `apiFetch()` yang otomatis:
 
-1. Menyisipkan header `Authorization: Bearer <token>` — **kecuali** endpoint publik (`/auth/*`, `GET /campaigns/*` non-`me`, `GET /donations/*`) atau body `FormData`.
-2. Jika server menjawab **401 (token kedaluwarsa)** → memanggil `/auth/refresh-token` lalu **mengulang request** dengan token baru.
-3. Jika refresh gagal / tidak ada refresh token → **force logout**: token dibersihkan dan user dialihkan ke `/login`.
-4. `SessionModal` (mount di `layout.tsx`) siap menampilkan dialog sesi habis ketika event `sessionExpired` dikirim.
+1. Menyisipkan header `Authorization: Bearer <token>` — **kecuali** endpoint publik yang ada di allowlist eksplisit (`/auth/*`, daftar/detail campaign, transaksi terbaru, stepper/disbursement/report, saldo wallet, profil kreator publik), request dengan opsi `publicRead`, atau body `FormData`.
+2. Memakai timeout **20 detik** per request (AbortController); error ditampilkan sebagai pesan yang bisa dibaca.
+3. Jika server menjawab **401 (token kedaluwarsa)** → memanggil `/auth/refresh-token` lalu **mengulang request** dengan token baru. Request 401 yang bersamaan berbagi **satu** proses refresh (single-flight).
+4. Jika refresh gagal / tidak ada refresh token → **force logout**: token dibersihkan, sesi Firebase di-sign-out, dan user dialihkan ke `/login` (halaman pendaftaran dikecualikan).
+5. `SessionModal` (mount di `layout.tsx`) siap menampilkan dialog sesi habis ketika event `sessionExpired` dikirim.
 
 ### 3. Alur Donasi (Pembayaran)
 
@@ -265,12 +277,14 @@ Setiap request ke backend lewat helper `apiFetch()` yang otomatis:
       1. NominalView   (pilih/isi jumlah, min Rp 1.000)
       2. MethodView     (pilih QRIS / AstraPay / VA bank / Indomaret)
       3. FormView       (nama, email, telepon, anonim, doa)
-      4. QrisSementara / QrisView (QR dari qrcode.react) atau VaView (nomor VA)
-   → backend: POST .../transaction-donasi
-   → redirect ke /payment/success atau /payment/failed
+       4. QrisSementara / QrisView (QR dari qrcode.react) atau VaView (nomor VA)
+   → backend: POST .../transaction-donasi (background, tidak memblokir QRIS)
+   → "Saya Sudah Membayar" → /payment/pending (polling) → success/failed
 ```
 
-- Nominal minimal untuk metode selain QRIS & AstraPay: **Rp 10.000**.
+- Nominal transaksi: **minimal Rp 1.000**, maksimal **Rp 1.000.000.000**, bilangan bulat.
+- Jika POST gateway gagal/timeout, **QRIS Dinamis lokal tetap tampil** dan UI menampilkan status pencatatan yang jujur (bukan klaim sukses palsu). Pengguna diarahkan ke verifikasi manual.
+- Tombol submit di-guard secara sinkron (`processingRef`) sehingga klik ganda tidak menghasilkan dua transaksi.
 - Komponen bersama ada di `components/payment/`.
 
 ### 4. Alur Wakaf
@@ -310,7 +324,8 @@ Salin `.env.example` menjadi `.env`, lalu isi nilainya:
 |---|---|
 | `NEXT_PUBLIC_API_BASE_URL` | **Wajib.** Alamat backend API (contoh: `https://example.com/api`) |
 | `NEXT_PUBLIC_IMAGE_BASE_URL` | **Wajib.** Alamat aset/gambar dari backend |
-| `API_PROXY_TARGET` | Target rewrite `/api-proxy/:path*` (server-side). Default ke backend dev jika kosong |
+| `API_PROXY_TARGET` | Opsional. Target rewrite `/api-proxy/:path*` (server-side); rewrite nonaktif jika kosong |
+| `DEV_ALLOWED_ORIGINS` | Opsional (development). Hostname tambahan untuk dev server, dipisah koma tanpa protokol/port |
 | `NEXT_PUBLIC_QRIS_STATIS` | Payload QRIS statis untuk fallback QRIS dinamis |
 | `NEXT_PUBLIC_FIREBASE_API_KEY` | Kredensial Firebase untuk login Google |
 | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | "" |
@@ -329,10 +344,13 @@ Salin `.env.example` menjadi `.env`, lalu isi nilainya:
 
 Deploy otomatis lewat GitHub Actions (`.github/workflows/deploy.yml`):
 
-1. Setiap **push ke branch `main`** → workflow aktif.
-2. Workflow membuka **SSH ke VPS** memakai secret: `VPS_HOST`, `VPS_USERNAME`, `VPS_PORT`, `VPS_SSH_KEY`.
-3. Di VPS: `git fetch` → `git reset --hard origin/main` → `npm install` → `npm run build`.
-4. Aplikasi di-reload oleh **PM2** dengan nama proses **"Filantropi LP"** pada **port 3005** (zero downtime).
+1. Setiap **push ke branch `main`** → workflow aktif. Pull request ke `main` juga menjalankan quality gate.
+2. **Quality gate** (`.github/workflows/quality.yml`) berjalan lebih dulu: `npm ci`, audit dependensi produksi, lint, typecheck, unit test, E2E, dan build. Deploy dibatalkan jika ada langkah yang gagal.
+3. Setelah lulus, workflow membuka **SSH ke VPS** memakai secret: `VPS_HOST`, `VPS_USERNAME`, `VPS_PORT`, `VPS_SSH_KEY`.
+4. Di VPS: `git fetch` → `git reset --hard origin/main` → `npm ci` → `npm run build`.
+5. Jika install/build gagal, workflow **rollback** ke commit sebelumnya lalu build ulang.
+6. Aplikasi dijalankan **single instance** (`pm2 ... -i 1`) dengan nama proses **"Filantropi LP"** pada **port 3005** — Next.js server tidak boleh di-cluster karena state in-memory (rate limit/idempotency) tidak dibagi antar worker.
+7. Setelah reload, workflow melakukan **healthcheck** ke `http://127.0.0.1:3005/`; bila gagal, rollback otomatis.
 
 ### Konfigurasi GitHub Secrets
 
@@ -350,8 +368,10 @@ Buka **Repository → Settings → Secrets and variables → Actions**, lalu tam
 | `npm run build` | Build produksi |
 | `npm run start` | Jalankan versi produksi |
 | `npm run lint` | Periksa kualitas kode dengan ESLint |
+| `npm run typecheck` | Generate tipe route Next.js lalu cek TypeScript |
 | `npm test` | Unit test (Vitest) |
-| `npm run test:e2e` | E2E test (Playwright, API dimock) |
+| `npm run test:coverage` | Unit test + laporan coverage (`coverage/index.html`) |
+| `npm run test:e2e` | E2E test (Playwright, API dimock, tanpa backend) |
 
 ---
 

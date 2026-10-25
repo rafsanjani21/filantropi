@@ -1,26 +1,27 @@
 /**
  * components/payment/QrisView.tsx
  *
- * Fungsi   : Tampilan QRIS dinamis dengan hitung mundur 1 jam, unduh QR, dan instruksi pembayaran.
+ * Fungsi   : Tampilan QRIS dinamis dengan hitung mundur 1 Jam, unduh QR, dan instruksi pembayaran.
  * Ekspor   : default QrisView
- * Dipakai  : Tidak ditemukan pemakai aktif saat ini; hanya dirujuk dalam komentar di app/(main)/programs/[slug]/donate/page.tsx dan app/(main)/wakaf/[slug]/donate/page.tsx
- * Catatan  : Countdown setInterval 1 detik dan selalu dibersihkan; QR kedaluwarsa saat waktu habis.
+ * Catatan  : Menggunakan QRCodeCanvas untuk me-render raw EMVCo string (Sandbox/Production) dari backend Midtrans.
  */
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { ArrowLeft, Clock, AlertCircle, Download, CheckCircle2, ChevronRight } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import toast from "react-hot-toast";
+import type { QrisData } from "@/types";
 
 type QrisViewProps = { 
-  qrisData: any; 
+  qrisData: QrisData | null; 
   amount: number | ""; 
   transactionType: "donasi" | "wakaf";
   onBack: () => void; 
-  onCheckStatus: () => void; // Dibuat dinamis agar bisa diarahkan ke Riwayat Donasi atau Wakaf
+  onCheckStatus: () => void;
 };
 
 export default function QrisView({ qrisData, amount, transactionType, onBack, onCheckStatus }: QrisViewProps) {
-  const [timeLeft, setTimeLeft] = useState(3600); // 1 Jam
+  const [timeLeft, setTimeLeft] = useState(900);
 
   const uiConfig = {
     donasi: {
@@ -63,32 +64,46 @@ export default function QrisView({ qrisData, amount, transactionType, onBack, on
   const formatRp = (num: number) => new Intl.NumberFormat("id-ID").format(num);
   const isTimeUp = timeLeft <= 0;
 
-  const handleDownloadQR = () => {
-    const canvas = document.getElementById("qris-canvas") as HTMLCanvasElement;
-    if (canvas) {
+  const handleDownloadQR = async () => {
+    try {
       const paddedCanvas = document.createElement("canvas");
       const padding = 40;
-      paddedCanvas.width = canvas.width + padding * 2;
-      paddedCanvas.height = canvas.height + padding * 2;
+      const size = 180;
+      paddedCanvas.width = size + padding * 2;
+      paddedCanvas.height = size + padding * 2;
       const ctx = paddedCanvas.getContext("2d");
       
-      if (ctx) {
-        ctx.fillStyle = "#ffffff"; 
-        ctx.fillRect(0, 0, paddedCanvas.width, paddedCanvas.height);
-        ctx.drawImage(canvas, padding, padding);
-        
-        const pngUrl = paddedCanvas.toDataURL("image/png");
-        const downloadLink = document.createElement("a");
-        downloadLink.href = pngUrl;
-        downloadLink.download = `QRIS-${theme.title}-${Date.now()}.png`;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-        
-        toast.success("Kode QRIS berhasil disimpan", {
-          icon: "✓", style: { borderRadius: "12px", background: theme.toastColor, color: "#fff", fontWeight: "bold" }
-        });
+      if (!ctx) return;
+      
+      // Beri warna latar belakang putih
+      ctx.fillStyle = "#ffffff"; 
+      ctx.fillRect(0, 0, paddedCanvas.width, paddedCanvas.height);
+
+      const qrisCanvas = document.getElementById("qris-canvas") as HTMLCanvasElement;
+
+      if (qrisCanvas) {
+        ctx.drawImage(qrisCanvas, padding, padding, size, size);
+      } else {
+        toast.error("Kode QR tidak ditemukan.");
+        return;
       }
+      
+      const pngUrl = paddedCanvas.toDataURL("image/png");
+      const downloadLink = document.createElement("a");
+      downloadLink.href = pngUrl;
+      downloadLink.download = `QRIS-${theme.title}-${Date.now()}.png`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      
+      toast.success("Kode QRIS berhasil disimpan", {
+        icon: "✓", style: { borderRadius: "12px", background: theme.toastColor, color: "#fff", fontWeight: "bold" }
+      });
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Gagal menyimpan QR. Silakan screenshot layar ini.", {
+        style: { borderRadius: "12px", background: "#EF4444", color: "#fff", fontWeight: "bold" }
+      });
     }
   };
 
@@ -135,19 +150,24 @@ export default function QrisView({ qrisData, amount, transactionType, onBack, on
               </>
             )}
 
-            <div className="bg-white p-3 rounded-2xl shadow-sm z-10">
+            <div className="bg-white p-3 rounded-2xl shadow-sm z-10 flex items-center justify-center relative w-[180px] h-[180px]">
               {isTimeUp ? (
-                <div className="w-[180px] h-[180px] flex flex-col items-center justify-center bg-slate-50 border border-slate-100 rounded-xl text-slate-400">
+                <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 border border-slate-100 rounded-xl text-slate-400">
                   <AlertCircle size={40} className="mb-2 opacity-30" />
                   <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Kedaluwarsa</span>
                 </div>
               ) : (
-                <div className="relative">
-                  <QRCodeCanvas id="qris-canvas" value={qrisData?.payment_code || "https://qris.id"} size={180} level="Q" />
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-1 rounded-md shadow-sm">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" alt="QRIS" className="h-5 object-contain" />
+                <>
+                  <QRCodeCanvas 
+                    id="qris-canvas" 
+                    value={String(qrisData?.qris_url || qrisData?.payment_code || "https://qris.id")} 
+                    size={180} 
+                    level="Q" 
+                  />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-1 rounded-md shadow-sm pointer-events-none">
+                    <Image src="/logo/qris.svg" alt="QRIS" width={60} height={20} unoptimized style={{ width: 60, height: 20 }} className="object-contain" />
                   </div>
-                </div>
+                </>
               )}
             </div>
           </div>
@@ -190,7 +210,7 @@ export default function QrisView({ qrisData, amount, transactionType, onBack, on
 
       <div className="fixed bottom-0 w-full max-w-md bg-white/80 backdrop-blur-xl p-5 border-t border-slate-100 z-30 shadow-[0_-20px_40px_-20px_rgba(0,0,0,0.05)]">
         <button onClick={onCheckStatus} className={`w-full ${theme.bgMain} text-white font-bold text-[15px] py-4 rounded-full shadow-lg ${theme.hoverBtn} active:scale-95 transition-all flex items-center justify-center gap-2`}>
-          Selesai & Kembali ke Beranda
+          Cek Status
           <ChevronRight size={18} />
         </button>
       </div>

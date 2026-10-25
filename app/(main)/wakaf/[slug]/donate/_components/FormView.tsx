@@ -7,12 +7,15 @@
  * Catatan  : Tanpa "use client"; NIK disaring non-digit dan dipotong 16 karakter; submit disabled saat isProcessing.
  */
 
+import Image from "next/image";
 import { ArrowLeft, User, Mail, Heart, Check, Phone, CreditCard } from "lucide-react"; 
 import { safeRp } from "@/lib/format";
+import type { FieldErrors } from "@/hooks/useTransactionSubmit";
+import type { PaymentMethod } from "@/types";
 
 type FormWakafViewProps = {
   amount: number | "";
-  selectedMethod: any;
+  selectedMethod: PaymentMethod | null;
   wakafName: string;
   name: string;
   setName: (val: string) => void;
@@ -28,6 +31,7 @@ type FormWakafViewProps = {
   isProcessing: boolean;
   onBack: () => void;
   onChangeMethod: () => void;
+  errors?: FieldErrors;
 };
 
 export default function FormWakafView({
@@ -48,9 +52,9 @@ export default function FormWakafView({
   isProcessing,
   onBack,
   onChangeMethod,
+  errors,
 }: FormWakafViewProps) {
-  const defaultQrisLogo =
-    "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg";
+const defaultQrisLogo = "/logo/qris.svg";
 
   return (
     <div className="w-full max-w-md mx-auto bg-slate-50 min-h-screen flex flex-col relative animate-in slide-in-from-right-4 duration-300">
@@ -59,6 +63,7 @@ export default function FormWakafView({
         <button
           onClick={onBack}
           disabled={isProcessing}
+          aria-label="Kembali"
           className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200 transition-colors disabled:opacity-50"
         >
           <ArrowLeft size={18} />
@@ -122,16 +127,24 @@ export default function FormWakafView({
           <p className="text-emerald-100 text-[12px] font-medium uppercase tracking-wider mb-1 relative z-10">
             Total Penyaluran
           </p>
-          <p className="text-3xl font-black mb-6 relative z-10">
+          <p className="text-3xl font-black mb-2 relative z-10">
             Rp {safeRp(amount)}
           </p>
+          {errors?.amount && (
+            <p role="alert" className="relative z-10 mb-4 text-[12px] font-medium text-rose-100">
+              {errors.amount}
+            </p>
+          )}
 
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 flex items-center justify-between border border-white/20 relative z-10">
             <div className="flex items-center gap-3 overflow-hidden">
               <div className="w-14 h-9 bg-white rounded-lg flex items-center justify-center p-1.5 shrink-0 shadow-inner">
-                <img
+                <Image
                   src={selectedMethod?.logo || defaultQrisLogo}
                   alt={selectedMethod?.name || "QRIS"}
+                  width={56}
+                  height={36}
+                  unoptimized
                   className="w-full h-full object-contain"
                 />
               </div>
@@ -184,9 +197,19 @@ export default function FormWakafView({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Nama Lengkap Anda"
-                className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                name="name"
+                autoComplete="name"
+                aria-label="Nama Lengkap Anda"
+                aria-invalid={errors?.name ? true : undefined}
+                aria-describedby={errors?.name ? "wakaf-name-error" : undefined}
+                className={`w-full pl-11 pr-4 py-3.5 bg-slate-50 border rounded-2xl text-[13px] font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all ${errors?.name ? "border-rose-300" : "border-slate-100"}`}
               />
             </div>
+            {errors?.name && (
+              <p id="wakaf-name-error" role="alert" className="px-2 text-[11px] font-semibold text-rose-600">
+                {errors.name}
+              </p>
+            )}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                 <Phone size={18} />
@@ -199,9 +222,19 @@ export default function FormWakafView({
                   setPhone(val);
                 }}
                 placeholder="08xxxxxxxxxx"
-                className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                name="phone"
+                autoComplete="tel"
+                aria-label="Nomor telepon"
+                aria-invalid={errors?.phone ? true : undefined}
+                aria-describedby={errors?.phone ? "wakaf-phone-error" : undefined}
+                className={`w-full pl-11 pr-4 py-3.5 bg-slate-50 border rounded-2xl text-[13px] font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all ${errors?.phone ? "border-rose-300" : "border-slate-100"}`}
               />
             </div>
+            {errors?.phone && (
+              <p id="wakaf-phone-error" role="alert" className="px-2 text-[11px] font-semibold text-rose-600">
+                {errors.phone}
+              </p>
+            )}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                 <Mail size={18} />
@@ -211,9 +244,19 @@ export default function FormWakafView({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="user123@example.com"
-                className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                name="email"
+                autoComplete="email"
+                aria-label="Email"
+                aria-invalid={errors?.email ? true : undefined}
+                aria-describedby={errors?.email ? "wakaf-email-error" : undefined}
+                className={`w-full pl-11 pr-4 py-3.5 bg-slate-50 border rounded-2xl text-[13px] font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all ${errors?.email ? "border-rose-300" : "border-slate-100"}`}
               />
             </div>
+            {errors?.email && (
+              <p id="wakaf-email-error" role="alert" className="px-2 text-[11px] font-semibold text-rose-600">
+                {errors.email}
+              </p>
+            )}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                 <CreditCard size={18} />
@@ -228,9 +271,20 @@ export default function FormWakafView({
                   setNik(val);
                 }}
                 placeholder="Nomor NIK (Opsional)"
-                className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                name="nik"
+                autoComplete="off"
+                aria-label="Nomor NIK (Opsional)"
+                aria-invalid={errors?.nik ? true : undefined}
+                aria-describedby={errors?.nik ? "wakaf-nik-error" : undefined}
+                maxLength={16}
+                className={`w-full pl-11 pr-4 py-3.5 bg-slate-50 border rounded-2xl text-[13px] font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all ${errors?.nik ? "border-rose-300" : "border-slate-100"}`}
               />
             </div>
+            {errors?.nik && (
+              <p id="wakaf-nik-error" role="alert" className="px-2 text-[11px] font-semibold text-rose-600">
+                {errors.nik}
+              </p>
+            )}
           </div>
         </div>
 
@@ -256,6 +310,11 @@ export default function FormWakafView({
 
       {/* FLOATING ACTION BOTTOM */}
       <div className="fixed bottom-0 w-full max-w-md bg-white p-5 rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.08)] z-30">
+        {errors?.form && (
+          <p role="alert" className="mb-3 px-2 text-[11px] font-semibold text-rose-600">
+            {errors.form}
+          </p>
+        )}
         <button
           onClick={onSubmit}
           disabled={isProcessing}

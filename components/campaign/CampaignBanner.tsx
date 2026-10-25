@@ -8,15 +8,23 @@
  */
 import { useState } from "react";
 import Image from "next/image";
+import { safeImageUrl } from "@/lib/safeUrl";
 
-export default function CampaignBanner({ images }: { images: string | string[] }) {
+export default function CampaignBanner({ images }: { images?: string | string[] | null }) {
   const [activeImage, setActiveImage] = useState(0);
   const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
 
-  const campaignImages = (Array.isArray(images) ? images : [images])
-    .filter(Boolean)
-    .map((img: string) => img.startsWith("http") ? img : `${IMAGE_BASE_URL}/${img.replace(/^\/+/, "")}`);
-    
+  const campaignImages = (Array.isArray(images) ? images : images ? [images] : [])
+    .filter((img): img is string => typeof img === "string" && img.trim() !== "")
+    .map((img) =>
+      safeImageUrl(
+        img.startsWith("http")
+          ? img
+          : `${IMAGE_BASE_URL}/${img.replace(/^\/+/, "")}`,
+        "/bencana.webp",
+      ),
+    );
+
   if (campaignImages.length === 0) campaignImages.push("/bencana.webp");
 
   return (

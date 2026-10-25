@@ -4,13 +4,17 @@
  * Fungsi   : Tampilan QRIS lokal (react-qr-code) sebagai fallback saat payment gateway bermasalah, dengan unduh QR ke PNG.
  * Ekspor   : default QrisSementara
  * Dipakai  : app/(main)/programs/[slug]/donate/page.tsx, app/(main)/wakaf/[slug]/donate/page.tsx, tests/unit/qrisSementara.leak.test.tsx
- * Catatan  : Tidak ada countdown/timer; tombol unduh nonaktif bila qrisString kosong.
+ * Catatan  : Tidak ada countdown/timer berulang; setTimeout hanya untuk revoke object URL
+ *            setelah unduhan. Tombol unduh nonaktif bila qrisString kosong.
  */
 //dipakai saat payment gateway bermasalah
 
-import { ArrowLeft, ShieldCheck, Wallet, Scan, CheckCircle2, Download } from "lucide-react";
+import NextImage from "next/image";
+import { ArrowLeft, ShieldCheck, Wallet, Scan, CheckCircle2, Download, Loader2, AlertTriangle } from "lucide-react";
 import QRCode from "react-qr-code";
 import toast from "react-hot-toast";
+import { safeRp } from "@/lib/format";
+import type { RecordStatus } from "@/hooks/useTransactionSubmit";
 
 type QrisSementaraProps = {
   amount: number | "";
@@ -18,6 +22,8 @@ type QrisSementaraProps = {
   transactionType: "donasi" | "wakaf";
   onBack: () => void;
   onCheckStatus: () => void;
+  recordStatus?: RecordStatus;
+  recordError?: string | null;
 };
 
 export default function QrisSementara({
@@ -26,40 +32,66 @@ export default function QrisSementara({
   transactionType,
   onBack,
   onCheckStatus,
+  recordStatus,
+  recordError,
 }: QrisSementaraProps) {
 
-  // Logika Mengunduh QR Code (SVG ke PNG)
+  // Logika Mengunduh QR Code (SVG -> PNG) tanpa API deprecated (unescape/atob).
   const handleDownloadQris = () => {
-    const svgElement = document.querySelector("#qris-container svg");
+    const svgElement = document.querySelector<SVGSVGElement>(
+      "#qris-container svg",
+    );
     if (!svgElement) {
       toast.error("Gagal memuat gambar QRIS");
       return;
     }
 
     const svgData = new XMLSerializer().serializeToString(svgElement);
+    const svgBlob = new Blob([svgData], {
+      type: "image/svg+xml;charset=utf-8",
+    });
+    const svgUrl = URL.createObjectURL(svgBlob);
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     const img = new Image();
+    const qrSize = 400;
+    const padding = 24;
+
+    if (!ctx) {
+      URL.revokeObjectURL(svgUrl);
+      toast.error("Browser tidak mendukung unduh QRIS");
+      return;
+    }
 
     img.onload = () => {
-      // Tambahkan margin putih 20px di sekitar QR
-      canvas.width = img.width + 40;
-      canvas.height = img.height + 40;
-      if (ctx) {
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 20, 20);
-        
-        const pngFile = canvas.toDataURL("image/png");
+      canvas.width = qrSize + padding * 2;
+      canvas.height = qrSize + padding * 2;
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, padding, padding, qrSize, qrSize);
+
+      canvas.toBlob((pngBlob) => {
+        URL.revokeObjectURL(svgUrl);
+        if (!pngBlob) {
+          toast.error("Gagal membuat gambar QRIS");
+          return;
+        }
+        const pngUrl = URL.createObjectURL(pngBlob);
         const downloadLink = document.createElement("a");
-        downloadLink.download = `QRIS_${transactionType.toUpperCase()}_Rp${amount}.png`;
-        downloadLink.href = pngFile;
+        downloadLink.download = `QRIS_${transactionType.toUpperCase()}_Rp${safeRp(amount)}.png`;
+        downloadLink.href = pngUrl;
+        document.body.appendChild(downloadLink);
         downloadLink.click();
-        toast.success("QRIS berhasil disimpan ke galeri!");
-      }
+        downloadLink.remove();
+        setTimeout(() => URL.revokeObjectURL(pngUrl), 1000);
+        toast.success("QRIS berhasil disimpan!");
+      }, "image/png");
     };
-    // Konversi string SVG agar aman di-load sebagai URL gambar
-    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+    img.onerror = () => {
+      URL.revokeObjectURL(svgUrl);
+      toast.error("Gagal memuat gambar QRIS");
+    };
+    img.src = svgUrl;
   };
 
   // Konfigurasi Tema
@@ -73,14 +105,18 @@ export default function QrisSementara({
     : "bg-gradient-to-r from-[#7C3996] to-[#5B2A73] hover:from-[#6b2e88] hover:to-[#4a225e] shadow-[#7C3996]/30";
   
   const titleLabel = isWakaf ? "Wakaf" : "Donasi";
-  const qrisLogo = "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg";
+  const qrisLogo = "/logo/qris.svg";
 
   return (
     <div className="w-full max-w-md mx-auto bg-slate-50 min-h-screen flex flex-col relative animate-in zoom-in-95 duration-300">
       
       {/* HEADER */}
       <div className="bg-white/80 backdrop-blur-md px-5 py-4 flex items-center gap-4 sticky top-0 z-20 border-b border-slate-100">
-        <button onClick={onBack} className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200 transition-colors active:scale-95">
+        <button
+          onClick={onBack}
+          aria-label="Kembali ke form"
+          className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200 transition-colors active:scale-95"
+        >
           <ArrowLeft size={18} />
         </button>
         <div>
@@ -93,6 +129,42 @@ export default function QrisSementara({
       
       <div className="flex-1 flex flex-col items-center pt-5 px-5 pb-32">
 
+        {recordStatus && recordStatus !== "idle" && (
+          <div
+            role="status"
+            aria-live="polite"
+            className={`w-full mb-4 rounded-2xl border px-4 py-3 text-[12px] font-semibold flex items-start gap-2 ${
+              recordStatus === "failed"
+                ? "bg-amber-50 border-amber-200 text-amber-800"
+                : recordStatus === "recorded"
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                  : "bg-slate-50 border-slate-200 text-slate-600"
+            }`}
+          >
+            {recordStatus === "recording" && (
+              <Loader2 size={16} className="mt-0.5 shrink-0 animate-spin" />
+            )}
+            {recordStatus === "recorded" && (
+              <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+            )}
+            {recordStatus === "failed" && (
+              <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+            )}
+            <span>
+              {recordStatus === "recording" &&
+                "Mencatat transaksi... QRIS sudah dapat dipindai."}
+              {recordStatus === "recorded" &&
+                "Transaksi tercatat. Pembayaran akan diverifikasi oleh sistem."}
+              {recordStatus === "failed" && (
+                <>
+                  Pencatatan otomatis gagal. QRIS tetap dapat dibayar, simpan
+                  bukti pembayaran Anda.
+                  {recordError ? ` (${recordError})` : ""}
+                </>
+              )}
+            </span>
+          </div>
+        )}
 
         {/* KARTU QRIS UTAMA */}
         <div className="w-full bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 flex flex-col items-center relative overflow-hidden border border-slate-100 mb-6">
@@ -100,7 +172,7 @@ export default function QrisSementara({
           <div className={`absolute top-0 left-0 w-full h-1.5 ${themeBg}`}></div>
 
           <div className="mt-8 mb-6">
-            <img src={qrisLogo} alt="QRIS" className="h-8 object-contain" />
+            <NextImage src={qrisLogo} alt="QRIS" width={96} height={32} unoptimized style={{ width: 96, height: 32 }} className="object-contain" />
           </div>
 
           {/* Container QR Code dengan ID agar bisa diunduh */}
@@ -130,7 +202,7 @@ export default function QrisSementara({
               Total {titleLabel}
             </p>
             <p className={`text-[32px] font-black ${themeText} tracking-tight`}>
-              Rp {new Intl.NumberFormat("id-ID").format(Number(amount))}
+              Rp {safeRp(amount)}
             </p>
           </div>
 
@@ -139,7 +211,7 @@ export default function QrisSementara({
             <button 
               onClick={handleDownloadQris}
               disabled={!qrisString}
-              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all active:scale-95 ${qrisString ? `${themeLightBg} ${themeBorder}${themeText} hover:bg-white` : 'bg-slate-100 text-slate-400 border-slate-100 cursor-not-allowed'}`}
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all active:scale-95 ${qrisString ? `${themeLightBg} ${themeBorder} ${themeText} hover:bg-white` : 'bg-slate-100 text-slate-400 border-slate-100 cursor-not-allowed'}`}
             >
               <Download size={18} />
               <span className="text-[13px] font-bold">Simpan QRIS ke Galeri</span>

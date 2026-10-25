@@ -6,12 +6,15 @@
  * Dipakai  : app/(main)/wakaf/[slug]/page.tsx, app/(main)/programs/[slug]/page.tsx
  * Catatan  : Kategori disembunyikan untuk program wakaf; memakai hook useTranslation dari react-i18next.
  */
-import { CheckCircle2, Clock, XCircle, Infinity } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import Link from "next/link"; 
+"use client";
 
-export default function CampaignHeader({ campaign, totalCollected }: { campaign: any, totalCollected: number | null }) {
-  const { t } = useTranslation();
+import { useState } from "react";
+import { CheckCircle2, Clock, XCircle, Infinity } from "lucide-react";
+import Link from "next/link";
+import type { Campaign } from "@/types";
+
+export default function CampaignHeader({ campaign, totalCollected }: { campaign: Campaign; totalCollected: number | null }) {
+  const [now] = useState(() => Date.now());
   
   const isUnlimitedTarget = !campaign.target_amount;
   const target = isUnlimitedTarget ? 1 : parseFloat(String(campaign.target_amount).replace(/[^\d.-]/g, ""));
@@ -19,7 +22,7 @@ export default function CampaignHeader({ campaign, totalCollected }: { campaign:
   const progress = isUnlimitedTarget || target === 0 ? 0 : Math.min(100, Math.floor((collected / target) * 100));
 
   const isUnlimitedTime = !campaign?.end_date;
-  const daysLeft = isUnlimitedTime ? null : Math.max(0, Math.ceil((new Date(campaign.end_date).getTime() - Date.now()) / 86400000));
+  const daysLeft = isUnlimitedTime ? null : Math.max(0, Math.ceil((new Date(campaign.end_date as string).getTime() - now) / 86400000));
 
   
   //  DETEKSI WAKAF GABUNGAN (Cek is_wakaf ATAU campaign_code)
@@ -29,9 +32,9 @@ export default function CampaignHeader({ campaign, totalCollected }: { campaign:
     String(campaign.is_wakaf).toLowerCase() === "true" || 
     String(campaign.is_wakaf) === "1" ||
     (campaign.campaign_code && String(campaign.campaign_code).toLowerCase().includes("fw"));
-  function getCategoryName(category_id: number) {
+  function getCategoryName(category_id?: number) {
     const map: Record<number, string> = { 1: "Pendidikan", 2: "Kesehatan", 3: "Bencana Alam", 4: "Ekonomi", 5: "Umum" };
-    return map[category_id] || "Umum";
+    return (category_id ? map[category_id] : undefined) || "Umum";
   }
 
   function renderStatusBadge() {

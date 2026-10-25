@@ -7,8 +7,9 @@
  * Catatan  : Hanya 5 transaksi pertama yang dirender.
  */
 import { History, ArrowDownRight } from "lucide-react";
+import type { WalletTransaction } from "@/types";
 
-export default function DonationHistory({ history }: { history: any[] }) {
+export default function DonationHistory({ history }: { history: WalletTransaction[] }) {
   return (
     <div className="px-6 pb-6 pt-4">
       <div className="flex items-center gap-2 mb-4">

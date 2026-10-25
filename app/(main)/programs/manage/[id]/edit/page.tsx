@@ -11,9 +11,11 @@
 
 import "@/lib/i18n";
 import { useState, useEffect } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AuthService } from "@/lib/auth.service";
 import { apiFetch } from "@/lib/api";
+import { safeImageUrl } from "@/lib/safeUrl";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
@@ -123,10 +125,10 @@ function KelolaProgramContent() {
           );
 
         setExistingImages(images);
-      } catch (error: any) {
+      } catch (error) {
         console.error("Gagal mengambil data:", error);
         showToast(
-          error.message ||
+          (error instanceof Error ? error.message : null) ||
             t(
               "load_campaign_failed",
               "Gagal memuat data program. Pastikan ID benar.",
@@ -235,10 +237,10 @@ function KelolaProgramContent() {
       setTimeout(() => {
         router.push("/programs/manage");
       }, 2000);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error update campaign:", error);
       showToast(
-        error.message ||
+        (error instanceof Error ? error.message : null) ||
           t(
             "campaign_update_error",
             "Gagal memperbarui program. Cek koneksi Anda.",
@@ -315,8 +317,9 @@ function KelolaProgramContent() {
                   key={`existing-${index}`}
                   className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-white shadow-md group"
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- URL gambar lama dinamis dari backend */}
                   <img
-                    src={url}
+                    src={safeImageUrl(url, "/bencana.webp")}
                     alt={`Existing ${index}`}
                     className="w-full h-full object-cover"
                   />
@@ -336,6 +339,7 @@ function KelolaProgramContent() {
                   key={`new-${index}`}
                   className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-purple-300 shadow-md group"
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- preview blob URL dari file lokal */}
                   <img
                     src={url}
                     alt={`New Preview ${index}`}
@@ -376,7 +380,7 @@ function KelolaProgramContent() {
           <InputField
             label={`${t("campaign_title_label", "Judul Kampanye")} *`}
             value={form.title}
-            onChange={(e: any) => handleChange("title", e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange("title", e.target.value)}
             icon={<Type size={18} />}
             placeholder={t(
               "campaign_title_placeholder",
@@ -434,7 +438,7 @@ function KelolaProgramContent() {
               label={`${t("end_date_label", "Batas Waktu")} (Opsional)`}
               type="date"
               value={form.end_date}
-              onChange={(e: any) => handleChange("end_date", e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange("end_date", e.target.value)}
               icon={<Calendar size={18} />}
               placeholder=""
               required={false}
@@ -528,6 +532,16 @@ function KelolaProgramContent() {
   );
 }
 
+type InputFieldProps = {
+  label: string;
+  value: string | number;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  icon?: ReactNode;
+  placeholder?: string;
+  type?: string;
+  required?: boolean;
+};
+
 function InputField({
   label,
   value,
@@ -536,7 +550,7 @@ function InputField({
   placeholder,
   type = "text",
   required = false,
-}: any) {
+}: InputFieldProps) {
   return (
     <div className="flex flex-col gap-1.5 w-full">
       <label className="text-sm font-bold text-gray-700 ml-1">{label}</label>

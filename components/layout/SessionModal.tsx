@@ -32,7 +32,7 @@ export default function SessionModal() {
 
   const handleRelogin = () => {
     document.body.style.overflow = "auto";
-    window.location.href = "/login";
+    window.location.replace("/login");
   };
 
   return (

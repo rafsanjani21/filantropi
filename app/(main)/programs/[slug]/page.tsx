@@ -48,12 +48,13 @@ function DetailContent() {
 
   // Fitur Auto-Open Donate (Dari halaman luar)
   useEffect(() => {
-    const isUnlimitedTime = !campaign?.end_date;
+    const endDate = campaign?.end_date;
+    const isUnlimitedTime = !endDate;
     const daysLeft = isUnlimitedTime
       ? null
       : Math.max(
           0,
-          Math.ceil((new Date(campaign.end_date).getTime() - Date.now()) / 86400000),
+          Math.ceil((new Date(endDate).getTime() - Date.now()) / 86400000),
         );
 
     if (
@@ -70,6 +71,7 @@ function DetailContent() {
   }, [campaign, router]);
 
   const handleDisbursementSubmit = async () => {
+    if (!campaign) return;
     setIsSubmittingReport(true);
     const loadingToast = toast.loading("Mengajukan pencairan dana...");
     try {
@@ -78,11 +80,13 @@ function DetailContent() {
       });
       toast.success("Pencairan berhasil diajukan!", { id: loadingToast });
       setShowDisburseConfirmModal(false);
-    } catch (err: any) {
+    } catch (err) {
       toast.error(
         typeof err === "string"
           ? err
-          : err.message || "Gagal mengajukan pencairan.",
+          : err instanceof Error
+            ? err.message
+            : "Gagal mengajukan pencairan.",
         { id: loadingToast },
       );
     } finally {
@@ -97,6 +101,7 @@ function DetailContent() {
     formData.append("description", description);
     files.forEach((file) => formData.append("proof_images", file));
 
+    if (!campaign) return;
     try {
       await apiFetch(`/campaigns/report/${campaign.id}`, {
         method: "POST",
@@ -104,11 +109,13 @@ function DetailContent() {
       });
       toast.success("Laporan berhasil dikirim!", { id: loadingToast });
       setShowReportModal(false);
-    } catch (err: any) {
+    } catch (err) {
       toast.error(
         typeof err === "string"
           ? err
-          : err.message || "Gagal mengirim laporan.",
+          : err instanceof Error
+            ? err.message
+            : "Gagal mengirim laporan.",
         { id: loadingToast },
       );
     } finally {

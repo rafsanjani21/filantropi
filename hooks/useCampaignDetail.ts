@@ -11,24 +11,27 @@ import { AuthService } from "@/lib/auth.service";
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTranslation } from "react-i18next";
+import type { Campaign, WalletTransaction } from "@/types";
+
+type TransactionApiItem = {
+  mutation_date?: string;
+  amount?: string | number;
+  sender_name?: string;
+};
 
 export function useCampaignDetail(slug: string | null) {
   const { t } = useTranslation();
   const { user, role, isInitialized } = useAuthStore();
 
-  const [campaign, setCampaign] = useState<any>(null);
+  const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [walletHistory, setWalletHistory] = useState<any[]>([]);
+  const [walletHistory, setWalletHistory] = useState<WalletTransaction[]>([]);
   const [totalCollected, setTotalCollected] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!slug) {
-      setError(t("campaign_id_not_found", "ID Kampanye tidak ditemukan"));
-      setLoading(false);
-      return;
-    }
+    if (!slug) return;
 
     const fetchCampaign = async () => {
       try {
@@ -39,8 +42,12 @@ export function useCampaignDetail(slug: string | null) {
         if (data?.current_amount !== undefined) {
           setTotalCollected(Number(data.current_amount));
         }
-      } catch (err: any) {
-        setError(err.message || t("fail_fetch_data", "Gagal memuat data"));
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : t("fail_fetch_data", "Gagal memuat data"),
+        );
       } finally {
         setLoading(false);
       }
@@ -63,13 +70,15 @@ export function useCampaignDetail(slug: string | null) {
         const apiData = res?.data || [];
 
         if (Array.isArray(apiData)) {
-          const mappedHistory = apiData.map((tx: any, index: number) => ({
-            tx_hash: index.toString(),
-            date: tx.mutation_date,
-            type: "In",
-            amount: String(tx.amount ?? 0),
-            from_to: tx.sender_name || "Anonim",
-          }));
+          const mappedHistory = (apiData as TransactionApiItem[]).map(
+            (tx, index) => ({
+              tx_hash: index.toString(),
+              date: tx.mutation_date ?? "",
+              type: "In",
+              amount: String(tx.amount ?? 0),
+              from_to: tx.sender_name || "Anonim",
+            }),
+          );
 
           setWalletHistory(mappedHistory);
         }
@@ -83,8 +92,8 @@ export function useCampaignDetail(slug: string | null) {
 
   return {
     campaign,
-    loading,
-    error,
+    loading: slug ? loading : false,
+    error: slug ? error : t("campaign_id_not_found", "ID Kampanye tidak ditemukan"),
     walletHistory,
     totalCollected,
     receiverWallet,

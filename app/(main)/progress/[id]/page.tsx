@@ -13,8 +13,18 @@ import "@/lib/i18n";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next"; 
-import { ArrowLeft, Clock, FileText, CheckCircle2, Image as ImageIcon, Banknote, Loader2, CircleDashed, XCircle } from "lucide-react";
+import { ArrowLeft, Clock, FileText, CheckCircle2, Image as ImageIcon, Banknote, CircleDashed, XCircle } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { safeHref, safeImageUrl } from "@/lib/safeUrl";
+
+type StepperItem = {
+  phase: number;
+  type?: string;
+  status?: string;
+  title?: string;
+  date?: string;
+  proof_images?: string[];
+};
 
 function ProgressContent() {
   const params = useParams<{ id: string }>();
@@ -24,7 +34,7 @@ function ProgressContent() {
   //  AMBIL ID DARI URL BUKAN SLUG
   const campaignId = params.id; 
   
-  const [stepperData, setStepperData] = useState<any[]>([]);
+  const [stepperData, setStepperData] = useState<StepperItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
@@ -38,7 +48,7 @@ function ProgressContent() {
         const res = await apiFetch(`/campaigns/stepper/${campaignId}?t=${new Date().getTime()}`, { method: "GET" });
         if (res && res.data) {
           // Urutkan berdasarkan phase dan tipe agar urutannya selalu benar
-          const sorted = res.data.sort((a: any, b: any) => {
+          const sorted = (res.data as StepperItem[]).sort((a, b) => {
              if (a.phase !== b.phase) return a.phase - b.phase;
              // Jika phase sama, PENCAIRAN harus di atas LAPORAN
              return a.type === "PENCAIRAN" ? -1 : 1;
@@ -101,8 +111,6 @@ function ProgressContent() {
               const isNotStarted = stepStatus === "NOT_STARTED";
               const isApproved = stepStatus.includes("APPROVE") || stepStatus.includes("SUCCESS");
               const isRejected = stepStatus.includes("REJECT") || stepStatus === "DITOLAK";
-              const isPending = !isApproved && !isNotStarted && !isRejected;
-              
               // WARNA INDIKATOR TIMELINE
               const dotColor = isApproved 
                 ? "bg-blue-500" 
@@ -181,7 +189,7 @@ function ProgressContent() {
                     
                     {!isNotStarted && (
                       <p className={`text-[10px] font-bold mb-3 flex items-center gap-1.5 ${isRejected ? 'text-red-400' : 'text-gray-400'}`}>
-                        <Clock size={12} /> {formatDate(step.date)}
+                        <Clock size={12} /> {formatDate(step.date ?? "")}
                       </p>
                     )}
 
@@ -199,21 +207,24 @@ function ProgressContent() {
                         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                           {step.proof_images.map((img: string, idx: number) => {
                             const cleanPath = img.replace(/^(public\/|\/+)/, '');
-                            const fullUrl = img.startsWith('http') ? img : `${IMAGE_BASE_URL}/${cleanPath}`;
+                            const rawUrl = img.startsWith('http') ? img : `${IMAGE_BASE_URL}/${cleanPath}`;
+                            const proofHref = safeHref(rawUrl);
                             return (
                               <a 
                                 key={idx} 
-                                href={fullUrl} 
+                                href={proofHref ?? undefined} 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
                                 className={`shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden border block ${isRejected ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-gray-100'}`}
                               >
+                                {/* eslint-disable-next-line @next/next/no-img-element -- URL bukti dinamis dari backend */}
                                 <img 
-                                  src={fullUrl} 
+                                  src={safeImageUrl(rawUrl, "/bencana.webp")} 
                                   alt={`${t("proof_text", "Bukti")} ${idx+1}`} 
                                   className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
                                   onError={(e) => {
-                                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150?text=Image+Error';
+                                    e.currentTarget.onerror = null;
+                                    e.currentTarget.src = "/bencana.webp";
                                   }}
                                 />
                               </a>

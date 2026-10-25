@@ -11,29 +11,32 @@
 import { Home, Heart, Newspaper, User, Lock, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { getAccessToken, getRefreshToken } from "@/lib/authTokens";
+import useMounted from "@/hooks/useMounted";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { getProfile } = useAuth();
+  const getProfileRef = useRef(getProfile);
   const { t } = useTranslation();
+
+  useEffect(() => {
+    getProfileRef.current = getProfile;
+  }, [getProfile]);
 
   const [role, setRole] = useState<"donor" | "beneficiary" | "guest" | null>(
     null,
   );
 
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
 
   useEffect(() => {
-    setMounted(true);
-
     const checkUserRole = async () => {
-      const token =
-        localStorage.getItem("access_token") ||
-        sessionStorage.getItem("access_token");
+      const token = getAccessToken() || getRefreshToken();
 
       if (!token) {
         setRole("guest");
@@ -41,11 +44,11 @@ export default function BottomNav() {
       }
 
       try {
-        await getProfile();
+        await getProfileRef.current();
         setRole("donor");
       } catch {
         try {
-          await getProfile("beneficiary");
+          await getProfileRef.current("beneficiary");
           setRole("beneficiary");
         } catch {
           setRole("guest");
@@ -59,7 +62,6 @@ export default function BottomNav() {
   if (!mounted) return null;
 
   const isDonasiLocked = false;
-  const isGalangLocked = role === "donor" || role === "guest";
 
   const themeColor = "#7C3996";
 

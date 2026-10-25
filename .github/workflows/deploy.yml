@@ -5,13 +5,24 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
 jobs:
+  quality:
+    uses: ./.github/workflows/quality.yml
+
   deploy:
+    needs: quality
     runs-on: ubuntu-latest
 
     steps:
       - name: Eksekusi Perintah SSH ke VPS
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@029f5b4aeeeb58fdfe1410a5d17f967dacf36262 # v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
@@ -25,17 +36,56 @@ jobs:
             export PATH=$PATH:/usr/local/bin:/usr/bin
 
             cd /home/devlanding/filantropi_lp/filantropi-main
-            
+
+            PREVIOUS_COMMIT=$(git rev-parse HEAD)
+            APP_NAME="Filantropi LP"
+            APP_PORT=3005
+
             # 1. Ambil data terbaru dari GitHub tanpa mengubah file
             git fetch origin
-            
+
             # 2. Paksa sinkronisasi: Timpa semua file di VPS agar 100% sama dengan branch main di GitHub
             git reset --hard origin/main
-            
-            # 3. Lanjut install dan build
-            npm install
-            npm run build
-            
-            # 4. Reload aplikasi dengan Zero Downtime
-            pm2 reload "Filantropi LP" --update-env || pm2 start node_modules/next/dist/bin/next --name "Filantropi LP" -i max -- start -p 3005
+
+            rollback() {
+              echo "Deploy gagal — rollback ke $PREVIOUS_COMMIT"
+              git reset --hard "$PREVIOUS_COMMIT"
+              npm ci
+              npm run build
+              pm2 reload "$APP_NAME" --update-env || pm2 start node_modules/next/dist/bin/next --name "$APP_NAME" -i 1 -- start -p "$APP_PORT"
+              pm2 save
+            }
+
+            # 3. Install dan build; rollback bila salah satu gagal
+            if ! npm ci; then
+              rollback
+              exit 1
+            fi
+            if ! npm run build; then
+              rollback
+              exit 1
+            fi
+
+            # 4. Reload aplikasi. Next.js server tidak boleh di-cluster (-i max) karena
+            #    state in-memory (rate limit/idempotency) tidak dibagi antar worker.
+            pm2 reload "$APP_NAME" --update-env || pm2 start node_modules/next/dist/bin/next --name "$APP_NAME" -i 1 -- start -p "$APP_PORT"
+            pm2 scale "$APP_NAME" 1
+
+            # 5. Healthcheck; rollback bila aplikasi tidak merespons
+            HEALTH_OK=0
+            for i in $(seq 1 12); do
+              if curl -fsS "http://127.0.0.1:${APP_PORT}/" >/dev/null 2>&1; then
+                HEALTH_OK=1
+                break
+              fi
+              sleep 5
+            done
+
+            if [ "$HEALTH_OK" != "1" ]; then
+              echo "Healthcheck gagal setelah deploy."
+              rollback
+              exit 1
+            fi
+
             pm2 save
+            echo "Deploy sukses dan healthcheck lolos."

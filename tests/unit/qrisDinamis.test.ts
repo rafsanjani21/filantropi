@@ -90,14 +90,43 @@ describe("generateDynamicQris", () => {
     const standard = generateDynamicQris(QRIS_STATIC, 10000);
     expect(standard.startsWith("000201010212")).toBe(true);
 
-    // Payload tanpa tag 01 tapi merchant name mengandung '010211' -> TIDAK terkorupsi
-    const noTag01 = QRIS_STATIC.replace("010211", "").replace(
-      "www.filantropi.net",
-      "www.010211lab.net",
-    );
+    // Payload tanpa tag 01 tapi merchant name mengandung '010211' -> TIDAK terkorupsi.
+    // Merchant name dibuat sama panjang (18) agar length tag 59 tetap valid.
+    const bodyNoTag01 = QRIS_STATIC.slice(0, -8)
+      .replace("010211", "")
+      .replace("www.filantropi.net", "www.010211lab.nett");
+    const noTag01 = `${bodyNoTag01}6304${crc16CcittFalse(`${bodyNoTag01}6304`)}`;
+
     const result = generateDynamicQris(noTag01, 10000);
-    expect(result).toContain("www.010211lab.net");
-    expect(result).not.toContain("www.010212lab.net");
+    expect(result).toContain("www.010211lab.nett");
+    expect(result).not.toContain("www.010212lab.nett");
+  });
+
+  it("menerima spasi sah di dalam nama merchant dan whitespace di tepi payload", () => {
+    const result = generateDynamicQris(`\n  ${QRIS_STATIC}  \n`, 25000);
+    expect(result).toContain("Kota Jakarta Ti");
+    expect(result).toContain("540525000");
+  });
+
+  it("tidak menduplikasi Tag 54 jika payload sudah dinamis", () => {
+    const first = generateDynamicQris(QRIS_STATIC, 10000);
+    const second = generateDynamicQris(first, 20000);
+    expect(second.match(/54\d{2}\d+/g)).toHaveLength(1);
+    expect(second).toContain("540520000");
+    expect(second).not.toContain("540510000");
+  });
+
+  it("MENOLAK payload dengan CRC yang salah", () => {
+    const corrupted = `${QRIS_STATIC.slice(0, -4)}0000`;
+    expect(() => generateDynamicQris(corrupted, 10000)).toThrow(
+      /CRC QRIS statis tidak valid/,
+    );
+  });
+
+  it("MENOLAK payload yang bukan TLV EMVCo", () => {
+    expect(() => generateDynamicQris("000201ABCDEF", 10000)).toThrow(
+      /Struktur QRIS tidak valid/,
+    );
   });
 
   it("nominal sangat besar tidak menyebabkan error dan CRC tetap 4 karakter hex", () => {

@@ -12,6 +12,7 @@
 import "@/lib/i18n";
 import { useState, Suspense } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { ensureBrowserSessionPersistence } from "@/lib/firebaseSession";
 import { AlertCircle, ShieldCheck, HelpCircle } from "lucide-react";
 import AuthNavbar from "@/components/layout/navbar/AuthNavbar";
 import { useTranslation } from "react-i18next";
@@ -33,14 +34,15 @@ function MasukContent() {
         import("@/lib/firebase"),
       ]);
 
+      await ensureBrowserSessionPersistence();
       const result = await signInWithPopup(auth, provider);
       const id_token = await result.user.getIdToken();
       const name = result.user.displayName || "User";
       
       // ROLE DIKUNCI LANGSUNG SEBAGAI "user" 
       await smartAuth(id_token, name, "user");
-    } catch (err: any) {
-      setMessage(err.message || t("auth_fail_process"));
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : t("auth_fail_process"));
     }
   };
 

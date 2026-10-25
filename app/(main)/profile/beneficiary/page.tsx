@@ -11,8 +11,15 @@
 
 import "@/lib/i18n"; // Proteksi i18n
 import { useState, useEffect } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { BASE_URL as API_BASE_URL } from "@/lib/api";
+import {
+  getAccessToken,
+  getRefreshToken,
+  setTokens,
+} from "@/lib/authTokens";
 import LogoNavbar from "@/components/layout/navbar/LogoNavbar";
 import { useTranslation } from "react-i18next"; // Import Hook
 import { 
@@ -81,42 +88,22 @@ export default function PagePenerima() {
   });
 
   const [originalForm, setOriginalForm] = useState(form);
-  const BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
+  const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || "";
 
   // Batas Maksimal File: 1 MB (dalam satuan Bytes)
   const MAX_FILE_SIZE = 1048576;
 
-  useEffect(() => {
-    const idToken = sessionStorage.getItem("id_token");
-    
-    if (idToken) {
-      setIsNewUser(true);
-      setIsEditing(true); 
-      const savedType = sessionStorage.getItem("tipe_penerima");
-      if (savedType === "perorangan" || savedType === "individual") {
-        setTipePenerima("perorangan");
-      } else if (savedType === "organisasi" || savedType === "organization") {
-        setTipePenerima("organisasi");
-      }
-    } else {
-      setIsNewUser(false);
-      fetchExistingProfile();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const formatImageUrl = (path: string) => {
     if (!path) return "";
-    return `${BASE_URL}/${path.replace(/^\/+/, '')}?t=${Date.now()}`; 
+    return `${IMAGE_BASE_URL.replace(/\/+$/, "")}/${path.replace(/^\/+/, '')}?t=${Date.now()}`; 
   };
 
-  const fetchExistingProfile = async () => {
+  async function fetchExistingProfile() {
     try {
-      // PENAMBAHAN: Cek token sebelum memanggil API
-      const token = localStorage.getItem("access_token");
-      if (!token) {
+      // Cek sesi sebelum memanggil API; refresh token cukup untuk memulihkan akses.
+      if (!getAccessToken() && !getRefreshToken()) {
         console.warn("Token tidak ditemukan, mengarahkan ke halaman login.");
-        router.replace("/login"); 
+        router.replace("/login");
         return;
       }
 
@@ -166,20 +153,46 @@ export default function PagePenerima() {
       setPreviewKtp(ktpUrl);
       setOriginalKtpPreview(ktpUrl);
 
-    } catch (error: any) {
+    } catch (error) {
       console.error("Gagal sinkronisasi data profil:", error);
-      
+
       // PENAMBAHAN: Redirect ke login jika error 401 Unauthorized
-      if (error?.message?.includes("401") || error?.status === 401) {
+      const message = error instanceof Error ? error.message : "";
+      const status =
+        typeof error === "object" && error !== null && "status" in error
+          ? (error as { status?: number }).status
+          : undefined;
+      if (message.includes("401") || status === 401) {
         showToast("Sesi telah habis, silakan login kembali.", "error");
         setTimeout(() => router.replace("/login"), 1500);
       }
     }
-  };
+  }
+
+  /* eslint-disable react-hooks/set-state-in-effect -- inisialisasi mode form dari sessionStorage saat mount */
+  useEffect(() => {
+    const idToken = sessionStorage.getItem("id_token");
+
+    if (idToken) {
+      setIsNewUser(true);
+      setIsEditing(true);
+      const savedType = sessionStorage.getItem("tipe_penerima");
+      if (savedType === "perorangan" || savedType === "individual") {
+        setTipePenerima("perorangan");
+      } else if (savedType === "organisasi" || savedType === "organization") {
+        setTipePenerima("organisasi");
+      }
+    } else {
+      setIsNewUser(false);
+      fetchExistingProfile();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleChange = (field: string, value: string) => {
     let newVal = value;
-    let newErrors = { ...errors };
+    const newErrors = { ...errors };
 
     const textFields = ["name", "alamat", "tempat_lahir", "pekerjaan", "pic"];
     if (textFields.includes(field)) {
@@ -327,7 +340,7 @@ export default function PagePenerima() {
         
         formData.append("id_token", idToken);
 
-        const res = await fetch(`${BASE_URL}/api/auth/register/beneficiary`, {
+        const res = await fetch(`${API_BASE_URL}/auth/register/beneficiary`, {
           method: "POST",
           body: formData 
         });
@@ -336,14 +349,16 @@ export default function PagePenerima() {
         let data;
         try {
           data = text ? JSON.parse(text) : {};
-        } catch (e) {
+        } catch {
           data = { message: text };
         }
 
         if (!res.ok) throw new Error(data.message || `Error Server: ${res.status}`);
 
-        localStorage.setItem("access_token", data.data?.access_token || data.access_token);
-        localStorage.setItem("refresh_token", data.data?.refresh_token || data.refresh_token);
+        const newToken = data.data?.access_token || data.access_token;
+        const newRefreshToken = data.data?.refresh_token || data.refresh_token;
+        if (!newToken) throw new Error("Respons registrasi tidak valid: token akses tidak ditemukan.");
+        setTokens(newToken, newRefreshToken);
 
         sessionStorage.removeItem("id_token");
         sessionStorage.removeItem("tipe_penerima");
@@ -361,9 +376,12 @@ export default function PagePenerima() {
         setIsEditing(false); 
       }
 
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      showToast(err.message || t("fail_process_data"), "error");
+      showToast(
+        err instanceof Error ? err.message : t("fail_process_data"),
+        "error",
+      );
     } finally {
       setLoading(false);
     }
@@ -473,6 +491,7 @@ export default function PagePenerima() {
                 )}
                 <div className={`w-32 h-32 rounded-full overflow-hidden border-4 border-white bg-gray-50 flex items-center justify-center shadow-md relative transition-all ${!isEditing && "opacity-90 grayscale-[10%]"}`}>
                   {previewUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- preview blob URL dari file lokal
                     <img key={previewUrl} src={previewUrl} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                   ) : (
                     <User size={50} className="text-gray-300" />
@@ -492,14 +511,14 @@ export default function PagePenerima() {
 
             <InputField 
               label={tipePenerima === "perorangan" ? t("full_name_label") : t("org_name_label")} 
-              value={form.name} onChange={(e: any) => handleChange("name", e.target.value)} 
+              value={form.name} onChange={(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleChange("name", e.target.value)} 
               icon={tipePenerima === "perorangan" ? <User size={18} /> : <Building size={18} />} 
               placeholder={tipePenerima === "perorangan" ? t("full_name_ktp_placeholder") : t("org_name_placeholder")} 
               disabled={!isEditing}
             />
             
             <InputField 
-              label={t("phone_number_label")} value={form.phone_number} onChange={(e: any) => handleChange("phone_number", e.target.value)} 
+              label={t("phone_number_label")} value={form.phone_number} onChange={(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleChange("phone_number", e.target.value)} 
               icon={<Phone size={18} />} placeholder="0812xxxxxxxx" 
               disabled={!isEditing}
               error={errors.phone_number} 
@@ -509,7 +528,7 @@ export default function PagePenerima() {
               <InputField 
                 label={t("wallet_address_polygon_label")} 
                 value={form.wallet} 
-                onChange={(e: any) => handleChange("wallet", e.target.value)} 
+                onChange={(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleChange("wallet", e.target.value)} 
                 icon={<Wallet size={18} />} 
                 placeholder="0x..." 
                 disabled={!isEditing} 
@@ -518,14 +537,14 @@ export default function PagePenerima() {
 
             <TextAreaField 
               label={tipePenerima === "perorangan" ? t("home_address_label") : t("office_address_label")} 
-              value={form.alamat} onChange={(e: any) => handleChange("alamat", e.target.value)} 
+              value={form.alamat} onChange={(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleChange("alamat", e.target.value)} 
               icon={<MapPin size={18} />} placeholder={t("address_placeholder")} 
               disabled={!isEditing}
             />
 
             <TextAreaField 
               label={tipePenerima === "perorangan" ? t("short_story_label") : t("vision_mission_label")} 
-              value={form.bio_description} onChange={(e: any) => handleChange("bio_description", e.target.value)} 
+              value={form.bio_description} onChange={(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleChange("bio_description", e.target.value)} 
               icon={<FileText size={18} />} placeholder={t("short_desc_placeholder_2")} 
               disabled={!isEditing}
             />
@@ -537,14 +556,14 @@ export default function PagePenerima() {
 
             {tipePenerima === "organisasi" && (
                <InputField 
-                 label={t("pic_name_label")} value={form.pic} onChange={(e: any) => handleChange("pic", e.target.value)} 
+                 label={t("pic_name_label")} value={form.pic} onChange={(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleChange("pic", e.target.value)} 
                  icon={<User size={18} />} placeholder={t("pic_name_placeholder")} 
                  disabled={!isEditing}
                />
             )}
             
             <InputField 
-              label={t("nik_label")} value={form.nik} onChange={(e: any) => handleChange("nik", e.target.value)} 
+              label={t("nik_label")} value={form.nik} onChange={(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleChange("nik", e.target.value)} 
               icon={<CreditCard size={18} />} placeholder={t("nik_placeholder")} 
               disabled={!isEditing}
               error={errors.nik} 
@@ -560,6 +579,7 @@ export default function PagePenerima() {
               <label className={`relative flex flex-col items-center justify-center w-full h-40 bg-gray-50 border-2 border-dashed rounded-2xl transition-all overflow-hidden ${!isEditing ? "border-transparent cursor-not-allowed opacity-70" : "border-purple-200 cursor-pointer hover:bg-purple-50 hover:border-purple-400 group"}`}>
                 {previewKtp ? (
                   <>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- preview blob URL dari file lokal */}
                     <img 
                       src={previewKtp} 
                       alt="Preview KTP" 
@@ -610,13 +630,13 @@ export default function PagePenerima() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
-                  <InputField label={t("birth_place_label")} value={form.tempat_lahir} onChange={(e: any) => handleChange("tempat_lahir", e.target.value)} icon={<MapPin size={18} />} placeholder={t("birth_place_placeholder")} disabled={!isEditing} />
-                  <InputField label={t("birth_date_label")} type="date" value={form.tanggal_lahir} onChange={(e: any) => handleChange("tanggal_lahir", e.target.value)} icon={<Calendar size={18} />} placeholder="" disabled={!isEditing} />
+                  <InputField label={t("birth_place_label")} value={form.tempat_lahir} onChange={(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleChange("tempat_lahir", e.target.value)} icon={<MapPin size={18} />} placeholder={t("birth_place_placeholder")} disabled={!isEditing} />
+                  <InputField label={t("birth_date_label")} type="date" value={form.tanggal_lahir} onChange={(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleChange("tanggal_lahir", e.target.value)} icon={<Calendar size={18} />} placeholder="" disabled={!isEditing} />
                 </div>
 
                 <div className="mt-4">
                   <InputField 
-                    label={t("job_label")} value={form.pekerjaan} onChange={(e: any) => handleChange("pekerjaan", e.target.value)} 
+                    label={t("job_label")} value={form.pekerjaan} onChange={(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleChange("pekerjaan", e.target.value)} 
                     icon={<Briefcase size={18} />} placeholder={t("job_placeholder")} 
                     disabled={!isEditing}
                   />
@@ -630,14 +650,14 @@ export default function PagePenerima() {
                 <h3 className={`font-bold mb-2 transition-colors ${isEditing ? "text-purple-800" : "text-gray-500"}`}>{t("org_legality")}</h3>
                 
                 <InputField 
-                  label={t("reg_number_label")} value={form.registration_number} onChange={(e: any) => handleChange("registration_number", e.target.value)} 
+                  label={t("reg_number_label")} value={form.registration_number} onChange={(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleChange("registration_number", e.target.value)} 
                   icon={<FileText size={18} />} placeholder="REG-123..." 
                   disabled={!isEditing}
                   error={errors.registration_number} 
                 />
 
                 <InputField 
-                  label={t("npwp_org_label")} value={form.npwp} onChange={(e: any) => handleChange("npwp", e.target.value)} 
+                  label={t("npwp_org_label")} value={form.npwp} onChange={(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleChange("npwp", e.target.value)} 
                   icon={<CreditCard size={18} />} placeholder="01.234.567.8-910.000" 
                   disabled={!isEditing}
                   error={errors.npwp} 
@@ -710,7 +730,19 @@ export default function PagePenerima() {
   );
 }
 
-function InputField({ label, value, onChange, icon, placeholder, type = "text", disabled, error }: any) {
+type InputFieldProps = {
+  label: string;
+  value: string | number;
+  onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  icon?: ReactNode;
+  placeholder?: string;
+  type?: string;
+  disabled?: boolean;
+  error?: string;
+  maxLength?: number;
+};
+
+function InputField({ label, value, onChange, icon, placeholder, type = "text", disabled, error }: InputFieldProps) {
   return (
     <div className="flex flex-col gap-1 w-full">
       <label className={`text-sm font-bold ml-1 transition-colors ${disabled ? "text-gray-500" : error ? "text-red-500" : "text-gray-700"}`}>
@@ -748,7 +780,16 @@ function InputField({ label, value, onChange, icon, placeholder, type = "text", 
   );
 }
 
-function TextAreaField({ label, value, onChange, icon, placeholder, disabled }: any) {
+type TextAreaFieldProps = {
+  label: string;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
+  icon?: ReactNode;
+  placeholder?: string;
+  disabled?: boolean;
+};
+
+function TextAreaField({ label, value, onChange, icon, placeholder, disabled }: TextAreaFieldProps) {
   return (
     <div className="flex flex-col gap-1.5 w-full">
       <label className={`text-sm font-bold ml-1 transition-colors ${disabled ? "text-gray-500" : "text-gray-700"}`}>

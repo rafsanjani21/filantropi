@@ -11,8 +11,8 @@
 
 import "@/lib/i18n";
 import { useState, useEffect } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthService } from "@/lib/auth.service";
 import { useTranslation } from "react-i18next";
@@ -34,7 +34,7 @@ export default function GalangPage() {
   const [isBlocked, setIsBlocked] = useState(false);
   const [isUnverified, setIsUnverified] = useState(false);
 
-  const [beneficiaryType, setBeneficiaryType] = useState<string>("");
+  const [, setBeneficiaryType] = useState<string>("");
 
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -168,9 +168,13 @@ export default function GalangPage() {
         router.push("/programs/manage");
       }, 2000);
 
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error submit campaign:", error);
-      showToast(error.message || t("campaign_created_error", "Gagal membuat kampanye."), "error");
+      showToast(
+        (error instanceof Error ? error.message : null) ||
+          t("campaign_created_error", "Gagal membuat kampanye."),
+        "error",
+      );
     }
   };
 
@@ -334,6 +338,7 @@ export default function GalangPage() {
               <div className="grid grid-cols-3 gap-3 mb-2">
                 {previewUrls.map((url, index) => (
                   <div key={url} className="relative group rounded-2xl overflow-hidden shadow-sm border border-gray-200 aspect-square">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- preview blob URL dari file lokal */}
                     <img src={url} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
 
                     <button
@@ -380,7 +385,7 @@ export default function GalangPage() {
 
           <InputField
             label={t("campaign_title_label", "Judul Kampanye")}
-            value={form.title} onChange={(e: any) => handleChange("title", e.target.value)}
+            value={form.title} onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange("title", e.target.value)}
             icon={<Type size={18} />} placeholder={t("campaign_title_placeholder", "Cth: Bantuan Korban Bencana")}
             required
           />
@@ -471,7 +476,7 @@ export default function GalangPage() {
                 label={t("end_date_label", "Berakhir")}
                 type="date"
                 value={form.end_date}
-                onChange={(e: any) => handleChange("end_date", e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange("end_date", e.target.value)}
                 icon={<Calendar size={18} />}
               />
               <p className="text-[10px] text-gray-400 font-medium ml-1 leading-tight">
@@ -535,7 +540,17 @@ export default function GalangPage() {
   );
 }
 
-function InputField({ label, value, onChange, icon, placeholder, type = "text", required = false }: any) {
+type InputFieldProps = {
+  label: string;
+  value: string | number;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  icon?: ReactNode;
+  placeholder?: string;
+  type?: string;
+  required?: boolean;
+};
+
+function InputField({ label, value, onChange, icon, placeholder, type = "text", required = false }: InputFieldProps) {
   return (
     <div className="flex flex-col gap-1.5 w-full">
       <label className="text-sm font-bold text-gray-700 ml-1">{label}</label>

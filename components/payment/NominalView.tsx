@@ -8,9 +8,11 @@
  */
 import { ArrowLeft, Award } from "lucide-react";
 import toast from "react-hot-toast";
+import { getAmountError } from "@/lib/validation";
+import type { Campaign } from "@/types";
 
 type NominalViewProps = {
-  campaign?: any;
+  campaign?: Campaign | null;
   amount: number | "";
   setAmount: (val: number | "") => void;
   transactionType: "donasi" | "wakaf";
@@ -28,6 +30,7 @@ export default function NominalView({ campaign, amount, setAmount, transactionTy
       bgMain: "bg-[#7C3996]",
       bgLight: "bg-[#7C3996]/10",
       borderMain: "border-[#7C3996]",
+      focusBorder: "focus:border-[#7C3996]",
       btnHover: "hover:bg-[#6b2e88]"
     },
     wakaf: {
@@ -36,6 +39,7 @@ export default function NominalView({ campaign, amount, setAmount, transactionTy
       bgMain: "bg-emerald-600",
       bgLight: "bg-emerald-50",
       borderMain: "border-emerald-600",
+      focusBorder: "focus:border-emerald-600",
       btnHover: "hover:bg-emerald-700"
     }
   };
@@ -43,13 +47,15 @@ export default function NominalView({ campaign, amount, setAmount, transactionTy
   const theme = uiConfig[transactionType];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/\D/g, "");
+    // Hanya digit; batasi 12 digit agar Number() tetap aman dan tidak presisi hilang.
+    const val = e.target.value.replace(/\D/g, "").slice(0, 12);
     setAmount(val ? Number(val) : "");
   };
 
   const handleNext = () => {
-    if (!amount || amount < 1000) {
-      toast.error(`Minimal ${theme.title.toLowerCase()} Rp 1.000`);
+    const error = getAmountError(amount, transactionType);
+    if (error) {
+      toast.error(error);
       return;
     }
     onNext();
@@ -76,7 +82,7 @@ export default function NominalView({ campaign, amount, setAmount, transactionTy
         )}
 
         <div className="mb-8 relative">
-          <label className="block text-[12px] font-bold text-slate-500 uppercase tracking-widest mb-3">
+          <label htmlFor="amount-input" className="block text-[12px] font-bold text-slate-500 uppercase tracking-widest mb-3">
             Masukkan Nominal {theme.title}
           </label>
           <div className="relative flex items-center">
@@ -84,12 +90,15 @@ export default function NominalView({ campaign, amount, setAmount, transactionTy
               Rp
             </span>
             <input
+              id="amount-input"
               type="text"
               inputMode="numeric"
               value={amount ? new Intl.NumberFormat("id-ID").format(Number(amount)) : ""}
               onChange={handleInputChange}
               placeholder="0"
-              className={`w-full pl-12 pr-4 py-2 text-4xl font-black bg-transparent border-b-2 border-slate-200 outline-none focus:${theme.borderMain} text-slate-800 placeholder-slate-200 transition-colors rounded-none`}
+              name="amount"
+              aria-label={`Nominal ${theme.title}`}
+              className={`w-full pl-12 pr-4 py-2 text-4xl font-black bg-transparent border-b-2 border-slate-200 outline-none ${theme.focusBorder} text-slate-800 placeholder-slate-200 transition-colors rounded-none`}
             />
           </div>
         </div>
@@ -105,7 +114,7 @@ export default function NominalView({ campaign, amount, setAmount, transactionTy
                   onClick={() => setAmount(preset)}
                   className={`py-3.5 px-2 rounded-2xl text-[14px] font-bold border-2 transition-all active:scale-95 ${
                     isSelected 
-                      ? `${theme.bgLight} ${theme.borderMain}${theme.textMain}` 
+                      ? `${theme.bgLight} ${theme.borderMain} ${theme.textMain}` 
                       : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 shadow-sm"
                   }`}
                 >

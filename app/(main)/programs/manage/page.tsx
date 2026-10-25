@@ -15,26 +15,25 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, Plus, Clock, CheckCircle2, XCircle,
-  AlertCircle, Share2, Edit3, Heart, Wallet, ShieldAlert
+  AlertCircle, Share2, Edit3, Heart, ShieldAlert
 } from "lucide-react";
 import { AuthService } from "@/lib/auth.service";
 import { apiFetch } from "@/lib/api";
+import { getAccessToken, getRefreshToken } from "@/lib/authTokens";
+import { safeImageUrl } from "@/lib/safeUrl";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
-
-const truncateWallet = (address: string) => {
-  if (!address) return "Belum diatur";
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
-};
+import type { Campaign, UserProfile } from "@/types";
 
 export default function ProgramPage() {
   const router = useRouter();
   const { getProfile } = useAuth();
   const { t } = useTranslation();
 
-  const [campaigns, setCampaigns] = useState<any[]>([]);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [now] = useState(() => Date.now());
 
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [showUnverifiedModal, setShowUnverifiedModal] = useState(false);
@@ -43,9 +42,7 @@ export default function ProgramPage() {
 
   useEffect(() => {
     const fetchMyCampaigns = async () => {
-      const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-
-      if (!token) {
+      if (!getAccessToken() && !getRefreshToken()) {
         router.replace("/login");
         return;
       }
@@ -55,7 +52,7 @@ export default function ProgramPage() {
         try {
           const profile = await getProfile("beneficiary");
           setUserProfile(profile?.data || profile);
-        } catch (err) {
+        } catch {
           console.warn("Gagal mengambil profil penerima manfaat");
         }
 
@@ -85,7 +82,7 @@ export default function ProgramPage() {
             totalAmount = parseFloat(amountData.total_amount);
           }
         }
-      } catch (err) {
+      } catch {
         console.warn("Gagal ambil total donasi untuk wallet:", wallet);
       }
     }
@@ -139,7 +136,7 @@ setCampaigns(campaignsWithTotalCollected);
     }
   };
 
-  const renderStatusBadge = (status: string) => {
+  const renderStatusBadge = (status?: string) => {
     switch (status?.toLowerCase()) {
       case "active":
         return (
@@ -269,7 +266,7 @@ setCampaigns(campaignsWithTotalCollected);
             const isUnlimitedTarget = !campaign.target_amount || campaign.target_amount === 0;
             const target = isUnlimitedTarget ? 1 : Number(campaign.target_amount);
 
-            const collected = campaign.live_collected !== undefined ? campaign.live_collected : (campaign.current_amount || 0);
+            const collected = Number(campaign.live_collected ?? campaign.current_amount ?? 0);
 
             let progress: number | string = 0;
             const percent = (collected / target) * 100;
@@ -285,9 +282,13 @@ setCampaigns(campaignsWithTotalCollected);
               ? campaign.image_banner[0]
               : campaign.image_banner;
 
-            const imageUrl = typeof banner === "string" && banner.trim() !== ""
-              ? (banner.startsWith('http') ? banner : `${IMAGE_BASE_URL}/${banner.replace(/^\/+/, '')}?t=${Date.now()}`)
-              : "/placeholder.png";
+            const rawImageUrl =
+              typeof banner === "string" && banner.trim() !== ""
+                ? banner.startsWith("http")
+                  ? banner
+                  : `${IMAGE_BASE_URL}/${banner.replace(/^\/+/, "")}?t=${now}`
+                : "";
+            const imageUrl = safeImageUrl(rawImageUrl, "/bencana.webp");
 
             const campaignIdentifier = campaign.slug || campaign.id;
 
@@ -295,6 +296,7 @@ setCampaigns(campaignsWithTotalCollected);
               <div key={campaign.id} className="bg-white rounded-3xl shadow-[0_4px_20px_-4px_rgba(124,57,150,0.15)] border border-[#7C3996]/8 overflow-hidden flex flex-col group transition-shadow hover:shadow-[0_8px_28px_-6px_rgba(124,57,150,0.25)]">
                 <Link href={`/programs/${campaignIdentifier}`} className="block cursor-pointer">
                   <div className="relative h-40">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- URL gambar kampanye dinamis dari backend */}
                     <img src={imageUrl} alt={campaign.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent group-hover:from-black/5 transition-colors"></div>
                     <div className="absolute top-3 left-3">
@@ -364,7 +366,7 @@ setCampaigns(campaignsWithTotalCollected);
                 <div className="px-5 pb-5">
                   <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-100">
                     <button
-                      onClick={() => campaign.status === 'active' ? handleShare(campaign.title) : null}
+                      onClick={() => campaign.status === 'active' ? handleShare(campaign.title ?? "") : null}
                       disabled={campaign.status !== 'active'}
                       className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition ${
                         campaign.status === 'active'

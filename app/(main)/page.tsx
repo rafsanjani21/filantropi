@@ -4,59 +4,39 @@
  * Fungsi   : Halaman beranda: sapaan pengguna, pintasan Donasi/Wakaf, dan program terbaru.
  * Ekspor   : default HomePage
  * Dipakai  : Route /; merender LogoNavbar, Carousel, PartnerWakaf, LatestPrograms, BottomNav
- * Catatan  : "use client"; cek role via useAuth dan localStorage saat mount
+ * Catatan  : "use client"; cek role via useAuth dan token helper saat mount
  */
 
 "use client";
 
 import "@/lib/i18n";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Gift,
-  BookOpen,
-  ChevronRight,
-} from "lucide-react";
+import { Gift, BookOpen, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import LogoNavbar from "@/components/layout/navbar/LogoNavbar";
 import BottomNav from "@/components/layout/BottomNav";
 import Carousel from "@/components/home/Carousel";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { getAccessToken, getRefreshToken } from "@/lib/authTokens";
 import { useTranslation } from "react-i18next";
 import LatestPrograms from "@/components/home/LatestPrograms";
 import PartnerWakaf from "@/components/home/PartnerWakaf";
+import type { UserProfile } from "@/types";
 
 export default function HomePage() {
-  const router = useRouter();
   const { getProfile } = useAuth();
   const { t } = useTranslation();
 
   const [role, setRole] = useState<
     "donor" | "beneficiary" | "guest" | null
   >(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "warning" | "error" | "success";
-  } | null>(null);
-
-  const showToast = (
-    message: string,
-    type: "warning" | "error" | "success",
-  ) => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
-  };
 
   useEffect(() => {
     const checkUserRole = async () => {
-      const token =
-        localStorage.getItem("access_token") ||
-        sessionStorage.getItem("access_token");
+      const token = getAccessToken() || getRefreshToken();
 
       if (!token) {
         setRole("guest");
@@ -71,13 +51,13 @@ export default function HomePage() {
       try {
         userData = await getProfile("donor");
         assignedRole = "donor";
-      } catch (err) {}
+      } catch {}
 
       if (assignedRole === "guest") {
         try {
           userData = await getProfile("beneficiary");
           assignedRole = "beneficiary";
-        } catch (err) {}
+        } catch {}
       }
 
       if (assignedRole === "guest") {
@@ -112,34 +92,6 @@ export default function HomePage() {
   return (
     <main className="flex min-h-screen w-full max-w-lg justify-center mx-auto bg-[#FBF8F3] shadow-2xl relative overflow-x-hidden">
       <div className="flex flex-col w-full min-h-screen relative bg-[#FBF8F3] pb-28">
-        {toast && (
-          <div
-            role="status"
-            className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm rounded-xl bg-white shadow-xl border-l-4 flex items-start gap-3 px-4 py-3.5 animate-in fade-in slide-in-from-top-4 duration-300 ${
-              toast.type === "warning"
-                ? "border-[#E8B94A]"
-                : toast.type === "success"
-                  ? "border-emerald-500"
-                  : "border-red-500"
-            }`}
-          >
-            {toast.type === "success" ? (
-              <CheckCircle2
-                size={20}
-                className="shrink-0 mt-0.5 text-emerald-500"
-              />
-            ) : (
-              <AlertCircle
-                size={20}
-                className={`shrink-0 mt-0.5 ${toast.type === "warning" ? "text-[#C9971F]" : "text-red-500"}`}
-              />
-            )}
-            <span className="text-sm font-medium leading-snug text-[#2A1B33]">
-              {toast.message}
-            </span>
-          </div>
-        )}
-
         {/* Hero Banner */}
         <div className="relative w-full overflow-hidden bg-gradient-to-b from-[#3E1854] via-[#6B2E88] to-[#8A45A8] rounded-b-[2.25rem] shadow-lg pt-4 pb-20 flex flex-col z-0">
           <svg

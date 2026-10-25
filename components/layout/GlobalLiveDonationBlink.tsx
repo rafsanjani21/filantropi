@@ -135,6 +135,7 @@ export default function GlobalLiveDonationBlink() {
   useEffect(() => {
     if (validHistory.length === 0 || pathname !== "/") return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- banner harus langsung tampil saat donasi bergilir
     setIsVisible(true);
 
     const hideTimer = setTimeout(() => {

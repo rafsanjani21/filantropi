@@ -12,10 +12,22 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Receipt } from "lucide-react";
+import { apiFetch } from "@/lib/api";
+import { getAccessToken, getRefreshToken } from "@/lib/authTokens";
 
 import WakafCard, { WakafRecord } from "./_components/WakafCard";
 import LoadingSkeleton from "./_components/LoadingSkeleton";
 import EmptyState from "./_components/EmptyState";
+
+type HistoryApiItem = {
+  id: string;
+  transaction_code?: string;
+  campaign_name?: string;
+  amount: number;
+  created_at: string;
+  status?: string;
+  contact_number?: string;
+};
 
 export default function HistoryWakafPage() {
   const router = useRouter();
@@ -26,48 +38,31 @@ export default function HistoryWakafPage() {
     const fetchHistory = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-        
-        if (!token) {
+        if (!getAccessToken() && !getRefreshToken()) {
           setLoading(false);
           return;
         }
 
-        const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081";
-        
-        const response = await fetch(`${API_BASE}/user/profile/history`, {
+        const result = await apiFetch("/user/profile/history", {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
         });
 
-        const result = await response.json();
-
-        if (!response.ok || result.error) {
+        if (result.error) {
           throw new Error(result.message || "Gagal mengambil data riwayat");
         }
 
-        const formattedData: WakafRecord[] = result.data
-          .filter((item: any) => 
+        const formattedData: WakafRecord[] = (result.data as HistoryApiItem[])
+          .filter((item) => 
             item.transaction_code && 
             (item.transaction_code.includes("fw") || item.transaction_code.includes("WKF") || item.transaction_code.includes("DNS"))
           )
-          .map((item: any) => {
-            
-            // Format Tanggal
-            const dateObj = new Date(item.created_at);
-            const formattedDate = dateObj.toLocaleDateString("id-ID", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            });
-
-
+          .map((item) => {
             return {
-              id: item.transaction_code !== "-" ? item.transaction_code : item.id.substring(0, 8).toUpperCase(),
-              campaign_title: item.campaign_name,
+              id:
+                item.transaction_code && item.transaction_code !== "-"
+                  ? item.transaction_code
+                  : item.id.substring(0, 8).toUpperCase(),
+              campaign_title: item.campaign_name || "-",
               amount: item.amount,
               date: item.created_at,
               status: item.status || "Diproses",

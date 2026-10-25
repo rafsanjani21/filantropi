@@ -9,6 +9,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Calendar, ChevronRight } from "lucide-react";
+import { safeImageUrl } from "@/lib/safeUrl";
 
 type NewsCardProps = {
   title: string;
@@ -27,7 +28,7 @@ export default function NewsCard({ title, excerpt, date, category, imageUrl, slu
     >
       <div className="relative h-40 w-full overflow-hidden">
         <Image
-          src={imageUrl || "/bencana.webp"}
+          src={safeImageUrl(imageUrl, "/bencana.webp")}
           alt={title}
           fill
           sizes="(max-width: 768px) 100vw, 50vw"

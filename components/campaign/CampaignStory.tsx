@@ -6,7 +6,7 @@
  * Dipakai  : app/(main)/wakaf/[slug]/page.tsx, app/(main)/programs/[slug]/page.tsx
  * Catatan  : Menampilkan "Belum ada cerita." bila story kosong.
  */
-export default function CampaignStory({ story }: { story: string }) {
+export default function CampaignStory({ story }: { story?: string | null }) {
   return (
     <div className="p-6">
       <div className="flex items-center gap-2 mb-4">

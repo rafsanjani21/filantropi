@@ -1,5 +1,5 @@
 /**
- * components/layout/AuthProvider.tsx
+ * components/providers/AuthProvider.tsx
  *
  * Fungsi   : Provider tipis yang memanggil checkAuth sekali saat aplikasi pertama dimuat, lalu merender children.
  * Ekspor   : default AuthProvider

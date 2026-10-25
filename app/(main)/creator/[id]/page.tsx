@@ -21,6 +21,8 @@ import {
   LayoutDashboard
 } from "lucide-react";
 import Link from "next/link";
+import { apiFetch } from "@/lib/api";
+import { safeImageUrl } from "@/lib/safeUrl";
 
 type Campaign = {
   id: string;
@@ -54,6 +56,7 @@ export default function CreatorProfilePage() {
   const [creator, setCreator] = useState<CreatorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [cacheBust] = useState(() => Date.now());
 
   useEffect(() => {
     const fetchCreatorProfile = async () => {
@@ -61,26 +64,18 @@ export default function CreatorProfilePage() {
       
       setLoading(true);
       try {
-        const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
-        const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-        
-        const response = await fetch(`${API_BASE}/user/profile/campaign-creator/${creatorId}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        });
+        const result = await apiFetch(
+          `/user/profile/campaign-creator/${encodeURIComponent(creatorId)}`,
+          { method: "GET" },
+        );
 
-        const result = await response.json();
-
-        if (!response.ok || result.error) {
+        if (result.error) {
           throw new Error(result.message || "Gagal mengambil data kreator");
         }
 
         setCreator(result.data);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Gagal mengambil data kreator");
       } finally {
         setLoading(false);
       }
@@ -90,11 +85,14 @@ export default function CreatorProfilePage() {
   }, [creatorId]);
 
   const resolveImageUrl = (path?: string) => {
-    if (!path) return "/placeholder-image.jpg"; // Ganti dengan gambar default Anda
-    if (path.startsWith("http")) return path;
-    const API_BASE = process.env.NEXT_PUBLIC_IMAGE_BASE_URL
-    let cleanPath = path.replace(/^\/+/, "");
-    return `${API_BASE}/${cleanPath}?t=${Date.now()}`;
+    const IMAGE_BASE = process.env.NEXT_PUBLIC_IMAGE_BASE_URL;
+    const rawUrl = path
+      ? path.startsWith("http")
+        ? path
+        : `${IMAGE_BASE}/${path.replace(/^\/+/, "")}?t=${cacheBust}`
+      : "";
+
+    return safeImageUrl(rawUrl, "/profile.png");
   };
 
   const formatCurrency = (amount: number) => {
@@ -148,6 +146,7 @@ export default function CreatorProfilePage() {
         <div className="bg-white rounded-3xl p-6 shadow-lg border border-gray-100 flex flex-col items-center text-center">
           <div className="relative mb-4">
             <div className="w-24 h-24 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-100">
+              {/* eslint-disable-next-line @next/next/no-img-element -- URL foto dinamis dari backend */}
               <img
                 src={resolveImageUrl(creator.photo_profile)}
                 alt={creator.full_name}
@@ -191,7 +190,7 @@ export default function CreatorProfilePage() {
 
           {creator.bio_description && (
             <p className="text-sm text-gray-500 leading-relaxed italic border-t border-gray-100 pt-4 w-full">
-              "{creator.bio_description}"
+              &ldquo;{creator.bio_description}&rdquo;
             </p>
           )}
         </div>
@@ -228,6 +227,7 @@ export default function CreatorProfilePage() {
           className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all group flex gap-3 p-3"
         >
           <div className="w-24 h-24 shrink-0 rounded-xl overflow-hidden bg-gray-100 relative">
+            {/* eslint-disable-next-line @next/next/no-img-element -- URL banner dinamis dari backend */}
             <img
               src={resolveImageUrl(camp.image_banner)}
               alt={camp.title}

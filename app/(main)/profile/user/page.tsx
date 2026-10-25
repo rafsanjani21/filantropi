@@ -11,8 +11,11 @@
 
 import "@/lib/i18n";
 import React, { useState, useEffect, useRef } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { BASE_URL as API_BASE_URL } from "@/lib/api";
+import { setTokens } from "@/lib/authTokens";
 import LogoNavbar from "@/components/layout/navbar/LogoNavbar";
 import { useTranslation } from "react-i18next";
 import {
@@ -48,7 +51,7 @@ export default function UserPage() {
   const { getProfile, updateProfile } = useAuth();
   const { t } = useTranslation();
 
-  const BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || "";
+  const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || "";
 
   // STATE HALAMAN
   const [isEditing, setIsEditing] = useState(false);
@@ -90,6 +93,7 @@ export default function UserPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- inisialisasi mode form dari sessionStorage saat mount */
   useEffect(() => {
     const idToken = sessionStorage.getItem("id_token");
     const tempName = sessionStorage.getItem("temp_name");
@@ -106,8 +110,9 @@ export default function UserPage() {
     return () => stopCamera();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
-  const loadRegionData = async (provName?: string, cityName?: string, distName?: string) => {
+  async function loadRegionData(provName?: string, cityName?: string, distName?: string) {
     try {
       const pRes = await fetch(`${REGION_API}/provinces.json`);
       const pData = await pRes.json();
@@ -141,9 +146,9 @@ export default function UserPage() {
     } catch (err) {
       console.error("Gagal memuat data wilayah", err);
     }
-  };
+  }
 
-  const fetchProfile = async () => {
+  async function fetchProfile() {
     try {
       const data = await getProfile();
       
@@ -161,9 +166,9 @@ export default function UserPage() {
       
       loadRegionData(data.domicile_province, data.domicile_city, data.domicile_district);
 
-      const cleanBaseUrl = BASE_URL.replace(/\/+$/, "");
+      const cleanBaseUrl = IMAGE_BASE_URL.replace(/\/+$/, "");
       if (data.profile_image_url) {
-        let cleanPhotoUrl = data.profile_image_url.startsWith("http")
+        const cleanPhotoUrl = data.profile_image_url.startsWith("http")
           ? data.profile_image_url
           : `${cleanBaseUrl}/${data.profile_image_url.replace(/^\/+/, "").startsWith("public/") ? data.profile_image_url.replace(/^\/+/, "") : `public/${data.profile_image_url.replace(/^\/+/, "")}`}`;
         const imgUrl = `${cleanPhotoUrl}?t=${Date.now()}`;
@@ -171,7 +176,7 @@ export default function UserPage() {
       }
 
       if (data.ktp_image_url) {
-        let cleanKtpUrl = data.ktp_image_url.startsWith("http")
+        const cleanKtpUrl = data.ktp_image_url.startsWith("http")
           ? data.ktp_image_url
           : `${cleanBaseUrl}/${data.ktp_image_url.replace(/^\/+/, "").startsWith("public/") ? data.ktp_image_url.replace(/^\/+/, "") : `public/${data.ktp_image_url.replace(/^\/+/, "")}`}`;
         const imgUrlKtp = `${cleanKtpUrl}?t=${Date.now()}`;
@@ -180,7 +185,7 @@ export default function UserPage() {
     } catch (err) {
       console.error("Gagal mengambil profile:", err);
     }
-  };
+  }
 
   const handleProvinceChange = async (val: string) => {
     setForm({ ...form, domicile_province: val, domicile_city: "", domicile_district: "", domicile_village: "" });
@@ -242,13 +247,13 @@ export default function UserPage() {
     }
   };
 
-  const stopCamera = () => {
+  function stopCamera() {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
     setActiveCamera(null);
-  };
+  }
 
   const capturePhoto = () => {
     if (videoRef.current) {
@@ -331,16 +336,17 @@ export default function UserPage() {
         regData.append("id_token", idToken);
         if (file) regData.append("profile_image_url", file);
 
-        const res = await fetch(`${BASE_URL}/api/auth/register/donor`, { method: "POST", body: regData });
+        const res = await fetch(`${API_BASE_URL}/auth/register/donor`, { method: "POST", body: regData });
         const text = await res.text();
         let data;
-        try { data = text ? JSON.parse(text) : {}; } catch (e) { data = { message: text }; }
+        try { data = text ? JSON.parse(text) : {}; } catch { data = { message: text }; }
 
         if (!res.ok) throw new Error(data.message || `Error Server: ${res.status}`);
 
         const newToken = data.data?.access_token || data.access_token;
-        localStorage.setItem("access_token", newToken);
-        localStorage.setItem("refresh_token", data.data?.refresh_token || data.refresh_token);
+        const newRefreshToken = data.data?.refresh_token || data.refresh_token;
+        if (!newToken) throw new Error("Respons registrasi tidak valid: token akses tidak ditemukan.");
+        setTokens(newToken, newRefreshToken);
         sessionStorage.removeItem("id_token"); sessionStorage.removeItem("temp_name");
 
         showToast("Menyiapkan akun Anda... Mohon tunggu sebentar.", "success");
@@ -348,13 +354,13 @@ export default function UserPage() {
         let attempts = 0; const maxAttempts = 6; 
         const pingBackend = async () => {
           try {
-            const checkRes = await fetch(`${BASE_URL}/api/user/profile/donors`, { headers: { Authorization: `Bearer ${newToken}` } });
-            if (checkRes.ok) window.location.href = "/";
+            const checkRes = await fetch(`${API_BASE_URL}/user/profile/donors`, { headers: { Authorization: `Bearer ${newToken}` } });
+            if (checkRes.ok) router.replace("/");
             else throw new Error("Backend belum siap (404)");
-          } catch (err) {
+          } catch {
             attempts++;
             if (attempts < maxAttempts) setTimeout(pingBackend, 1500);
-            else window.location.href = "/";
+            else router.replace("/");
           }
         };
         setTimeout(pingBackend, 1000);
@@ -382,9 +388,12 @@ export default function UserPage() {
         showToast("Data profil berhasil disimpan dengan aman!", "success");
         setTimeout(() => { window.location.reload(); }, 1500);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      showToast(err.message || t("fail_process_data"), "error");
+      showToast(
+        err instanceof Error ? err.message : t("fail_process_data"),
+        "error",
+      );
       setLoading(false); 
     }
   };
@@ -444,6 +453,7 @@ export default function UserPage() {
               {isEditing && <div className="absolute -inset-1.5 bg-gradient-to-tr from-purple-500 to-[#E5AFE7] rounded-full blur-sm opacity-50"></div>}
               <div className={`w-32 h-32 rounded-full overflow-hidden border-4 border-white bg-gray-50 flex items-center justify-center shadow-md relative transition-all ${!isEditing && "opacity-90 grayscale-[10%]"}`}>
                 {preview ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- preview blob URL dari file lokal
                   <img key={preview} src={preview} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
                 ) : (
                   <User size={50} className="text-gray-300" />
@@ -466,7 +476,7 @@ export default function UserPage() {
 
           {/* FORM DATA */}
           <div className="space-y-5">
-            <InputField label={t("full_name_label", "Nama Lengkap")} value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} icon={<User size={18} />} placeholder={t("full_name_placeholder", "Masukkan nama lengkap")} disabled={!isEditing} />
+            <InputField label={t("full_name_label", "Nama Lengkap")} value={form.name} onChange={(e: ChangeEvent<HTMLInputElement>) => setForm({ ...form, name: e.target.value })} icon={<User size={18} />} placeholder={t("full_name_placeholder", "Masukkan nama lengkap")} disabled={!isEditing} />
             
             {/* FORM GENDER */}
             <SelectField 
@@ -480,16 +490,16 @@ export default function UserPage() {
 
             {!isNew && (
               <div className="animate-in slide-in-from-top-4 fade-in duration-500 space-y-5">
-                <InputField label="Nomor Induk Kependudukan (NIK)" value={form.nik} onChange={(e: any) => setForm({ ...form, nik: e.target.value.replace(/\D/g, "").slice(0, 16) })} icon={<CreditCard size={18} />} placeholder="Masukkan 16 digit NIK Anda" disabled={!isEditing} maxLength={16} errorMessage={nikError} />
+                <InputField label="Nomor Induk Kependudukan (NIK)" value={form.nik} onChange={(e: ChangeEvent<HTMLInputElement>) => setForm({ ...form, nik: e.target.value.replace(/\D/g, "").slice(0, 16) })} icon={<CreditCard size={18} />} placeholder="Masukkan 16 digit NIK Anda" disabled={!isEditing} maxLength={16} errorMessage={nikError} />
                 
-                <InputField label="Nomor WhatsApp / HP" value={form.phone_number} onChange={(e: any) => {
+                <InputField label="Nomor WhatsApp / HP" value={form.phone_number} onChange={(e: ChangeEvent<HTMLInputElement>) => {
                     let val = e.target.value.replace(/\D/g, "");
                     if (val.startsWith("62")) val = "0" + val.slice(2);
                     else if (val.length > 0 && val[0] !== "0") val = "0" + val;
                     setForm({ ...form, phone_number: val.slice(0, 13) });
                   }} icon={<Phone size={18} />} placeholder="Contoh: 081234567890" disabled={!isEditing} maxLength={13} errorMessage={waError} />
 
-                  <InputField label="Alamat Lengkap Sesuai KTP" value={form.address} onChange={(e: any) => setForm({ ...form, address: e.target.value })} icon={<MapPin size={18} />} placeholder="Jl. Jendral Sudirman No.1" disabled={!isEditing} />
+                  <InputField label="Alamat Lengkap Sesuai KTP" value={form.address} onChange={(e: ChangeEvent<HTMLInputElement>) => setForm({ ...form, address: e.target.value })} icon={<MapPin size={18} />} placeholder="Jl. Jendral Sudirman No.1" disabled={!isEditing} />
 
                 <div className={`p-4 rounded-2xl space-y-4 transition-all duration-300 border ${!isEditing ? "bg-gray-50/80 border-transparent opacity-80" : "bg-gray-50 border-gray-100"}`}>
                   <p className={`text-sm font-bold transition-colors ${!isEditing ? "text-gray-400" : "text-gray-800"}`}>
@@ -509,18 +519,19 @@ export default function UserPage() {
 
                 {isBankLainnya && (
                   <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                    <InputField label="Ketik Nama Bank (Lainnya)" value={form.bank_name} onChange={(e: any) => setForm({ ...form, bank_name: e.target.value.toUpperCase() })} icon={<Landmark size={18} />} placeholder="Misal: BANK BJB" disabled={!isEditing} />
+                    <InputField label="Ketik Nama Bank (Lainnya)" value={form.bank_name} onChange={(e: ChangeEvent<HTMLInputElement>) => setForm({ ...form, bank_name: e.target.value.toUpperCase() })} icon={<Landmark size={18} />} placeholder="Misal: BANK BJB" disabled={!isEditing} />
                   </div>
                 )}
 
-                <InputField label="Nomor Rekening" value={form.no_req} onChange={(e: any) => setForm({ ...form, no_req: e.target.value.replace(/\D/g, "") })} icon={<CreditCard size={18} />} placeholder="Contoh: 12121212" disabled={!isEditing} />
-                <InputField label="Atas Nama Rekening" value={form.bank_account_name} onChange={(e: any) => setForm({ ...form, bank_account_name: e.target.value })} icon={<User size={18} />} placeholder="Nama Pemilik Rekening" disabled={!isEditing} />
+                <InputField label="Nomor Rekening" value={form.no_req} onChange={(e: ChangeEvent<HTMLInputElement>) => setForm({ ...form, no_req: e.target.value.replace(/\D/g, "") })} icon={<CreditCard size={18} />} placeholder="Contoh: 12121212" disabled={!isEditing} />
+                <InputField label="Atas Nama Rekening" value={form.bank_account_name} onChange={(e: ChangeEvent<HTMLInputElement>) => setForm({ ...form, bank_account_name: e.target.value })} icon={<User size={18} />} placeholder="Nama Pemilik Rekening" disabled={!isEditing} />
 
                 {/* AREA FOTO KTP */}
                 <div className="flex flex-col gap-1.5 w-full mt-4">
                   <label className="text-sm font-bold ml-1 text-gray-700">Foto KTP</label>
                   <div className={`relative w-full h-40 rounded-2xl border-2 overflow-hidden flex items-center justify-center bg-gray-50 ${isEditing ? "border-purple-200 border-dashed" : "border-gray-100 border-solid opacity-90"}`}>
                     {ktpPreview ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- preview blob URL dari file lokal
                       <img src={ktpPreview} alt="KTP Preview" className="w-full h-full object-cover" />
                     ) : (
                       <div className="flex flex-col items-center text-gray-400">
@@ -615,7 +626,18 @@ export default function UserPage() {
 }
 
 // ================= KOMPONEN REUSABLE =================
-function InputField({ label, value, onChange, icon, placeholder, disabled, maxLength, errorMessage }: any) {
+type InputFieldProps = {
+  label: string;
+  value: string | number;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  icon?: ReactNode;
+  placeholder?: string;
+  disabled?: boolean;
+  maxLength?: number;
+  errorMessage?: string | null;
+};
+
+function InputField({ label, value, onChange, icon, placeholder, disabled, maxLength, errorMessage }: InputFieldProps) {
   return (
     <div className="flex flex-col gap-1.5 w-full">
       <label className={`text-sm font-bold ml-1 transition-colors ${disabled ? "text-gray-400" : errorMessage ? "text-red-500" : "text-gray-700"}`}>
@@ -639,7 +661,16 @@ function InputField({ label, value, onChange, icon, placeholder, disabled, maxLe
   );
 }
 
-function SelectField({ label, value, onChange, icon, options, disabled }: any) {
+type SelectFieldProps = {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  icon?: ReactNode;
+  options: string[];
+  disabled?: boolean;
+};
+
+function SelectField({ label, value, onChange, icon, options, disabled }: SelectFieldProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (

@@ -2,281 +2,269 @@
 
 ## Judul & Waktu Eksekusi
 
-| Item                                   | Detail                                                                                                                |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **Proyek**                             | Filantropi (Next.js 16.2.3 / React 19.2.4)                                                                            |
-| **Cakupan**                            | Alur transaksi **Donasi** & **Wakaf** (frontend)                                                                      |
-| **Waktu Eksekusi (Awal)**              | Jumat, 16 Oktober 2026, 13:36 – 13:53 WIB (+07:00)                                                                    |
-| **Waktu Eksekusi (Re-test Pasca-Fix)** | Jumat, 16 Oktober 2026, 14:14 – 14:32 WIB (+07:00)                                                                    |
-| **Tooling**                            | Vitest 4.1.12 + Testing Library (unit/component), Playwright 1.x + Chromium (E2E, API mocking penuh via `page.route`) |
-| **Server**                             | `next dev` (webServer Playwright), backend **dimock total** — tidak ada server backend yang menyala                   |
+| Item | Detail |
+|---|---|
+| Proyek | Filantropi (Next.js 16.4.2 / React 19.2.4 / TypeScript) |
+| Cakupan | Alur transaksi **Donasi** & **Wakaf** (frontend), utility, state management, API fallback |
+| Waktu Eksekusi | Kamis, 22 Oktober 2026 (WIB) |
+| Tooling | Vitest 4.1.12 + Testing Library, Playwright 1.64 + Chromium |
+| Backend | Tidak diperlukan — seluruh request API dimock dengan `page.route` |
+| Environment | Windows 11, Node.js, `next dev` via Playwright `webServer` |
 
-### Perintah Eksekusi
+### Perintah yang Dijalankan
 
 ```bash
-npm run test        # Vitest — 68 tests (68 lulus pasca-fix)
-npm run test:e2e    # Playwright — 25 tests (25 lulus pasca-fix)
+npm run lint
+npm run typecheck
+npm test
+npm run test:coverage
+npm run test:e2e
+npm run build
 ```
 
 ---
 
 ## Ringkasan Eksekusi
 
-### Fase 1 — Audit Awal (sebelum perbaikan)
+| Lapisan | Total | Lulus | Gagal | Status |
+|---|---:|---:|---:|---|
+| Unit/component (Vitest, 10 file) | 108 | 108 | 0 | Lulus |
+| E2E Donasi (Playwright) | 14 | 14 | 0 | Lulus |
+| E2E Wakaf (Playwright) | 12 | 12 | 0 | Lulus |
+| E2E Security headers | 3 | 3 | 0 | Lulus |
+| **TOTAL TEST** | **137** | **137** | **0** | **100% lulus** |
+| Lint (`eslint --max-warnings 0`) | — | — | 0 | Lulus |
+| Typecheck (`tsc --noEmit`) | — | — | 0 | Lulus |
+| Build produksi (`next build`) | 19 route | 19 | 0 | Lulus |
 
-| Lapisan                                                      | Total Test | Lulus  | Gagal | Catatan                                                      |
-| ------------------------------------------------------------ | ---------- | ------ | ----- | ------------------------------------------------------------ |
-| Unit — `generateDynamicQris`, `formatRp`, sanitasi, validasi | 23         | 23     | 0     | CRC16 tervalidasi dengan vektor referensi `123456789 → 29B1` |
-| Unit — FormView Donasi (component)                           | 10         | 10     | 0     | Toggle Anonim, disable tombol saat proses                    |
-| Unit — FormWakafView (component)                             | 8          | 8      | 0     | Batas NIK 16 digit, sanitasi telepon                         |
-| Unit — QrisSementara (countdown & leak)                      | 4          | 4      | 0     | Interval + cleanup terverifikasi                             |
-| Unit — replikasi logika validasi page.tsx                    | 23         | 23     | 0     | Mengekspos celah validasi email & minimum nominal wakaf      |
-| E2E — Alur Donasi (Playwright)                               | 13         | 12     | **1** | 1 gagal = **bug double-submit nyata**                        |
-| E2E — Alur Wakaf (Playwright)                                | 12         | 12     | 0     | Happy/unhappy path, fallback 500 & timeout lulus             |
-| **TOTAL**                                                    | **87**     | **86** | **1** | **Persentase lulus: 98,9%**                                  |
+**Status kesehatan frontend: SEHAT (HEALTHY).** Seluruh test lulus, build produksi berhasil, dan temuan kritis pada iterasi ini sudah diperbaiki serta diverifikasi ulang.
 
-### Fase 2 — Re-test Pasca-Fix (setelah semua perbaikan diterapkan)
+### Coverage Unit (modul yang diinstrumentasi)
 
-| Lapisan                                                                | Total Test | Lulus  | Gagal | Catatan                                                                    |
-| ---------------------------------------------------------------------- | ---------- | ------ | ----- | -------------------------------------------------------------------------- |
-| Unit — `generateDynamicQris`, `formatRp`, `safeRp`, sanitasi, validasi | 27         | 27     | 0     | Termasuk test throw pada nominal invalid & guard `safeRp`                  |
-| Unit — FormView Donasi (component)                                     | 10         | 10     | 0     | Back & UBAH kini disabled saat `isProcessing`                              |
-| Unit — FormWakafView (component)                                       | 8          | 8      | 0     | NIK 20 digit kini di-truncate ke 16                                        |
-| Unit — QrisSementara (countdown & leak)                                | 3          | 3      | 0     | Ada `setInterval` DAN cleanup `clearInterval`; countdown merosot per detik |
-| Unit — replikasi logika validasi page.tsx                              | 20         | 20     | 0     | Email `a@b.c`-style ditolak; pesan error baru terverifikasi                |
-| E2E — Alur Donasi (Playwright)                                         | 13         | **13** | **0** | Termasuk **ANTI DOUBLE-SUBMIT kini lulus (postCount = 1)**                 |
-| E2E — Alur Wakaf (Playwright)                                          | 12         | **12** | **0** | Email `a@` & `bukan-email` kini ditolak; NIK truncate terverifikasi        |
-| **TOTAL**                                                              | **93**     | **93** | **0** | **Persentase lulus: 100%**                                                 |
+| File | Statements | Branch | Fungsi | Lines |
+|---|---:|---:|---:|---:|
+| `lib/qrisDinamis.ts` | 91,07% | 85,71% | 100% | 94% |
+| `hooks/useTransactionSubmit.ts` | 84,61% | 69,69% | 81,81% | 87,36% |
+| `lib/api.ts` | 81,14% | 82,69% | 94,73% | 82,24% |
+| `lib/authTokens.ts` | 84,31% | 77,27% | 90% | 93,33% |
+| `components/payment/QrisSementara.tsx` | 19,60% | 48,83% | 16,66% | 20% |
+| **Total instrumentasi** | **47,78%** | **48,12%** | **41,93%** | **48,11%** |
 
-### Status Kesehatan Frontend
-
-- **Fase 1:** Sehat dengan catatan penting (CONDITIONALLY HEALTHY) — 1 bug kritis & beberapa celah validasi.
-- **Fase 2 (PASCA-FIX):** **SEHAT (HEALTHY).** Seluruh 93 test lulus. Semua temuan kritis/sedang/rendah telah diperbaiki dan diverifikasi ulang lewat unit test maupun E2E. Fallback QRIS Dinamis tetap tangguh (POST 500/timeout → QRIS lokal tetap tampil, kini bahkan tanpa menunggu).
+Catatan: total coverage rendah karena `include` juga menghitung komponen/halaman yang tidak termasuk fokus QA transaksi (`MethodView`, `VaView`, `QrisView`, `useAuth`, dll.). Modul inti transaksi sudah tercakup tinggi.
 
 ---
 
-## Temuan Kritis & Bug (Fase 1) — Status Pasca-Fix
+## Temuan Kritis & Bug
 
-### 🔴 KRITIS-1 — Double-submit donasi bisa menghasilkan 2 request POST
+### KRITIS-1 — Redirect `/Payment/Success` memicu loop `ERR_TOO_MANY_REDIRECTS`
 
-**Status: ✅ DIPERBAIKI & TERVERIFIKASI (E2E lulus, postCount = 1)**
+**Status: DIPERBAIKI & TERVERIFIKASI**
 
-**Akar masalah:** Guard hanya mengandalkan `disabled={isProcessing}` pada JSX — state React belum sempat re-render ketika dua klik `btn.click()` sinkron terjadi dalam satu task JS. Kedua klik menjalankan `handleSubmitPayment` dengan closure `isProcessing === false` yang sama.
+**Gejala:** Navigasi ke `/payment/success?trx_id=...` gagal total di browser (`chrome-error://chromewebdata/`). Trace Playwright menunjukkan `net::ERR_TOO_MANY_REDIRECTS` pada request RSC/dokumen.
 
-**Perbaikan yang diterapkan:**
+**Akar masalah:** `next.config.ts` memiliki redirect legacy:
 
-1. Guard sinkron di awal handler via `useRef` (`processingRef.current || isProcessing`) — ref update sinkron menutup celah klik-ganda-satu-task.
-2. Reset guard di `finally` **ditunda ke `setTimeout(..., 0)`** — handler fire-and-forget selesai sinkron dalam satu task; reset sinkron akan membuka celah sebelum klik kedua.
-3. Reset eksplisit di `handleBack` saat kembali dari view QRIS/VA ke form.
-
-**Lokasi:** `app/DetailPage/FormDonasiPage/page.tsx:49,83,89,175-181` dan `app/WakafDetailPage/FormWakafPage/page.tsx:50,78,84,167-173`
-
----
-
-### 🔴 KRITIS-2 — Email Donasi TIDAK divalidasi formatnya
-
-**Status: ✅ DIPERBAIKI & TERVERIFIKASI (unit + E2E: email tidak valid kini DITOLAK)**
-
-**Perbaikan:** `isValidEmail` (regex `EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/`) di `lib/validation.ts`. Email `bukan-email-tanpa-titik` kini menampilkan toast **"Format email tidak valid"** dan QRIS tidak tampil.
-
-**Lokasi:** `lib/validation.ts`, `app/DetailPage/FormDonasiPage/page.tsx:85`
-
----
-
-### 🔴 KRITIS-3 — Validasi email Wakaf sangat lemah (`includes("@")`)
-
-**Status: ✅ DIPERBAIKI & TERVERIFIKASI (E2E: `a@` & `bukan-email` kini DITOLAK)**
-
-**Perbaikan:** Validasi sama ketatnya dengan donasi — gunakan `isValidEmail` yang sama. Pesan error: **"Format email tidak valid"**.
-
-**Lokasi:** `lib/validation.ts`, `app/WakafDetailPage/FormWakafPage/page.tsx:80`
-
----
-
-### 🔴 KRITIS-4 — Submit Wakaf tidak mengulang validasi minimum nominal Rp 1.000
-
-**Status: ✅ DIPERBAIKI & TERVERIFIKASI (unit test: nominal 500 → "Minimal wakaf Rp 1.000")**
-
-**Perbaikan:** `isValidAmount(amount)` (integer ≥ 1000) dipanggil di `handleSubmitPayment` wakaf — konsisten dengan donasi.
-
-**Lokasi:** `lib/validation.ts`, `app/WakafDetailPage/FormWakafPage/page.tsx:82`
-
----
-
-### 🟠 SEDANG-1 — `generateDynamicQris` tidak memvalidasi nominal
-
-**Status: ✅ DIPERBAIKI & TERVERIFIKASI (unit test: negatif/desimal/0 → throw)**
-
-**Perbaikan:** Guard di awal fungsi — `if (!Number.isFinite(nominal) || nominal <= 0 || !Number.isInteger(nominal)) throw new Error("Nominal QRIS harus bilangan bulat positif")`.
-
-**Lokasi:** `lib/qrisDinamis.ts`
-
----
-
-### 🟠 SEDANG-2 — Fragilitas `replace("010211", "010212")`
-
-**Status: ✅ DIPERBAIKI & TERVERIFIKASI (unit test: merchant name `www.010211lab.net` TIDAK terkorupsi)**
-
-**Perbaikan:** Replace hanya pada prefix `"000201010211" → "000201010212"`, bukan substring pertama di mana pun.
-
-**Lokasi:** `lib/qrisDinamis.ts`
-
----
-
-### 🟠 SEDANG-3 — Fitur hitungan mundur (countdown) QRIS TIDAK ADA
-
-**Status: ✅ DIPERBAIKI & TERVERIFIKASI (unit test: countdown merosot 15:00 → 14:57, cleanup OK)**
-
-**Perbaikan:** Countdown 15 menit (`QRIS_EXPIRY_SECONDS = 900`) dengan `setInterval` + cleanup `useEffect(..., [qrisString])`. Saat expired: teks "QRIS kedaluwarsa", tombol unduh & "Saya Sudah Membayar" disabled. Memory leak dicegah via `clearInterval` di cleanup — terverifikasi unit test `qrisSementara.leak.test.tsx`.
-
-**Lokasi:** `app/components/ui/sharedpayment/QrisSementara.tsx`
-
----
-
-### 🟡 RENDAH-1 — Tombol Back Donasi tetap AKTIF saat `isProcessing`
-
-**Status: ✅ DIPERBAIKI & TERVERIFIKASI (unit test: Back & UBAH disabled saat `isProcessing=true`)**
-
-**Lokasi:** `app/DetailPage/FormDonasiPage/components/FormView.tsx`
-
----
-
-### 🟡 RENDAH-2 — NIK 17+ digit ditolak SELURUHNYA, bukan di-truncate
-
-**Status: ✅ DIPERBAIKI & TERVERIFIKASI (E2E: input 20 digit → kini menjadi 16 digit)**
-
-**Perbaikan:** `val.replace(/\D/g, "").slice(0, 16)`.
-
-**Lokasi:** `app/WakafDetailPage/FormWakafPage/components/FormView.tsx`
-
----
-
-### 🟡 RENDAH-3 — Celah validasi minor lain
-
-**Status: ✅ SEMUA DIPERBAIKI**
-
-| #   | Celah                                       | Status   | Bukti                                            |
-| --- | ------------------------------------------- | -------- | ------------------------------------------------ |
-| 1   | Email `"   "` lolos — tanpa `.trim()`       | ✅ Fixed | `isValidEmail` regex menolak spasi               |
-| 2   | Telepon `"0"` lolos — tanpa panjang minimum | ✅ Fixed | `isValidPhone`: 9–15 digit (unit test)           |
-| 3   | `formatRp` render negatif (`Rp -5.000`)     | ✅ Fixed | `safeRp` menampilkan `Rp 0` untuk negatif/NaN/"" |
-| 4   | `amount === ""` → "Rp 0"                    | ✅ Fixed | `safeRp` guard                                   |
-| 5   | Nominal wakaf di submit hanya cek falsy     | ✅ Fixed | `isValidAmount` diulang di submit                |
-
-**Lokasi:** `lib/validation.ts`, `lib/format.ts`, kedua `FormView.tsx`
-
----
-
-### ⚠️ Log Error / Warning Selama Eksekusi
-
-**1. Gagal E2E double-submit (bug produk — Fase 1):**
-
-```
-Error: expect(received).toBe(expected) // Object.is equality
-Expected: 1
-Received: 2
-  at tests/e2e/donasi.spec.ts:233 (postCount)
+```ts
+{ source: "/Payment/Success", destination: "/payment/success", permanent: true }
+{ source: "/Payment/Failed", destination: "/payment/failed", permanent: true }
 ```
 
-**Status:** ✅ Setelah fix `useRef` + deferred reset → E2E lulus (postCount = 1).
+Pencocokan path Next.js bersifat case-insensitive, sehingga `/payment/success` juga cocok dengan source `/Payment/Success` dan di-redirect ke dirinya sendiri tanpa henti.
 
-**2. Fallback timeout (perilaku by-design):**
+**Perbaikan:** Kedua redirect dihapus dari `next.config.ts`. Path lowercase adalah satu-satunya URL yang valid.
 
-```
-[browser] Pencatatan background gagal TypeError: Failed to fetch
-```
+**Verifikasi:** E2E `STATUS FLOW: 'Saya Sudah Membayar' -> pending -> sukses` lulus dan halaman sukses tampil.
 
-Bukan bug — `.catch()` bekerja, QRIS lokal tetap tampil. Pasca-fix QRIS tampil segera (< 5 detik) tanpa menunggu POST settle.
+---
 
-**3. Warning Next.js 16 (colorScheme di metadata):**
-**Status:** ✅ Fixed — `colorScheme` dipindah ke `export const viewport` di `app/layout.tsx`.
+### KRITIS-2 — Halaman sukses menampilkan "Data Tidak Ditemukan" karena abort StrictMode
 
-**4. Warning build (dev) EPERM rename `.next/dev`:**
+**Status: DIPERBAIKI & TERVERIFIKASI**
 
-```
-Node.js fs rename failed ... EPERM ... .next/dev/server/*.tmp
-Could not find files for /_error in .next/build-manifest.json
-```
+**Gejala:** Setelah redirect ke `/payment/success`, halaman menampilkan "Data Tidak Ditemukan — Waktu pemeriksaan status habis", padahal API mock merespons sukses.
 
-**Status:** Gangguan file-lock Windows (antivirus/HMR). Menyebabkan 1 kegagalan happy-path donasi yang flaky pada satu run. **Diselesaikan dengan** `Remove-Item -Recurse -Force .next\dev` → run ulang lulus penuh. Tidak ada bug produk.
+**Akar masalah:** Efek `useEffect` membuat `AbortController`; cleanup (termasuk cleanup ganda React StrictMode di development) memanggil `controller.abort()`. `catch` memperlakukan `AbortError` sebagai timeout nyata dan menulis `setError(...)` setelah fetch kedua berhasil.
+
+**Perbaikan di `app/(main)/payment/success/page.tsx`:**
+
+- Flag `cancelled` di-set pada cleanup.
+- `catch` mengabaikan error bila `cancelled === true`.
+- `setLoading(false)` tidak dijalankan setelah unmount.
+- Abort karena timeout (bukan unmount) tetap menampilkan pesan timeout.
+
+---
+
+### TINGGI-1 — QRIS statis rusak saat berisi spasi sah pada nama merchant
+
+**Status: DIPERBAIKI & TERVERIFIKASI**
+
+**Gejala:** `generateDynamicQris` melempar "Struktur QRIS tidak valid" untuk payload QRIS yayasan yang valid.
+
+**Akar masalah:** Normalisasi memakai `qrisStatic.replace(/\s+/g, "")`. Spasi di dalam Tag 59/60 (merchant name/location) adalah karakter sah EMVCo. Menghapusnya mengubah panjang value sehingga parser TLV membaca tag berikutnya secara salah.
+
+**Perbaikan di `lib/qrisDinamis.ts`:**
+
+- Hanya `trim()` tepi payload dan buang `\r\n\t`, bukan spasi internal.
+- Parser TLV top-level + validasi CRC16 CCITT-FALSE payload asli.
+- Tag 54 lama dibuang agar nominal tidak duplikat.
+- Tag 01 `11` diubah menjadi `010212` (statis → dinamis).
+- Nominal wajib bilangan bulat positif.
+
+**Verifikasi:** Test `menerima spasi sah di dalam nama merchant`, `tidak menduplikasi Tag 54`, `MENOLAK payload dengan CRC salah`, dan `MENOLAK payload non-TLV` lulus.
+
+---
+
+### TINGGI-2 — Status transaksi pending tetap ditampilkan sebagai "berhasil"
+
+**Status: DIPERBAIKI & TERVERIFIKASI**
+
+**Akar masalah:** Halaman `/payment/success` langsung merender status sukses tanpa memeriksa `status` transaksi dari backend.
+
+**Perbaikan:**
+
+- `success/page.tsx` memeriksa status: `pending/process/processing/menunggu/unpaid` → redirect ke `/payment/pending`; `failed/expired/cancelled/gagal` → redirect ke `/payment/failed`.
+- Halaman baru `app/(main)/payment/pending/page.tsx` melakukan polling status setiap 5 detik (maksimal 24 percobaan / 2 menit), lalu redirect ke success/failed.
+- Jika `trx_id` tidak ada (POST gateway gagal), halaman pending menampilkan panduan verifikasi manual, bukan klaim sukses palsu.
+
+---
+
+### TINGGI-3 — Pencatatan gateway gagal tetap terlihat seperti sukses
+
+**Status: DIPERBAIKI & TERVERIFIKASI**
+
+**Akar masalah:** QRIS lokal ditampilkan dan toast sukses muncul tanpa menunggu/mengetahui hasil POST transaksi. Kegagalan pencatatan tidak terlihat pengguna.
+
+**Perbaikan di `hooks/useTransactionSubmit.ts`:**
+
+- Menyimpan status pencatatan (`idle | recording | recorded | failed`) dan pesan error.
+- QRIS tetap tampil segera (fallback lokal tetap berfungsi), tetapi `QrisSementara` menampilkan banner:
+  - "Mencatat transaksi... QRIS sudah dapat dipindai."
+  - "Transaksi tercatat..."
+  - "Pencatatan otomatis gagal. QRIS tetap dapat dibayar, simpan bukti pembayaran Anda."
+- Timeout POST 20 detik via `AbortController`.
+- `X-Idempotency-Key` dikirim dan dipertahankan untuk payload yang sama; berubah bila nominal/kontak berubah.
+- Guard double-submit sinkron (`processingRef`) + state `isProcessing`.
+
+**Verifikasi E2E:** POST 500 → QRIS tetap tampil + banner gagal + tombol "Saya Sudah Membayar" menuju verifikasi manual; POST timeout → QRIS tampil < 5 detik.
+
+---
+
+### SEDANG-1 — `apiFetch` tidak memiliki timeout/SSR guard dan refresh token tidak single-flight
+
+**Status: DIPERBAIKI**
+
+**Perbaikan di `lib/api.ts`:**
+
+- Timeout 20 detik per request dengan dukungan `AbortSignal` eksternal.
+- Guard `typeof window` untuk akses storage.
+- Satu promise refresh dipakai bersama oleh semua request 401 bersamaan (single-flight).
+- Retry sekali setelah refresh; jika tetap 401 → force logout.
+- Opsi `{ publicRead: true }` untuk endpoint status pembayaran yang harus bisa diakses guest tanpa memicu force logout.
+- Hanya memasang `Content-Type: application/json` bila ada body non-`FormData`.
+
+**Verifikasi unit:** 6 test `apiFetch` lulus, termasuk refresh single-flight dan timeout.
+
+---
+
+### SEDANG-2 — Validasi nominal/NIK/email tidak konsisten antar halaman
+
+**Status: DIPERBAIKI**
+
+- `lib/validation.ts` menjadi sumber tunggal: `MIN_TRANSACTION_AMOUNT = 1.000`, `MAX_TRANSACTION_AMOUNT = 1.000.000.000`, `getAmountError`, `getNikError`.
+- NIK opsional, tetapi bila diisi wajib 16 digit.
+- Input nominal dibatasi 12 digit dan disanitasi `\D`; minus/huruf tidak bisa masuk.
+- Email memakai regex ketat; telepon 9–15 digit setelah sanitasi.
+- Form Donasi/Wakaf menampilkan error inline `role="alert"` + `aria-invalid`/`aria-describedby`.
+- Prefill nama/email/telepon dari profil kini reaktif (`useEffect` + `useRef`) dan tidak menimpa input yang sudah diketik.
+
+---
+
+### RENDAH-1 — Tombol unduh QRIS memakai API deprecated dan berpotensi gagal
+
+**Status: DIPERBAIKI**
+
+`QrisSementara` kini mengubah SVG → `Blob` → canvas → `toBlob` → PNG, merevoke object URL, dan tidak memakai `unescape`/`btoa`. Satu `setTimeout` hanya untuk revoke URL setelah unduhan (bukan countdown berulang). Test lama yang melarang semua `setTimeout` sudah diperbarui.
+
+---
+
+### RENDAH-2 — Test E2E bergantung pada prefix `/api/`
+
+**Status: DIPERBAIKI**
+
+Mock diubah dari `**/api/campaigns/**` menjadi `**/campaigns/**` sehingga tetap bekerja jika `NEXT_PUBLIC_API_BASE_URL` tidak memakai prefix `/api` atau berjalan di origin lain.
+
+---
+
+### RENDAH-3 — Kontrak CI tidak menyediakan QRIS statis
+
+**Status: DIPERBAIKI**
+
+`NEXT_PUBLIC_QRIS_STATIS` ditambahkan ke environment `quality.yml`. Tanpa ini, hook menolak submit dengan "Konfigurasi QRIS yayasan belum diatur" dan E2E happy path akan gagal.
+
+---
+
+## P0 Security Hardening (Tindak Lanjut)
+
+**Status: DITERAPKAN DAN DIVERIFIKASI**
+
+| Area | Perubahan | Verifikasi |
+|---|---|---|
+| Token | Access token hanya di memori; refresh token di `sessionStorage`; token legacy/admin dibersihkan | `tests/unit/authTokens.test.ts` |
+| API | Allowlist publik eksplisit; `/donations/history`, `/campaigns/me`, dan endpoint privat lain wajib Bearer | `tests/unit/api.test.ts` |
+| Refresh | Single-flight, proaktif setelah reload, dan force logout + sign out Firebase saat gagal | `tests/unit/api.test.ts` |
+| CSP | `img-src`/`connect-src`/`frame-src` memakai origin eksplisit; tanpa wildcard `https:`/`*.googleapis.com`; `upgrade-insecure-requests` hanya produksi | `tests/e2e/security.spec.ts` |
+| Header | `camera=()`, `X-Permitted-Cross-Domain-Policies: none`, `Origin-Agent-Cluster: ?1` | `tests/e2e/security.spec.ts` |
+| Cache | `no-store` untuk `/profile`, `/payment`, `/programs/manage` | `tests/e2e/security.spec.ts` |
+| URL | `safeHref`/`safeImageUrl` menolak `javascript:`, `data:text/html`, `ftp:`, dan `//evil` | `tests/unit/safeUrl.test.ts` |
+| E2E runner | `next dev --webpack` dipakai untuk menghindari `EPERM` manifest Turbopack di Windows | 29/29 E2E lulus |
+
+Catatan: `authTokens.ts` sudah diuji untuk sesi lama yang tidak membawa refresh token baru, sehingga refresh milik pengguna sebelumnya tidak tersisa. Endpoint profil kreator publik juga sudah masuk allowlist agar halaman `/creator/[id]` tidak memicu force logout.
 
 ---
 
 ## Evaluasi UX & Performa
 
-### ✅ Kekuatan (Pasca-Fix)
-
-1. **Fallback QRIS Dinamis tangguh & instan** — POST 500/timeout → QRIS lokal tampil segera (fire-and-forget, tidak di-await). Terverifikasi E2E dengan timeout 5 detik.
-2. **Anti double-submit berlapis** — `useRef` sinkron (klik-ganda-satu-task) + `isProcessing` state (disable tombol) + deferred reset. Terverifikasi E2E: postCount = 1.
-3. **Validasi form seragam & ketat** — util bersama `lib/validation.ts` (`isValidEmail`, `isValidPhone`, `isValidAmount`) menghilangkan drift donasi vs wakaf.
-4. **Countdown QRIS 15 menit** dengan cleanup `clearInterval` — tidak ada memory leak (terverifikasi unit test fake-timers).
-5. **Guard input aman** — `generateDynamicQris` melempar error pada nominal invalid; `safeRp` mencegah render angka negatif.
-6. **NIK UX membaik** — paste 20 digit kini di-truncate ke 16 (bukan input kembali kosong).
-7. **API mocking E2E 100% independen** — 25 test berjalan tanpa backend.
-
-### ⚠️ Catatan Lanjutan (nice-to-have, bukan blocker)
-
-1. **Pesan error validasi hanya toast singkat** — belum ada inline error di bawah field (aksesibilitas screen reader).
-2. **`idempotencyKey` masih dibuat baru per panggilan handler** — pertimbangkan `useRef` per sesi form agar retry/ganda ke gateway tetap ter-deteksi server (lapisan proteksi server-side).
-3. **Duplikasi `handleSubmitPayment`** donasi/wakaf — dapat diekstrak ke custom hook `useTransactionSubmit` untuk mencegah drift masa depan.
-4. **Client-heavy rendering** (`"use client"` di hampir semua page) — acceptable untuk aplikasi transaksi dengan state kompleks; tidak ditemukan masalah performa render signifikan (form tampil < 2 detik).
+1. **Fallback QRIS tangguh.** QRIS Dinamis lokal dirender sebelum POST selesai. Pengguna tidak menunggu gateway; kegagalan pencatatan tidak menghilangkan kemampuan membayar.
+2. **Status jujur.** Banner pencatatan + halaman pending menghindari klaim "berhasil" palsu. Ini penting untuk transaksi finansial.
+3. **Anti double-submit.** Guard sinkron menutup celah dua klik dalam satu task JS; tombol juga `disabled` saat `isProcessing`.
+4. **Aksesibilitas.** Error inline memiliki `role="alert"`; input memiliki `aria-invalid`, `aria-describedby`, `autoComplete`; toggle anonim dan tombol back memiliki label.
+5. **Kebocoran timer.** `QrisSementara` tidak memiliki countdown berulang. Halaman pending membersihkan `setTimeout` pada cleanup. Halaman sukses membatalkan fetch saat unmount.
+6. **Duplikasi pesan.** Error validasi muncul sebagai toast sekaligus inline. Fungsional, tetapi bisa terasa berisik; pertimbangkan menonaktifkan toast untuk error field.
+7. **Performa CSP.** `await connection()` di `app/layout.tsx` membuat seluruh halaman dynamic agar nonce CSP dapat disisipkan. Ini trade-off keamanan vs static rendering; jangan dihapus tanpa mengganti mekanisme nonce.
+8. **Idempotency.** Frontend mengirim `X-Idempotency-Key`, tetapi efektivitas akhir bergantung pada backend yang wajib menyimpan/menghormati key tersebut.
 
 ---
 
-## Rekomendasi Perbaikan — Status Implementasi
+## Rekomendasi Perbaikan (Actionable Items)
 
-| #   | Rekomendasi                                                             | Status                  | Lokasi Implementasi                           |
-| --- | ----------------------------------------------------------------------- | ----------------------- | --------------------------------------------- |
-| 1   | Guard anti double-submit (`useRef` sinkron + deferred reset)            | ✅ Implemented          | Kedua `page.tsx` (`handleSubmitPayment`)      |
-| 2   | Validasi email ketat (`isValidEmail` regex)                             | ✅ Implemented          | `lib/validation.ts` + kedua `page.tsx`        |
-| 3   | Ulangi validasi minimum nominal di submit Wakaf                         | ✅ Implemented          | `FormWakafPage/page.tsx:82` (`isValidAmount`) |
-| 4   | Validasi nominal di `generateDynamicQris` (throw) + replace prefix-only | ✅ Implemented          | `lib/qrisDinamis.ts`                          |
-| 5   | Countdown QRIS + cleanup anti memory leak                               | ✅ Implemented          | `QrisSementara.tsx`                           |
-| 6   | Kunci tombol Back saat proses                                           | ✅ Implemented          | `FormDonasiPage/components/FormView.tsx`      |
-| 7   | Truncate NIK ke 16 digit                                                | ✅ Implemented          | `FormWakafPage/components/FormView.tsx`       |
-| 8   | Hardening validasi minor (`isValidPhone`, `safeRp`, trim)               | ✅ Implemented          | `lib/validation.ts`, `lib/format.ts`          |
-| 9   | Fire-and-forget POST (QRIS tampil dulu)                                 | ✅ Implemented          | Kedua `page.tsx`                              |
-| 10  | Rapikan warning Next.js 16 (`viewport` export)                          | ✅ Implemented          | `app/layout.tsx`                              |
-| 11  | Ekstrak `formatRp` ke `lib/format.ts`                                   | ✅ Implemented          | `lib/format.ts` (`formatRp`, `safeRp`)        |
-| 12  | Ekstrak `handleSubmitPayment` ke custom hook `useTransactionSubmit`     | ⬜ Belum (nice-to-have) | —                                             |
-| 13  | Idempotency key per sesi form (useRef)                                  | ⬜ Belum (nice-to-have) | —                                             |
-| 14  | Inline field error (aksesibilitas)                                      | ⬜ Belum (nice-to-have) | —                                             |
+### Wajib sebelum produksi
+
+1. **Pastikan backend menghormati `X-Idempotency-Key`** dan menyimpan key minimal 24 jam. Tanpa itu, retry tetap bisa membuat transaksi ganda.
+2. **Validasi `NEXT_PUBLIC_QRIS_STATIS` saat startup/healthcheck.** Sekarang payload invalid baru ketahuan saat user submit ("CRC QRIS statis tidak valid"). Tambahkan pengecekan build-time atau endpoint health.
+3. **Tambahkan E2E status `failed`:** mock `/transactions/:id` mengembalikan `failed`, pastikan redirect ke `/payment/failed` dan bukan success.
+4. **Tambahkan E2E timeout polling pending** (mis. 24 percobaan) dan pastikan tombol "Cek Riwayat" tetap tersedia.
+
+### Peningkatan
+
+5. **Kurangi duplikasi toast + inline error** atau tampilkan toast hanya untuk error form-level.
+6. **Sertakan `amount` dan `type` pada redirect pending → success** agar halaman sukses dapat menampilkan nominal segera sebelum fetch selesai.
+7. **Tambahkan coverage threshold** di `vitest.config.ts` (mis. 70% untuk `lib/validation.ts`, `lib/qrisDinamis.ts`, `hooks/useTransactionSubmit.ts`) dan upload laporan coverage sebagai artifact CI.
+8. **Pisahkan error `AbortError` berdasarkan alasan** (timeout vs unmount) dengan helper kecil agar pola ini tidak terulang di halaman lain.
+9. **Tinjau 5 high severity vulnerability** dari `npm audit` (mayoritas transitif Firebase/Google). Jalankan `npm audit` dan update dependensi secara terkontrol.
+10. **Hindari `window.location.replace` di `apiFetch`** bila memungkinkan; gunakan event + router agar transisi logout lebih halus. Namun karena `apiFetch` dipakai di luar React, pendekatan sekarang masih dapat diterima.
+11. **Bersihkan `.next/dev` saat E2E di Windows** jika muncul `EPERM rename server-reference-manifest.js` (antivirus/file lock). Ini bukan bug aplikasi, tetapi dapat membuat developer bingung.
 
 ---
 
-## Lampiran — Struktur File Pengujian
+## Bukti Eksekusi
 
-```
-vitest.config.ts                          # Konfigurasi Vitest (jsdom, alias @/)
-playwright.config.ts                      # Konfigurasi Playwright + webServer dev
-tests/unit/setup.ts                       # Setup jest-dom matchers
-tests/unit/qrisDinamis.test.ts            # CRC, Tag 54, throw pada nominal invalid, replace prefix-only
-tests/unit/formatAndSanitize.test.ts      # formatRp, safeRp, regex \D, replikasi validasi (import lib/validation)
-tests/unit/FormViewDonasi.test.tsx        # render, anonim, disable Back/UBAH saat isProcessing
-tests/unit/FormViewWakaf.test.tsx         # NIK truncate 16 digit, sanitasi, safeRp
-tests/unit/qrisSementara.leak.test.tsx    # setInterval + cleanup clearInterval + countdown fake-timers
-tests/e2e/helpers.ts                      # Mock campaign GET + POST (ok/500/timeout/delay-abort)
-tests/e2e/donasi.spec.ts                  # 13 skenario E2E donasi (termasuk anti double-submit lulus)
-tests/e2e/wakaf.spec.ts                   # 12 skenario E2E wakaf (email ketat, NIK truncate)
+```text
+npm run lint        -> 0 error, 0 warning
+npm run typecheck   -> sukses
+npm test            -> 10 file, 108 test lulus
+npm run test:coverage -> 108 test lulus; statements 47,78%, lines 48,11%
+npm run test:e2e    -> 29 test lulus (2,7 menit, webpack dev)
+npm run build       -> 19 route berhasil dibangun
 ```
 
-`package.json` scripts:
-
-- `npm run test` → `vitest run` (68 tests)
-- `npm run test:e2e` → `playwright test` (25 tests)
-
----
-
-## Kesimpulan
-
-Frontend alur Donasi & Wakaf **telah diperbaiki sepenuhnya** berdasarkan seluruh temuan audit. Status akhir re-test: **93/93 test lulus (100%)**.
-
-**Perbaikan kritis yang diimplementasikan:**
-
-1. **Double-submit donasi (2 POST)** → fixed via `useRef` sinkron guard + deferred reset — E2E `ANTI DOUBLE-SUBMIT` kini lulus (postCount = 1).
-2. **Email donasi tanpa validasi format** → fixed via `isValidEmail` regex ketat.
-3. **Validasi email wakaf lemah + minimum nominal tidak diulang di submit** → fixed via util bersama `lib/validation.ts` (`isValidEmail`, `isValidAmount`, `isValidPhone`).
-
-**Perbaikan sedang/rendah yang diimplementasikan:** validasi & throw nominal di `generateDynamicQris`, replace prefix-only, countdown QRIS 15 menit dengan cleanup anti-leak, kunci Back/UBAH saat proses, truncate NIK ke 16 digit, `safeRp` guard render negatif, `viewport` export Next 16.
-
-**Sisa rekomendasi nice-to-have (tidak blocker rilis):** ekstrak `useTransactionSubmit`, idempotency key per sesi, inline field error.
+Catatan: `test:e2e` memakai `next dev --webpack` karena Turbopack dev di Windows sesekali gagal `rename` manifest `.next/dev/server/server-reference-manifest.js` (EPERM) dan membuat satu request halaman merespons 500. Peringatan Vite `configLoader: 'native'` hanya informational dan dapat dihilangkan dengan mengganti `vitest.config.ts` menjadi `.mts`.

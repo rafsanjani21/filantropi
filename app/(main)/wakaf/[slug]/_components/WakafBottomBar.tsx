@@ -9,11 +9,19 @@
 
 "use client";
 
+import { useState } from "react";
 import { Share2, BookOpen } from "lucide-react";
+import type { Campaign } from "@/types";
 
-export default function WakafBottomBar({ campaign, onWakafClick }: any) {
+type WakafBottomBarProps = {
+  campaign: Campaign | null;
+  onWakafClick: () => void;
+};
+
+export default function WakafBottomBar({ campaign, onWakafClick }: WakafBottomBarProps) {
+  const [now] = useState(() => Date.now());
   const isUnlimitedTime = !campaign?.end_date;
-  const daysLeft = isUnlimitedTime ? null : Math.max(0, Math.ceil((new Date(campaign.end_date).getTime() - Date.now()) / 86400000));
+  const daysLeft = isUnlimitedTime ? null : Math.max(0, Math.ceil((new Date(campaign.end_date as string).getTime() - now) / 86400000));
   const isDonateDisabled = campaign?.status !== "active" || (!isUnlimitedTime && (daysLeft as number) <= 0);
 
   return (

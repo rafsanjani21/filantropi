@@ -16,12 +16,13 @@ import BottomNav from "@/components/layout/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { UserProfile } from "@/types";
+import { safeImageUrl } from "@/lib/safeUrl";
 import {
   User,
   History,
   LogOut,
   ChevronRight,
-  CheckCircle2,
   Building2,
   MapPin,
   Mail,
@@ -102,8 +103,8 @@ export default function ProfilePagePenerima() {
     getProfile,
   } = useAuth();
 
-  const [user, setUser] = useState<any>(null);
-  const [copied, setCopied] = useState(false);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [cacheBust] = useState(() => Date.now());
 
   const { t, i18n } = useTranslation();
 
@@ -113,10 +114,10 @@ export default function ProfilePagePenerima() {
         let userData = null;
         try {
           userData = await getProfile("donor");
-        } catch (err) {
+        } catch {
           try {
             userData = await getProfile("beneficiary");
-          } catch (err2) {
+          } catch {
             console.warn("User reguler tidak ditemukan");
           }
         }
@@ -138,7 +139,7 @@ export default function ProfilePagePenerima() {
   if (photoUrl) {
     if (photoUrl.startsWith("http")) {
       // Jika login pakai Google (URL utuh)
-      userPhoto = `${photoUrl}?t=${Date.now()}`;
+      userPhoto = `${photoUrl}?t=${cacheBust}`;
     } else {
       // Menghilangkan garis miring ganda
       const cleanBaseUrl = BASE_URL.replace(/\/+$/, "");
@@ -150,22 +151,16 @@ export default function ProfilePagePenerima() {
       }
 
       // Hasil akhir: http://192.168.110.29:8081/public/uploads/profile/...
-      userPhoto = `${cleanBaseUrl}/${cleanPhotoUrl}?t=${Date.now()}`;
+      userPhoto = `${cleanBaseUrl}/${cleanPhotoUrl}?t=${cacheBust}`;
     }
   }
+
+  const safeUserPhoto = safeImageUrl(userPhoto, "/profile.png");
 
   const displayName =
     user?.name || user?.full_name || "User";
   const displayAddress = user?.alamat;
   const displayEmail = user?.email;
-
-  const handleCopyWallet = () => {
-    if (user?.wallet_address) {
-      navigator.clipboard.writeText(user.wallet_address);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
 
   const isBeneficiary =
     user?.role === "beneficiary" || user?.role === "penerima_manfaat";
@@ -201,21 +196,15 @@ export default function ProfilePagePenerima() {
 
       <LogoNavbar backHref="/" />
 
-      {copied && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-[#241432]/95 backdrop-blur-md text-white px-5 py-2.5 rounded-full shadow-2xl text-sm font-medium flex items-center gap-2 z-50 border border-white/10 animate-in fade-in slide-in-from-top-4 duration-300">
-          <CheckCircle2 size={17} className="text-emerald-400" />
-          {t("copied_wallet")}
-        </div>
-      )}
-
       <main className="relative flex-1 flex flex-col items-center pt-10 px-6">
         {/* HEADER — PHOTO & IDENTITY */}
         <div className="relative mb-5">
           <div className="absolute -inset-2 bg-[#E8B94A]/30 rounded-full blur-xl" aria-hidden="true" />
           <div className="relative p-[3px] bg-gradient-to-br from-[#F3D48A] to-[#C9962F] rounded-full shadow-xl">
             <div className="p-1 bg-white rounded-full">
+              {/* eslint-disable-next-line @next/next/no-img-element -- URL foto dari Google/backend dinamis */}
               <img
-                src={userPhoto}
+                src={safeUserPhoto}
                 alt="Profile"
                 referrerPolicy="no-referrer"
                 className="w-28 h-28 rounded-full object-cover"

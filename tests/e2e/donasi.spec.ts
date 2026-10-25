@@ -7,12 +7,16 @@
  * Catatan  : Menguji happy path, nominal < Rp 1.000, minus ditolak, email/nama invalid, anonim, fallback POST 500/timeout, anti double-submit, dan campaign error.
  */
 import { test, expect } from "@playwright/test";
-import { mockCampaignApis, DONASI_URL } from "./helpers";
+import {
+  mockCampaignApis,
+  mockTransactionDetail,
+  DONASI_URL,
+} from "./helpers";
 
 test.describe("E2E Alur DONASI (QRIS Dinamis fallback)", () => {
   test("HAPPY PATH: nominal -> form -> QRIS muncul dengan nominal yang benar", async ({ page }) => {
     let postCount = 0;
-    await page.route("**/api/campaigns/**", async (route) => {
+    await page.route("**/campaigns/**", async (route) => {
       const req = route.request();
       if (req.method() === "GET") {
         if (req.url().includes("/campaigns/transactions/")) {
@@ -55,7 +59,40 @@ test.describe("E2E Alur DONASI (QRIS Dinamis fallback)", () => {
     await expect(page.getByText("Pembayaran QRIS")).toBeVisible({ timeout: 20000 });
     await expect(page.locator("#qris-container svg")).toBeVisible();
     await expect(page.getByText("Rp 50.000")).toBeVisible();
-    expect(postCount).toBe(1);
+    await expect.poll(() => postCount).toBe(1);
+  });
+
+  test("STATUS FLOW: 'Saya Sudah Membayar' -> pending -> sukses setelah status berubah", async ({
+    page,
+  }) => {
+    await mockCampaignApis(page);
+    await mockTransactionDetail(page, ["pending", "success"]);
+
+    await page.goto(DONASI_URL);
+    await page.getByRole("button", { name: "Rp 50.000" }).click();
+    await page.getByRole("button", { name: "Lanjut Pembayaran" }).click();
+    await page.getByPlaceholder("Nama Lengkap").fill("Budi QA");
+    await page.getByPlaceholder("08xxxxxxxxxx").fill("08123456789");
+    await page.getByPlaceholder("user@example.com").fill("budi@qa.id");
+    await page.getByRole("button", { name: "Lanjut Pembayaran" }).click();
+
+    await expect(page.getByText("Pembayaran QRIS")).toBeVisible({
+      timeout: 20000,
+    });
+    await page.getByRole("button", { name: "Saya Sudah Membayar" }).click();
+
+    await expect(page).toHaveURL(/\/payment\/pending\?/);
+    expect(new URL(page.url()).searchParams.get("trx_id")).toBe("123");
+    await expect(
+      page.getByRole("heading", { name: "Menunggu Pembayaran" }),
+    ).toBeVisible();
+
+    await expect(page).toHaveURL(/\/payment\/success\?trx_id=123/, {
+      timeout: 20000,
+    });
+    await expect(
+      page.getByText("Transaksi Anda Telah Berhasil"),
+    ).toBeVisible();
   });
 
   test("UNHAPPY: nominal di bawah Rp 1.000 ditolak", async ({ page }) => {
@@ -93,7 +130,9 @@ test.describe("E2E Alur DONASI (QRIS Dinamis fallback)", () => {
     await page.getByPlaceholder("Nama Lengkap").fill("");
     await page.getByRole("button", { name: "Lanjut Pembayaran" }).click();
 
-    await expect(page.getByText("Nama wajib diisi")).toBeVisible();
+    await expect(page.locator("#donation-name-error")).toHaveText(
+      "Nama wajib diisi",
+    );
     await expect(page.getByText("Pembayaran QRIS")).not.toBeVisible();
   });
 
@@ -110,7 +149,9 @@ test.describe("E2E Alur DONASI (QRIS Dinamis fallback)", () => {
     await page.getByRole("button", { name: "Lanjut Pembayaran" }).click();
 
     // Setelah perbaikan: email tidak valid harus DITOLAK
-    await expect(page.getByText("Format email tidak valid")).toBeVisible();
+    await expect(page.locator("#donation-email-error")).toHaveText(
+      "Format email tidak valid",
+    );
     await expect(page.getByText("Pembayaran QRIS")).not.toBeVisible();
   });
 
@@ -175,6 +216,15 @@ test.describe("E2E Alur DONASI (QRIS Dinamis fallback)", () => {
 
     await expect(page.getByText("Pembayaran QRIS")).toBeVisible({ timeout: 20000 });
     await expect(page.locator("#qris-container svg")).toBeVisible();
+    await expect(
+      page.getByText(/Pencatatan otomatis gagal/i).last(),
+    ).toBeVisible({ timeout: 10000 });
+
+    await page.getByRole("button", { name: "Saya Sudah Membayar" }).click();
+    await expect(page).toHaveURL(/\/payment\/pending/);
+    await expect(
+      page.getByRole("heading", { name: "Verifikasi Pembayaran" }),
+    ).toBeVisible();
   });
 
   test("FALLBACK: POST transaksi timeout/abort -> QRIS lokal TETAP tampil TANPA menunggu (fire-and-forget)", async ({ page }) => {
@@ -194,7 +244,7 @@ test.describe("E2E Alur DONASI (QRIS Dinamis fallback)", () => {
 
   test("FIXED ANTI DOUBLE-SUBMIT: klik ganda hanya menghasilkan 1 request POST", async ({ page }) => {
     let postCount = 0;
-    await page.route("**/api/campaigns/**", async (route) => {
+    await page.route("**/campaigns/**", async (route) => {
       const req = route.request();
       if (req.method() === "GET") {
         if (req.url().includes("/campaigns/transactions/")) {
@@ -256,7 +306,7 @@ test.describe("E2E Alur DONASI (QRIS Dinamis fallback)", () => {
   });
 
   test("UNHAPPY: campaign API error -> pesan 'Data program tidak ditemukan'", async ({ page }) => {
-    await page.route("**/api/campaigns/**", async (route) => {
+    await page.route("**/campaigns/**", async (route) => {
       if (route.request().method() === "GET") {
         return route.fulfill({ status: 500, json: { message: "Server error" } });
       }

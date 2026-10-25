@@ -6,18 +6,22 @@
  * Dipakai  : Tidak ditemukan pemakai aktif saat ini; hanya dirujuk dalam komentar di app/(main)/programs/[slug]/donate/page.tsx dan app/(main)/wakaf/[slug]/donate/page.tsx
  * Catatan  : Metode non-instan terkunci bila nominal < Rp 10.000 dan memunculkan toast.
  */
+import { useState } from "react";
 import { ArrowLeft, CheckCircle2, Lock } from "lucide-react";
 import toast from "react-hot-toast";
+import type { PaymentMethod } from "@/types";
 
 type MethodViewProps = { 
   amount: number | ""; 
-  selectedMethod: any; 
+  selectedMethod: PaymentMethod | null; 
   transactionType: "donasi" | "wakaf";
-  onSelectMethod: (method: any) => void; 
+  onSelectMethod: (method: PaymentMethod) => void; 
   onBack: () => void; 
 };
 
 export default function MethodView({ amount, selectedMethod, transactionType, onSelectMethod, onBack }: MethodViewProps) {
+  const [failedLogos, setFailedLogos] = useState<Record<string, boolean>>({});
+
   // KONFIGURASI TEMA
   const uiConfig = {
     donasi: {
@@ -44,28 +48,18 @@ export default function MethodView({ amount, selectedMethod, transactionType, on
     {
       title: "Pembayaran Instan",
       methods: [
-        { id: "QRIS", name: "QRIS Pay", logo: "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" },
-        { id: "ASTRAPAY", name: "AstraPay", logo: "/logo/astrapay.png" },
+        { id: "qris", name: "QRIS", logo: "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" },
       ]
     },
     {
       title: "Virtual Account",
       methods: [
-        { id: "BNI", name: "BNI Virtual", logo: "/logo/bni.png" },
-        { id: "BRI", name: "BRI Virtual", logo: "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_BRI.png" },
-        { id: "BSI", name: "BSI Virtual", logo: "https://upload.wikimedia.org/wikipedia/commons/a/a0/Bank_Syariah_Indonesia.svg" },
-        { id: "BSS", name: "BSS Virtual", logo: "/logo/bss.png" },
-        { id: "CIMB", name: "CIMB Niaga", logo: "https://upload.wikimedia.org/wikipedia/commons/3/38/CIMB_Niaga_logo.svg" },
-        { id: "MANDIRI", name: "Mandiri Virtual", logo: "https://upload.wikimedia.org/wikipedia/commons/a/ad/Bank_Mandiri_logo_2016.svg" },
-        { id: "PERMATA", name: "Permata Virtual", logo: "/logo/permata.png" },
+        { id: "bni_va", name: "BNI Virtual", logo: "/logo/bni.png" },
+        { id: "bri_va", name: "BRI Virtual", logo: "https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_BRI.png" },
+        { id: "mandiri_va", name: "Mandiri Virtual", logo: "https://upload.wikimedia.org/wikipedia/commons/a/ad/Bank_Mandiri_logo_2016.svg" },
+        { id: "permata_va", name: "Permata Virtual", logo: "/logo/permata.png" },
       ]
     },
-    {
-      title: "Gerai Retail",
-      methods: [
-        { id: "INDOMARET", name: "Indomaret", logo: "https://upload.wikimedia.org/wikipedia/commons/4/44/Indomaret.svg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original" },
-      ]
-    }
   ];
 
   return (
@@ -112,15 +106,19 @@ export default function MethodView({ amount, selectedMethod, transactionType, on
                       }`}
                     >
                       <div className="w-14 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center p-1.5 mr-4 shrink-0">
-                        <img 
-                          src={m.logo} 
-                          alt={m.name} 
-                          className={`w-full h-full object-contain ${isLocked ? "grayscale opacity-50" : ""}`} 
-                          onError={(e) => { 
-                            e.currentTarget.style.display = 'none'; 
-                            e.currentTarget.parentElement!.innerHTML = `<span class="text-[10px] font-black text-slate-400">${m.id}</span>`; 
-                          }}
-                        />
+                        {failedLogos[m.id] ? (
+                          <span className="text-[10px] font-black text-slate-400">{m.id}</span>
+                        ) : (
+                          // eslint-disable-next-line @next/next/no-img-element -- logo metode dari host dinamis
+                          <img
+                            src={m.logo}
+                            alt={m.name}
+                            className={`w-full h-full object-contain ${isLocked ? "grayscale opacity-50" : ""}`}
+                            onError={() =>
+                              setFailedLogos((prev) => ({ ...prev, [m.id]: true }))
+                            }
+                          />
+                        )}
                       </div>
                       
                       <span className={`flex-1 text-left text-[14px] font-bold ${isLocked ? "text-slate-400" : isSelected ? theme.textMain : "text-slate-700"}`}>

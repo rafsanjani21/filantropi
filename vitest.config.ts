@@ -23,5 +23,16 @@ export default defineConfig({
     setupFiles: ["./tests/unit/setup.ts"],
     include: ["tests/unit/**/*.test.{ts,tsx}"],
     css: false,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html"],
+      reportsDirectory: "./coverage",
+      include: [
+        "lib/**/*.{ts,tsx}",
+        "hooks/**/*.{ts,tsx}",
+        "components/payment/**/*.tsx",
+      ],
+      exclude: ["**/*.d.ts"],
+    },
   },
 });

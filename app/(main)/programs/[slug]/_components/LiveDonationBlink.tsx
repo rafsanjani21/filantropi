@@ -62,8 +62,6 @@ export default function LiveDonationBlink({
 
   const amount = Number(donation.amount || 0).toLocaleString("id-ID");
 
-  const initial = donor.charAt(0).toUpperCase();
-
   return (
     <div className="fixed top-5 left-1/2 z-[999] w-full max-w-sm -translate-x-1/2 px-4 pointer-events-none">
       <div

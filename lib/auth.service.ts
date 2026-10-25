@@ -7,6 +7,7 @@
  * Catatan  : Logout memakai fetch langsung (bukan apiFetch) agar bisa refresh token sekali saat 401.
  */
 import { apiFetch, BASE_URL } from "./api";
+import { getAccessToken, setAccessToken, setTokens } from "./authTokens";
 
 export const AuthService = {
   async login(id_token: string) {
@@ -44,7 +45,7 @@ export const AuthService = {
   },
 
   async logout(refresh_token: string) {
-    let access_token = localStorage.getItem("access_token");
+    let access_token = getAccessToken();
 
     const doLogout = async (token: string | null) => {
       return fetch(`${BASE_URL}/auth/logout`, {
@@ -77,11 +78,15 @@ export const AuthService = {
         throw new Error("Refresh token gagal saat logout");
       }
 
-      access_token = refreshData.data.access_token;
-      if (access_token !== null) {
-        localStorage.setItem("access_token", access_token);
-      } else {
-        localStorage.removeItem("access_token");
+      access_token =
+        refreshData?.data?.access_token ?? refreshData?.access_token ?? null;
+      const nextRefreshToken =
+        refreshData?.data?.refresh_token ?? refreshData?.refresh_token;
+
+      if (access_token && typeof nextRefreshToken === "string" && nextRefreshToken) {
+        setTokens(access_token, nextRefreshToken);
+      } else if (access_token) {
+        setAccessToken(access_token);
       }
 
       res = await doLogout(access_token);
@@ -134,7 +139,7 @@ export const AuthService = {
 
   // 2. GET DETAIL (Mencari berdasarkan Slug)
   async getCampaignDetail(slug: string) {
-    return apiFetch(`/campaigns/${slug}`, {
+    return apiFetch(`/campaigns/${encodeURIComponent(slug)}`, {
       method: "GET",
     });
   },
@@ -156,7 +161,7 @@ export const AuthService = {
 
   // 5. UPDATE CAMPAIGN (FUNGSI BARU UNTUK EDIT)
   async updateCampaign(identifier: string, formData: FormData) {
-    return apiFetch(`/campaigns/${identifier}`, {
+    return apiFetch(`/campaigns/${encodeURIComponent(identifier)}`, {
       method: "PUT", 
       body: formData,
     });

@@ -15,8 +15,17 @@ import { useRef, useState, useEffect } from "react";
 import NewsCard from "@/components/news/NewsCard";
 import Link from "next/link";
 
+type NewsItem = {
+  title: string;
+  excerpt: string;
+  date: string;
+  category: string;
+  imageUrl: string;
+  slug: string;
+};
+
 export default function BeritaPage() {
-  const [news, setNews] = useState<any[]>([]);
+  const [news] = useState<NewsItem[]>([]);
   const [visibleCount, setVisibleCount] = useState(5);
   const observerTarget = useRef<HTMLDivElement>(null);
 
@@ -30,10 +39,11 @@ export default function BeritaPage() {
       { threshold: 0.1 },
     );
 
-    if (observerTarget.current) observer.observe(observerTarget.current);
+    const target = observerTarget.current;
+    if (target) observer.observe(target);
 
     return () => {
-      if (observerTarget.current) observer.unobserve(observerTarget.current);
+      if (target) observer.unobserve(target);
     };
   }, [observerTarget, news.length]);
 

@@ -4,11 +4,14 @@
  * Fungsi   : Hook autentikasi Google (id_token) yang memilih redirect donor/penerima, plus logout dan operasi profil/kampanye.
  * Ekspor   : useAuth
  * Dipakai  : app/(auth)/login/page.tsx, app/(main)/page.tsx, app/(main)/profile/page.tsx, app/(main)/profile/user/page.tsx, app/(main)/profile/beneficiary/page.tsx, app/(main)/programs/new/page.tsx, app/(main)/programs/manage/page.tsx, components/layout/BottomNav.tsx
- * Catatan  : Menyimpan token di localStorage/sessionStorage, memakai useAuthStore.checkAuth, dan fallback ke halaman pendaftaran jika user belum terdaftar.
+ * Catatan  : Menyimpan access token di memori dan refresh token di sessionStorage, memakai
+ *            useAuthStore.checkAuth, dan fallback ke halaman pendaftaran jika user belum terdaftar.
  */
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthService } from "@/lib/auth.service";
+import { clearTokens, getRefreshToken, setTokens } from "@/lib/authTokens";
+import { signOutFirebase } from "@/lib/firebaseSession";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export function useAuth() {
@@ -25,12 +28,25 @@ export function useAuth() {
         throw new Error("User belum terdaftar");
       }
 
-      localStorage.setItem("access_token", res.data.access_token || res.access_token);
-      localStorage.setItem("refresh_token", res.data.refresh_token || res.refresh_token);
+      const accessToken = res.data.access_token || res.access_token;
+      const refreshToken = res.data.refresh_token || res.refresh_token;
+
+      if (!accessToken) {
+        throw new Error("Token akses tidak diterima");
+      }
+
+      setTokens(accessToken, refreshToken);
       sessionStorage.removeItem("selected_role");
 
-      const redirectPath = sessionStorage.getItem("redirect_after_login") || "/";
-      if (sessionStorage.getItem("redirect_after_login")) {
+      const rawRedirect = sessionStorage.getItem("redirect_after_login");
+      const redirectPath =
+        rawRedirect &&
+        rawRedirect.startsWith("/") &&
+        !rawRedirect.startsWith("//") &&
+        !rawRedirect.startsWith("/\\")
+          ? rawRedirect
+          : "/";
+      if (rawRedirect) {
         sessionStorage.setItem("auto_open_donate", "true");
         sessionStorage.removeItem("redirect_after_login");
       }
@@ -38,7 +54,7 @@ export function useAuth() {
       router.replace(redirectPath);
       router.refresh();
 
-    } catch (err: any) {
+    } catch {
       sessionStorage.setItem("id_token", id_token); 
       sessionStorage.setItem("temp_name", name); 
       
@@ -55,19 +71,19 @@ export function useAuth() {
   const handleLogout = async () => {
     try {
       setLoading(true);
-      const refresh_token = localStorage.getItem("refresh_token");
+      const refresh_token = getRefreshToken();
       if (refresh_token) {
         try {
           await AuthService.logout(refresh_token);
-        } catch (err) {
+        } catch {
           console.warn("Logout API gagal (diabaikan)");
         }
       }
     } finally {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-      sessionStorage.clear(); 
-      window.location.href = "/login";
+      clearTokens();
+      await signOutFirebase();
+      sessionStorage.clear();
+      window.location.replace("/login");
     }
   };
 
@@ -75,10 +91,15 @@ export function useAuth() {
     try {
       const res = await AuthService.getProfile(type);
       return res.data;
-    } catch (err: any) {
-      if (err.message.toLowerCase().includes("unauthorized")) {
-        localStorage.removeItem("access_token");
-        window.location.href = "/login";
+    } catch (err) {
+      if (
+        err instanceof Error &&
+        (err.message.includes("401") ||
+          err.message.toLowerCase().includes("unauthorized"))
+      ) {
+        clearTokens();
+        void signOutFirebase();
+        window.location.replace("/login");
       }
       throw err;
     }
