@@ -22,7 +22,6 @@ import PledgeView from "./_components/PledgeView";
 import NominalView from "@/components/payment/NominalView";
 import FormWakafView from "./_components/FormView";
 import VaView from "@/components/payment/VaView";
-import QrisSementara from "@/components/payment/QrisSementara";
 
 // ⚠️ CARA KEMBALI KE PAYMENT GATEWAY: Buka comment di bawah ini
 import MethodView from "@/components/payment/MethodView";
@@ -38,10 +37,7 @@ export default function FormWakafPage() {
   // Logika transaksi (guard, validasi, QRIS, pencatatan gateway) — lihat hooks/useTransactionSubmit.ts
   const {
     isProcessing,
-    qrisString,
     transactionData,
-    recordStatus,
-    recordError,
     fieldErrors,
     clearFieldError,
     transactionId,

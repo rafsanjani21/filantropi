@@ -9,7 +9,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { CheckCircle2, Heart, Receipt, Home, XCircle } from "lucide-react";
+import { CheckCircle2, Receipt, Home, XCircle } from "lucide-react";
 import { BASE_URL } from "@/lib/api";
 import type { TransactionDetail } from "@/types";
 

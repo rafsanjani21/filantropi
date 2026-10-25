@@ -9,7 +9,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Clock3, Receipt, Home, RefreshCw, AlertTriangle, LogIn } from "lucide-react";
+import { Clock3, Receipt, RefreshCw, AlertTriangle } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { formatRp } from "@/lib/format";
 import { hasRefreshToken } from "@/lib/authTokens";
@@ -42,10 +42,11 @@ function PendingContent() {
 
   const [state, setState] = useState<PendingState>(trxId ? "polling" : "manual");
   const [detail, setDetail] = useState<string>("");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsLoggedIn(hasRefreshToken());
+    setIsMounted(true);
   }, []);
 
   useEffect(() => {
