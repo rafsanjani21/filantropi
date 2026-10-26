@@ -69,7 +69,7 @@ jobs:
             # 4. Reload aplikasi. Next.js server tidak boleh di-cluster (-i max) karena
             #    state in-memory (rate limit/idempotency) tidak dibagi antar worker.
             pm2 reload "$APP_NAME" --update-env || pm2 start node_modules/next/dist/bin/next --name "$APP_NAME" -i 1 -- start -p "$APP_PORT"
-            pm2 scale "$APP_NAME" 1
+            pm2 scale "$APP_NAME" 1 || true
 
             # 5. Healthcheck; rollback bila aplikasi tidak merespons
             HEALTH_OK=0
