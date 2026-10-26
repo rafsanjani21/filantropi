@@ -179,16 +179,39 @@ async function parseBody(res: Response) {
   }
 }
 
+const REFRESH_LOCK_NAME = "filantropi-auth-refresh";
+
+/** Sinkronkan refresh antar tab agar refresh token yang dirotasi tidak dipakai dua kali. */
+async function withRefreshLock<T>(task: () => Promise<T>): Promise<T> {
+  if (typeof navigator !== "undefined" && "locks" in navigator) {
+    return navigator.locks.request(REFRESH_LOCK_NAME, task);
+  }
+
+  return task();
+}
+
 /** Refresh token single-flight: request 401 bersamaan berbagi satu proses refresh. */
-function refreshAccessToken(refresh_token: string): Promise<string> {
+function refreshAccessToken(
+  refresh_token: string,
+  staleAccessToken: string | null = null,
+): Promise<string> {
   if (!refreshPromise) {
-    refreshPromise = (async () => {
+    refreshPromise = withRefreshLock(async () => {
+      // Tab lain mungkin sudah memperbarui access token saat kita menunggu lock.
+      const sharedToken = getAccessToken();
+      if (sharedToken && sharedToken !== staleAccessToken) {
+        return sharedToken;
+      }
+
+      // Refresh token bisa saja sudah dirotasi oleh tab lain.
+      const currentRefreshToken = getRefreshToken() || refresh_token;
+
       const refreshRes = await fetchWithTimeout(
         `${BASE_URL}/auth/refresh-token`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ refresh_token }),
+          body: JSON.stringify({ refresh_token: currentRefreshToken }),
         },
       );
 
@@ -214,7 +237,7 @@ function refreshAccessToken(refresh_token: string): Promise<string> {
       }
 
       return newToken;
-    })().finally(() => {
+    }).finally(() => {
       refreshPromise = null;
     });
   }
@@ -225,7 +248,7 @@ function refreshAccessToken(refresh_token: string): Promise<string> {
 export async function apiFetch(
   endpoint: string,
   options: RequestInit = {},
-  config: { publicRead?: boolean } = {},
+  config: { publicRead?: boolean; keepSession?: boolean } = {},
 ) {
   const method = (options.method ?? "GET").toUpperCase();
   const path = pathOf(endpoint);
@@ -243,9 +266,9 @@ export async function apiFetch(
 
     if (refresh_token) {
       try {
-        access_token = await refreshAccessToken(refresh_token);
+        access_token = await refreshAccessToken(refresh_token, null);
       } catch {
-        forceLogout();
+        if (!config.keepSession) forceLogout();
         throw new Error("Sesi habis");
       }
     }
@@ -273,20 +296,20 @@ export async function apiFetch(
     const refresh_token = getRefreshToken();
 
     if (!refresh_token) {
-      forceLogout();
+      if (!config.keepSession) forceLogout();
       throw new Error("Sesi habis");
     }
 
     try {
-      const newToken = await refreshAccessToken(refresh_token);
+      const newToken = await refreshAccessToken(refresh_token, access_token);
       res = await doFetch(newToken);
 
       if (res.status === 401) {
-        forceLogout();
+        if (!config.keepSession) forceLogout();
         throw new Error("Sesi habis");
       }
     } catch {
-      forceLogout();
+      if (!config.keepSession) forceLogout();
       throw new Error("Sesi habis");
     }
   }

@@ -144,7 +144,7 @@ describe("apiFetch", () => {
   });
 
   it("memulihkan access token dari refresh token setelah reload", async () => {
-    sessionStorage.setItem("refresh_token", "refresh-abc");
+    localStorage.setItem("refresh_token", "refresh-abc");
     fetchMock.mockImplementation((url: string) => {
       if (url.endsWith("/auth/refresh-token")) {
         return Promise.resolve(
@@ -190,12 +190,12 @@ describe("apiFetch", () => {
     expect(b).toEqual({ data: { ok: true } });
     expect(refreshCalls).toBe(1);
     expect(getAccessToken()).toBe("token-baru");
-    expect(localStorage.getItem("access_token")).toBeNull();
+    expect(localStorage.getItem("access_token")).toBe("token-baru");
   });
 
   it("membersihkan sesi bila refresh setelah reload gagal", async () => {
     window.history.replaceState({}, "", "/login");
-    sessionStorage.setItem("refresh_token", "refresh-abc");
+    localStorage.setItem("refresh_token", "refresh-abc");
     fetchMock.mockResolvedValue(
       jsonResponse({ message: "refresh tidak valid" }, 401),
     );

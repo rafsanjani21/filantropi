@@ -120,14 +120,21 @@ export const AuthService = {
     });
   },
 
-  async getProfile(type: "donor" | "beneficiary" = "donor") {
+  async getProfile(
+    type: "donor" | "beneficiary" = "donor",
+    options: { keepSession?: boolean } = {},
+  ) {
     const endpoint = type === "beneficiary" 
       ? "/user/profile/beneficiaries" 
       : "/user/profile/donors";
 
-    return apiFetch(endpoint, {
-      method: "GET",
-    });
+    return apiFetch(
+      endpoint,
+      {
+        method: "GET",
+      },
+      options,
+    );
   },
 
   // 1. GET ALL

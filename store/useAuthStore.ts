@@ -13,6 +13,11 @@ import { clearTokens, getAccessToken, getRefreshToken } from "@/lib/authTokens";
 import { signOutFirebase } from "@/lib/firebaseSession";
 import type { UserProfile } from "@/types";
 
+function isAuthError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return /\b(401|403)\b/.test(message) || /unauthori[sz]ed|forbidden/i.test(message);
+}
+
 interface AuthState {
   user: UserProfile | null;
   role: "donor" | "beneficiary" | "guest" | null;
@@ -39,18 +44,22 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     try {
       // Coba panggil sebagai donatur dulu
-      const res = await AuthService.getProfile("donor");
+      const res = await AuthService.getProfile("donor", { keepSession: true });
       set({ user: res.data || res, role: "donor", isAuthenticated: true, isInitialized: true });
-    } catch {
+    } catch (donorError) {
       try {
         // Jika gagal, coba sebagai penerima manfaat
-        const res = await AuthService.getProfile("beneficiary");
+        const res = await AuthService.getProfile("beneficiary", { keepSession: true });
         set({ user: res.data || res, role: "beneficiary", isAuthenticated: true, isInitialized: true });
-      } catch {
-        // Jika dua-duanya gagal (misal token tidak valid), jangan simpan sesi basi.
-        clearTokens();
-        void signOutFirebase();
+      } catch (beneficiaryError) {
         set({ user: null, role: "guest", isAuthenticated: false, isInitialized: true });
+
+        // Hanya hapus sesi jika server benar-benar menolak token. Error jaringan/timeout
+        // tidak boleh membuat pengguna logout dan kehilangan sesi saat reload.
+        if (isAuthError(donorError) || isAuthError(beneficiaryError)) {
+          clearTokens();
+          void signOutFirebase();
+        }
       }
     }
   },
