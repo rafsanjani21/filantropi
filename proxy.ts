@@ -43,6 +43,7 @@ const imageSources = [
 const connectSources = [
   "'self'",
   apiOrigin,
+  imageOrigin,
   firebaseAuthOrigin,
   "https://www.emsifa.com",
   "https://identitytoolkit.googleapis.com",

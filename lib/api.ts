@@ -245,19 +245,16 @@ function refreshAccessToken(
   return refreshPromise;
 }
 
-export async function apiFetch(
-  endpoint: string,
-  options: RequestInit = {},
-  config: { publicRead?: boolean; keepSession?: boolean } = {},
+/**
+ * Request dengan penyisipan token dan refresh single-flight, tanpa parsing body.
+ * Dipakai apiFetch (JSON) dan apiFetchBlob (binary, mis. foto KTP terenkripsi).
+ */
+async function authenticatedFetch(
+  url: string,
+  init: RequestInit,
+  isNoAuth: boolean,
+  config: { keepSession?: boolean },
 ) {
-  const method = (options.method ?? "GET").toUpperCase();
-  const path = pathOf(endpoint);
-
-  const isNoAuth =
-    config.publicRead === true ||
-    isPublicRead(method, path) ||
-    isAuthEndpoint(path);
-
   let access_token = getAccessToken();
 
   // Setelah reload, access token di memori hilang; gunakan refresh token sesi.
@@ -275,14 +272,14 @@ export async function apiFetch(
   }
 
   const isFormData =
-    typeof FormData !== "undefined" && options.body instanceof FormData;
+    typeof FormData !== "undefined" && init.body instanceof FormData;
 
   const doFetch = (token: string | null) =>
-    fetchWithTimeout(`${BASE_URL}${endpoint}`, {
-      ...options,
+    fetchWithTimeout(url, {
+      ...init,
       headers: {
-        ...(options.headers || {}),
-        ...(options.body && !isFormData
+        ...(init.headers || {}),
+        ...(init.body && !isFormData
           ? { "Content-Type": "application/json" }
           : {}),
         ...(!isNoAuth && token ? { Authorization: `Bearer ${token}` } : {}),
@@ -314,6 +311,29 @@ export async function apiFetch(
     }
   }
 
+  return res;
+}
+
+export async function apiFetch(
+  endpoint: string,
+  options: RequestInit = {},
+  config: { publicRead?: boolean; keepSession?: boolean } = {},
+) {
+  const method = (options.method ?? "GET").toUpperCase();
+  const path = pathOf(endpoint);
+
+  const isNoAuth =
+    config.publicRead === true ||
+    isPublicRead(method, path) ||
+    isAuthEndpoint(path);
+
+  const res = await authenticatedFetch(
+    `${BASE_URL}${endpoint}`,
+    options,
+    isNoAuth,
+    config,
+  );
+
   const data = await parseBody(res);
 
   if (!res.ok) {
@@ -323,4 +343,26 @@ export async function apiFetch(
   }
 
   return data;
+}
+
+/**
+ * Mengambil respons biner (mis. foto KTP) dari URL absolut dengan Authorization Bearer.
+ * URL tidak melalui BASE_URL karena endpoint aman memakai path `/api/v1/...`.
+ */
+export async function apiFetchBlob(
+  url: string,
+  config: { keepSession?: boolean } = {},
+) {
+  const res = await authenticatedFetch(
+    url,
+    { method: "GET", cache: "no-store" },
+    false,
+    config,
+  );
+
+  if (!res.ok) {
+    throw new Error(`${res.status} ${url}: Gagal mengambil berkas`);
+  }
+
+  return res.blob();
 }

@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { BASE_URL as API_BASE_URL } from "@/lib/api";
 import { setTokens } from "@/lib/authTokens";
+import { fetchSecureKtpObjectUrl, isSecureKtpPath } from "@/lib/secureKtp";
 import LogoNavbar from "@/components/layout/navbar/LogoNavbar";
 import { useTranslation } from "react-i18next";
 import {
@@ -93,8 +94,16 @@ export default function UserPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  // Object URL (foto KTP aman / file lokal) yang harus di-revoke saat unmount.
+  const objectUrlsRef = useRef<Set<string>>(new Set());
+  const trackObjectUrl = (url: string) => {
+    if (url.startsWith("blob:")) objectUrlsRef.current.add(url);
+    return url;
+  };
+
   /* eslint-disable react-hooks/set-state-in-effect -- inisialisasi mode form dari sessionStorage saat mount */
   useEffect(() => {
+    const objectUrls = objectUrlsRef.current;
     const idToken = sessionStorage.getItem("id_token");
     const tempName = sessionStorage.getItem("temp_name");
 
@@ -107,10 +116,25 @@ export default function UserPage() {
       fetchProfile();
     }
 
-    return () => stopCamera();
+    return () => {
+      stopCamera();
+      objectUrls.forEach((url) => URL.revokeObjectURL(url));
+      objectUrls.clear();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  async function loadSecureKtpPreview(path: string) {
+    try {
+      const objectUrl = await fetchSecureKtpObjectUrl(path);
+      trackObjectUrl(objectUrl);
+      setKtpPreview(objectUrl);
+      setOriginalKtpPreview(objectUrl);
+    } catch (err) {
+      console.error("Gagal mengambil foto KTP:", err);
+    }
+  }
 
   async function loadRegionData(provName?: string, cityName?: string, distName?: string) {
     try {
@@ -176,11 +200,15 @@ export default function UserPage() {
       }
 
       if (data.ktp_image_url) {
-        const cleanKtpUrl = data.ktp_image_url.startsWith("http")
-          ? data.ktp_image_url
-          : `${cleanBaseUrl}/${data.ktp_image_url.replace(/^\/+/, "").startsWith("public/") ? data.ktp_image_url.replace(/^\/+/, "") : `public/${data.ktp_image_url.replace(/^\/+/, "")}`}`;
-        const imgUrlKtp = `${cleanKtpUrl}?t=${Date.now()}`;
-        setKtpPreview(imgUrlKtp); setOriginalKtpPreview(imgUrlKtp);
+        if (isSecureKtpPath(data.ktp_image_url)) {
+          void loadSecureKtpPreview(data.ktp_image_url);
+        } else {
+          const cleanKtpUrl = data.ktp_image_url.startsWith("http")
+            ? data.ktp_image_url
+            : `${cleanBaseUrl}/${data.ktp_image_url.replace(/^\/+/, "").startsWith("public/") ? data.ktp_image_url.replace(/^\/+/, "") : `public/${data.ktp_image_url.replace(/^\/+/, "")}`}`;
+          const imgUrlKtp = `${cleanKtpUrl}?t=${Date.now()}`;
+          setKtpPreview(imgUrlKtp); setOriginalKtpPreview(imgUrlKtp);
+        }
       }
     } catch (err) {
       console.error("Gagal mengambil profile:", err);
@@ -220,10 +248,11 @@ export default function UserPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: "profile" | "ktp") => {
     if (e.target.files?.[0]) {
       const selectedFile = e.target.files[0];
+      const objectUrl = trackObjectUrl(URL.createObjectURL(selectedFile));
       if (type === "profile") {
-        setFile(selectedFile); setPreview(URL.createObjectURL(selectedFile));
+        setFile(selectedFile); setPreview(objectUrl);
       } else {
-        setKtpFile(selectedFile); setKtpPreview(URL.createObjectURL(selectedFile));
+        setKtpFile(selectedFile); setKtpPreview(objectUrl);
       }
     }
   };

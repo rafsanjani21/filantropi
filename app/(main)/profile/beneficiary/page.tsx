@@ -10,7 +10,7 @@
 "use client";
 
 import "@/lib/i18n"; // Proteksi i18n
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { ChangeEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,6 +20,7 @@ import {
   getRefreshToken,
   setTokens,
 } from "@/lib/authTokens";
+import { fetchSecureKtpObjectUrl, isSecureKtpPath } from "@/lib/secureKtp";
 import LogoNavbar from "@/components/layout/navbar/LogoNavbar";
 import { useTranslation } from "react-i18next"; // Import Hook
 import { 
@@ -93,10 +94,36 @@ export default function PagePenerima() {
   // Batas Maksimal File: 1 MB (dalam satuan Bytes)
   const MAX_FILE_SIZE = 1048576;
 
+  // Object URL (foto KTP aman / file lokal) yang harus di-revoke saat unmount.
+  const objectUrlsRef = useRef<Set<string>>(new Set());
+  const trackObjectUrl = (url: string) => {
+    if (url.startsWith("blob:")) objectUrlsRef.current.add(url);
+    return url;
+  };
+
   const formatImageUrl = (path: string) => {
     if (!path) return "";
     return `${IMAGE_BASE_URL.replace(/\/+$/, "")}/${path.replace(/^\/+/, '')}?t=${Date.now()}`; 
   };
+
+  async function loadSecureKtpPreview(path: string) {
+    try {
+      const objectUrl = await fetchSecureKtpObjectUrl(path);
+      trackObjectUrl(objectUrl);
+      setPreviewKtp(objectUrl);
+      setOriginalKtpPreview(objectUrl);
+    } catch (err) {
+      console.error("Gagal mengambil foto KTP:", err);
+    }
+  }
+
+  useEffect(() => {
+    const objectUrls = objectUrlsRef.current;
+    return () => {
+      objectUrls.forEach((url) => URL.revokeObjectURL(url));
+      objectUrls.clear();
+    };
+  }, []);
 
   async function fetchExistingProfile() {
     try {
@@ -144,14 +171,14 @@ export default function PagePenerima() {
       setPreviewUrl(imgUrl);
       setOriginalPreview(imgUrl);
 
-      let ktpUrl = "";
-      if (data.url_ktp) {
-        ktpUrl = formatImageUrl(data.url_ktp);
-      } else if (data.ktp_url) {
-        ktpUrl = formatImageUrl(data.ktp_url);
+      const ktpPath = data.url_ktp || data.ktp_url || "";
+      if (isSecureKtpPath(ktpPath)) {
+        void loadSecureKtpPreview(ktpPath);
+      } else if (ktpPath) {
+        const ktpUrl = formatImageUrl(ktpPath);
+        setPreviewKtp(ktpUrl);
+        setOriginalKtpPreview(ktpUrl);
       }
-      setPreviewKtp(ktpUrl);
-      setOriginalKtpPreview(ktpUrl);
 
     } catch (error) {
       console.error("Gagal sinkronisasi data profil:", error);
@@ -259,7 +286,7 @@ export default function PagePenerima() {
       }
 
       setSelectedFile(file); 
-      setPreviewUrl(URL.createObjectURL(file)); 
+      setPreviewUrl(trackObjectUrl(URL.createObjectURL(file))); 
     }
   };
 
@@ -274,7 +301,7 @@ export default function PagePenerima() {
       }
 
       setSelectedKtp(file); 
-      setPreviewKtp(URL.createObjectURL(file)); 
+      setPreviewKtp(trackObjectUrl(URL.createObjectURL(file))); 
     }
   };
 
