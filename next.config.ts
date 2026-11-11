@@ -1,7 +1,7 @@
 /**
  * next.config.ts
  *
- * Fungsi   : Konfigurasi Next.js untuk allowedDevOrigins, images, redirect legacy, dan rewrite proxy API lokal.
+ * Fungsi   : Konfigurasi Next.js untuk allowedDevOrigins, images, redirect legacy, rewrite proxy API lokal, dan output standalone.
  * Ekspor   : default nextConfig
  * Dipakai  : Dijalankan otomatis oleh Next.js saat dev/build/start
  * Catatan  : env API/gambar wajib diisi; remotePatterns dari NEXT_PUBLIC_IMAGE_BASE_URL; rewrite /api-proxy opsional via API_PROXY_TARGET.
@@ -48,6 +48,9 @@ const devAllowedOrigins = (process.env.DEV_ALLOWED_ORIGINS ?? "")
   .filter(Boolean);
 
 const nextConfig: NextConfig = {
+  // Tambahan utama untuk menghemat ruang disk VPS (node_modules bisa dihapus setelah build)
+  output: "standalone",
+
   poweredByHeader: false,
   ...(isDev && devAllowedOrigins.length > 0
     ? { allowedDevOrigins: devAllowedOrigins }
@@ -105,8 +108,6 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
-      // Legacy query-based routes (sebelumnya ditangani app/(legacy)/QueryRedirect).
-      // Aturan dengan `has` didahulukan agar nilai query dipetakan ke path baru.
       {
         source: '/DetailPage',
         has: [{ type: 'query', key: 'slug', value: '(?<slug>.+)' }],

@@ -52,7 +52,11 @@ jobs:
               git reset --hard "$PREVIOUS_COMMIT"
               npm ci
               npm run build
-              pm2 reload "$APP_NAME" --update-env || pm2 start node_modules/next/dist/bin/next --name "$APP_NAME" -i 1 -- start -p "$APP_PORT"
+              # Rollback juga menggunakan format standalone
+              cp -r public .next/standalone/ || true
+              cp -r .next/static .next/standalone/.next/ || true
+              rm -rf node_modules
+              PORT=$APP_PORT pm2 reload "$APP_NAME" --update-env || PORT=$APP_PORT pm2 start .next/standalone/server.js --name "$APP_NAME"
               pm2 save
             }
 
@@ -66,9 +70,16 @@ jobs:
               exit 1
             fi
 
-            # 4. Reload aplikasi. Next.js server tidak boleh di-cluster (-i max) karena
-            #    state in-memory (rate limit/idempotency) tidak dibagi antar worker.
-            pm2 reload "$APP_NAME" --update-env || pm2 start node_modules/next/dist/bin/next --name "$APP_NAME" -i 1 -- start -p "$APP_PORT"
+            # --- BAGIAN STANDALONE (Menghemat Disk) ---
+            # Salin aset statis agar gambar dan CSS tetap bisa dimuat
+            cp -r public .next/standalone/ || true
+            cp -r .next/static .next/standalone/.next/ || true
+            
+            # HAPUS node_modules utuh karena aplikasi standalone tidak membutuhkannya lagi
+            rm -rf node_modules
+
+            # 4. Reload aplikasi menggunakan server.js bawaan standalone
+            PORT=$APP_PORT pm2 reload "$APP_NAME" --update-env || PORT=$APP_PORT pm2 start .next/standalone/server.js --name "$APP_NAME"
             pm2 scale "$APP_NAME" 1 || true
 
             # 5. Healthcheck; rollback bila aplikasi tidak merespons
