@@ -28,11 +28,17 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           port: ${{ secrets.VPS_PORT }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          # REKOMENDASI 4: Tambahkan fingerprint untuk keamanan MITM (buat secret VPS_SSH_FINGERPRINT di GitHub)
+          # fingerprint: ${{ secrets.VPS_SSH_FINGERPRINT }} 
           script: |
             set -e
 
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            
+            # REKOMENDASI 3: Memastikan VPS memakai versi Node.js yang stabil (Pin Node 22)
+            nvm install 22
+            nvm use 22
             export PATH=$PATH:/usr/local/bin:/usr/bin
 
             cd /home/devlanding/filantropi_lp/filantropi-main
@@ -50,16 +56,16 @@ jobs:
               npm ci
               npm run build
               
-              # Deteksi cerdas: cek apakah commit lama pakai standalone atau node_modules
               if [ -d ".next/standalone" ]; then
                 cp -r public .next/standalone/ || true
                 cp -r .next/static .next/standalone/.next/ || true
                 rm -rf node_modules
                 pm2 delete "$APP_NAME" || true
-                PORT=$APP_PORT HOSTNAME=0.0.0.0 pm2 start .next/standalone/server.js --name "$APP_NAME"
+                # REKOMENDASI 1: Ubah 0.0.0.0 menjadi 127.0.0.1 agar tidak bisa ditembus langsung dari IP Publik
+                PORT=$APP_PORT HOSTNAME=127.0.0.1 pm2 start .next/standalone/server.js --name "$APP_NAME"
               else
                 pm2 delete "$APP_NAME" || true
-                pm2 start node_modules/next/dist/bin/next --name "$APP_NAME" -i 1 -- start -p "$APP_PORT"
+                PORT=$APP_PORT HOSTNAME=127.0.0.1 pm2 start node_modules/next/dist/bin/next --name "$APP_NAME" -i 1 -- start -p "$APP_PORT"
               fi
               pm2 save
             }
@@ -77,11 +83,11 @@ jobs:
             cp -r .next/static .next/standalone/.next/ || true
             rm -rf node_modules
 
-            # 4. HAPUS proses lama, dan MULAI BARU dengan standalone
             pm2 delete "$APP_NAME" || true
-            PORT=$APP_PORT HOSTNAME=0.0.0.0 pm2 start .next/standalone/server.js --name "$APP_NAME"
+            
+            # REKOMENDASI 1: Mengunci aplikasi murni hanya untuk diakses proxy lokal (Nginx)
+            PORT=$APP_PORT HOSTNAME=127.0.0.1 pm2 start .next/standalone/server.js --name "$APP_NAME"
 
-            # 5. Healthcheck
             HEALTH_OK=0
             for i in $(seq 1 12); do
               if curl -fsS "http://127.0.0.1:${APP_PORT}/" >/dev/null 2>&1; then
@@ -98,4 +104,4 @@ jobs:
             fi
 
             pm2 save
-            echo "Deploy sukses dan healthcheck lolos." 
+            echo "Deploy sukses dan healthcheck lolos."
