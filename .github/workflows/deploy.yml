@@ -39,6 +39,7 @@ jobs:
             # REKOMENDASI 3: Memastikan VPS memakai versi Node.js yang stabil (Pin Node 22)
             nvm install 22
             nvm use 22
+            npm install -g pm2
             export PATH=$PATH:/usr/local/bin:/usr/bin
 
             cd /home/devlanding/filantropi_lp/filantropi-main
