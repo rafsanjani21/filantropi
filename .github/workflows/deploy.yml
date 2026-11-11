@@ -29,7 +29,7 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            set -e # PENTING: Menghentikan proses jika ada error
+            set -e
 
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
@@ -41,10 +41,7 @@ jobs:
             APP_NAME="Filantropi LP"
             APP_PORT=3005
 
-            # 1. Ambil data terbaru dari GitHub tanpa mengubah file
             git fetch origin
-
-            # 2. Paksa sinkronisasi: Timpa semua file di VPS agar 100% sama dengan branch main di GitHub
             git reset --hard origin/main
 
             rollback() {
@@ -52,15 +49,21 @@ jobs:
               git reset --hard "$PREVIOUS_COMMIT"
               npm ci
               npm run build
-              # Rollback juga menggunakan format standalone
-              cp -r public .next/standalone/ || true
-              cp -r .next/static .next/standalone/.next/ || true
-              rm -rf node_modules
-              PORT=$APP_PORT pm2 reload "$APP_NAME" --update-env || PORT=$APP_PORT pm2 start .next/standalone/server.js --name "$APP_NAME"
+              
+              # Deteksi cerdas: cek apakah commit lama pakai standalone atau node_modules
+              if [ -d ".next/standalone" ]; then
+                cp -r public .next/standalone/ || true
+                cp -r .next/static .next/standalone/.next/ || true
+                rm -rf node_modules
+                pm2 delete "$APP_NAME" || true
+                PORT=$APP_PORT HOSTNAME=0.0.0.0 pm2 start .next/standalone/server.js --name "$APP_NAME"
+              else
+                pm2 delete "$APP_NAME" || true
+                pm2 start node_modules/next/dist/bin/next --name "$APP_NAME" -i 1 -- start -p "$APP_PORT"
+              fi
               pm2 save
             }
 
-            # 3. Install dan build; rollback bila salah satu gagal
             if ! npm ci; then
               rollback
               exit 1
@@ -70,19 +73,15 @@ jobs:
               exit 1
             fi
 
-            # --- BAGIAN STANDALONE (Menghemat Disk) ---
-            # Salin aset statis agar gambar dan CSS tetap bisa dimuat
             cp -r public .next/standalone/ || true
             cp -r .next/static .next/standalone/.next/ || true
-            
-            # HAPUS node_modules utuh karena aplikasi standalone tidak membutuhkannya lagi
             rm -rf node_modules
 
-            # 4. Reload aplikasi menggunakan server.js bawaan standalone
-            PORT=$APP_PORT pm2 reload "$APP_NAME" --update-env || PORT=$APP_PORT pm2 start .next/standalone/server.js --name "$APP_NAME"
-            pm2 scale "$APP_NAME" 1 || true
+            # 4. HAPUS proses lama, dan MULAI BARU dengan standalone
+            pm2 delete "$APP_NAME" || true
+            PORT=$APP_PORT HOSTNAME=0.0.0.0 pm2 start .next/standalone/server.js --name "$APP_NAME"
 
-            # 5. Healthcheck; rollback bila aplikasi tidak merespons
+            # 5. Healthcheck
             HEALTH_OK=0
             for i in $(seq 1 12); do
               if curl -fsS "http://127.0.0.1:${APP_PORT}/" >/dev/null 2>&1; then
@@ -99,4 +98,4 @@ jobs:
             fi
 
             pm2 save
-            echo "Deploy sukses dan healthcheck lolos."
+            echo "Deploy sukses dan healthcheck lolos." 
